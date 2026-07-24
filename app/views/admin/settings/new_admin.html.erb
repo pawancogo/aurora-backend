@@ -1,0 +1,43 @@
+<%= render "admin/settings/tabs" %>
+
+<p><%= link_to "← Team", admin_settings_team_path, class: "link" %></p>
+<h2 class="section-title">New admin</h2>
+
+<div class="panel">
+  <% if @new_admin.errors.any? %>
+    <div class="flash flash-alert"><%= @new_admin.errors.full_messages.to_sentence %></div>
+  <% end %>
+
+  <%= form_with url: admin_settings_create_admin_path, method: :post do %>
+    <div class="admin-form-grid" style="max-width:640px;">
+      <div class="form-row"><label>First name</label><%= text_field_tag "admin_user[first_name]", @new_admin.first_name %></div>
+      <div class="form-row"><label>Last name</label><%= text_field_tag "admin_user[last_name]", @new_admin.last_name %></div>
+    </div>
+    <div class="admin-form-grid" style="max-width:640px;">
+      <div class="form-row"><label>Email</label><%= email_field_tag "admin_user[email]", @new_admin.email, required: true %></div>
+      <div class="form-row">
+        <label>Password</label>
+        <%= password_field_tag "admin_user[password]", nil, required: true %>
+        <p class="muted-sm">Minimum 10 characters.</p>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label>Roles</label>
+      <div class="check-grid">
+        <%= hidden_field_tag "role_ids[]", "" %>
+        <% @roles.each do |role| %>
+          <label class="check">
+            <%= check_box_tag "role_ids[]", role.id, @new_admin.role_ids.include?(role.id), id: nil %>
+            <%= role.name %>
+          </label>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn-sm">Create admin</button>
+      <%= link_to "Cancel", admin_settings_team_path, class: "link" %>
+    </div>
+  <% end %>
+</div>

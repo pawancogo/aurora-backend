@@ -1,0 +1,52 @@
+<%= render "admin/settings/tabs" %>
+
+<% can_manage = allowed_to?("users.manage") %>
+
+<% unless can_manage %>
+  <p class="page-sub">Read-only view. Managing admins requires the <code>users.manage</code> permission (Super Admin).</p>
+<% end %>
+
+<% if can_manage %>
+  <div class="toolbar">
+    <%= link_to "+ New admin", admin_new_settings_admin_path, class: "btn-sm" %>
+  </div>
+<% end %>
+
+<%= render "admin/ui/search", url: admin_settings_team_path, query: params[:q],
+      placeholder: "Search by email or name",
+      filters: [
+        { name: "status", prompt: "Any status", selected: params[:status],
+          options: Array(@admin_facets["status"]).map { |facet| ["#{facet[:label]} (#{facet[:count]})", facet[:value]] } }
+      ] %>
+
+<%
+  columns = [
+    { label: "Admin", cell: ->(admin) {
+        name = admin.full_name.presence || "—"
+        heading = can_manage ? link_to(name, admin_settings_admin_path(admin)) : name
+        safe_join([heading, tag.br, content_tag(:span, admin.email, class: "muted-sm")])
+      } },
+    { label: "Status", cell: ->(admin) {
+        content_tag(:span, admin.status, class: "chip #{admin.status == 'active' ? 'ok' : 'off'}")
+      } },
+    { label: "Roles", cell: ->(admin) {
+        if admin.roles.any?
+          safe_join(admin.roles.map { |role| content_tag(:span, role.name, class: "chip") })
+        else
+          content_tag(:span, "—", class: "muted-sm")
+        end
+      } }
+  ]
+  if can_manage
+    columns << { label: "", class: "row-actions", cell: ->(admin) {
+        if admin == current_admin_user
+          content_tag(:span, "(you)", class: "muted-sm")
+        else
+          link_to("Manage", admin_settings_admin_path(admin), class: "link")
+        end
+      } }
+  end
+%>
+<%= render "admin/ui/table", rows: @admins, columns: columns, empty: "No admins yet." %>
+
+<%= render "admin/ui/pagination", collection: @admins, path: admin_settings_team_path %>

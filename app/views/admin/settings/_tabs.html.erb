@@ -1,0 +1,9 @@
+<h1 class="page-title">Settings</h1>
+<p class="page-sub">Access control &amp; team management.</p>
+
+<%= render "admin/ui/tabs", tabs: [
+      { label: "Roles",       path: admin_settings_roles_path,       active: controller_name == "roles" },
+      { label: "Permissions", path: admin_settings_permissions_path,
+        active: controller_name == "permissions" || action_name == "permissions" },
+      { label: "Team",        path: admin_settings_team_path,        active: %w[team new_admin create_admin].include?(action_name) }
+    ] %>

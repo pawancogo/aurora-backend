@@ -1,0 +1,37 @@
+<%= render "admin/settings/tabs" %>
+
+<% can_manage = allowed_to?("permissions.manage") %>
+
+<div class="panel" style="margin-top:0;">
+  <p style="margin:0;">
+    Permissions are fixed capabilities enforced in the code — their <strong>keys can't be created or removed here</strong>.
+    You can edit a permission's description and control which roles grant it.
+    Super Admin always holds every permission.
+  </p>
+</div>
+
+<%= render "admin/ui/search", url: admin_settings_permissions_path, query: params[:q], placeholder: "Search permissions" %>
+
+<%
+  columns = [
+    { label: "Permission",  cell: ->(permission) { permission.name } },
+    { label: "Key",         cell: ->(permission) { content_tag(:code, permission.key) } },
+    { label: "Description", class: "muted-sm", cell: ->(permission) { permission.description } },
+    { label: "Granted to roles", cell: ->(permission) {
+        roles = permission.roles.reject { |role| role.key == "super_admin" }.sort_by(&:name)
+        if roles.any?
+          safe_join(roles.map { |role| content_tag(:span, role.name, class: "chip") })
+        else
+          content_tag(:span, "super admin only", class: "muted-sm")
+        end
+      } }
+  ]
+  if can_manage
+    columns << { label: "", class: "row-actions", cell: ->(permission) {
+        link_to("Edit", edit_admin_settings_permission_path(permission), class: "link")
+      } }
+  end
+%>
+<%= render "admin/ui/table", rows: @permissions, columns: columns %>
+
+<%= render "admin/ui/pagination", collection: @permissions, path: admin_settings_permissions_path %>

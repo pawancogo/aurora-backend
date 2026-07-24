@@ -1,0 +1,52 @@
+<% is_self = @admin == current_admin_user %>
+
+<p><%= link_to "← Team", admin_settings_team_path, class: "link" %></p>
+<h1 class="page-title"><%= @admin.full_name.presence || @admin.email %></h1>
+
+<div class="panel">
+  <div class="panel-head"><h2>Profile</h2></div>
+  <p>Email: <%= @admin.email %></p>
+  <p>Status: <span class="chip <%= @admin.status == "active" ? "ok" : "off" %>"><%= @admin.status %></span></p>
+  <p>Roles:
+    <% if @admin.roles.any? %>
+      <% @admin.roles.each do |role| %><span class="chip"><%= role.name %></span><% end %>
+    <% else %>
+      <span class="muted-sm">—</span>
+    <% end %>
+  </p>
+  <p>Last portal sign-in:
+    <%= @admin.last_login_at ? @admin.last_login_at.strftime("%d %b %Y, %H:%M") : "never" %></p>
+
+  <% if is_self %>
+    <p class="muted-sm">This is your own account — manage its roles and status from another admin.</p>
+  <% else %>
+    <div class="form-actions" style="margin-top:12px;">
+      <%= button_to (@admin.status == "active" ? "Deactivate account" : "Activate account"),
+            admin_settings_admin_status_path(@admin), method: :patch, class: "link" %>
+      <%= button_to "Remove admin", admin_settings_destroy_admin_path(@admin), method: :delete,
+            class: "link danger", form: { onsubmit: "return confirm('Remove #{@admin.email}?');" } %>
+    </div>
+  <% end %>
+</div>
+
+<% unless is_self %>
+  <div class="panel">
+    <div class="panel-head"><h2>Roles</h2></div>
+    <%= form_with url: admin_settings_admin_roles_path(@admin), method: :patch do %>
+      <div class="check-grid">
+        <%= hidden_field_tag "role_ids[]", "" %>
+        <% @roles.each do |role| %>
+          <label class="check">
+            <%= check_box_tag "role_ids[]", role.id, @admin.role_ids.include?(role.id), id: nil %>
+            <%= role.name %>
+          </label>
+        <% end %>
+      </div>
+      <div class="form-actions"><button type="submit" class="btn-sm">Save roles</button></div>
+    <% end %>
+  </div>
+<% end %>
+
+<%= render "admin/ui/sessions", sessions: @sessions, can_manage: true,
+      revoke_all_path: admin_settings_admin_sessions_path(@admin),
+      revoke_path: ->(session) { admin_settings_admin_session_path(@admin, session) } %>
