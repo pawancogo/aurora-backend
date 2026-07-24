@@ -31,7 +31,7 @@ gem "rack-cors"
 gem "redis", "~> 5.3"
 
 # Background job processing
-gem "sidekiq", "~> 7.3"
+gem "sidekiq", "~> 8.0"
 
 # Pin connection_pool to 2.x: 3.0 changed TimedStack#pop and breaks Sidekiq 7.3's
 # scheduler/retry poller. Also backs our REDIS_POOL (readiness checks, caching).
