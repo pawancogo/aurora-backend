@@ -50,6 +50,12 @@
     font-size: .85rem; cursor: pointer; color: var(--ink); }
   .btn-ghost:hover { background: var(--bg); }
 
+  /* Top-right nav group (Data Console link + account menu) */
+  .topbar-right { display: flex; align-items: center; gap: 18px; height: 64px; }
+  .topbar-link { display: inline-flex; align-items: center; height: 32px; padding: 0 12px; font-size: .85rem;
+    font-weight: 600; color: var(--ink); border: 1px solid var(--border); border-radius: 8px; }
+  .topbar-link:hover { background: var(--bg); border-color: #cbd5e1; }
+
   /* Account dropdown (native <details>) */
   .user-menu { position: relative; display: flex; height: 64px; align-items: center; }
   .user-menu summary { list-style: none; cursor: pointer; }

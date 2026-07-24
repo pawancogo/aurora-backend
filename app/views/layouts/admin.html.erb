@@ -23,11 +23,6 @@
         <span class="nav-link disabled">Orders <em>S9</em></span>
         <span class="nav-link disabled">CMS <em>S6</em></span>
         <a class="nav-link <%= "active" if %w[settings roles].include?(controller_name) %>" href="<%= admin_settings_path %>">Settings</a>
-
-        <% if current_admin_user.super_admin? %>
-          <div class="nav-section">System</div>
-          <a class="nav-link" href="/superadmin" target="_blank" rel="noopener">Data Console <em>↗</em></a>
-        <% end %>
       </nav>
     </aside>
 
@@ -35,7 +30,11 @@
       <header class="topbar">
         <div></div>
         <% menu_name = current_admin_user.full_name.presence || current_admin_user.email %>
-        <details class="user-menu">
+        <div class="topbar-right">
+          <% if current_admin_user.super_admin? %>
+            <a class="topbar-link" href="/superadmin" target="_blank" rel="noopener">Data Console ↗</a>
+          <% end %>
+          <details class="user-menu">
           <summary class="avatar" aria-label="Account menu" aria-haspopup="menu">
             <%= menu_name.to_s.split(/\s+/).first(2).filter_map { |part| part[0] }.join.upcase %>
           </summary>
@@ -52,7 +51,8 @@
               <%= button_to "Sign out", admin_logout_path, method: :delete, class: "user-menu-signout" %>
             </div>
           </div>
-        </details>
+          </details>
+        </div>
       </header>
 
       <main class="content">
