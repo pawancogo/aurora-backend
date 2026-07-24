@@ -3,6 +3,10 @@
 # Idempotent seeds: RBAC permissions, roles, and a bootstrap super admin.
 # Safe to run repeatedly (find_or_create_by).
 
+# `db:prepare` auto-seeds a freshly created database, which would flood the
+# RSpec-managed test database with demo data and break test isolation.
+return if Rails.env.test?
+
 PERMISSIONS = {
   "dashboard.read" => "View dashboard",
   "users.read" => "View admin users",

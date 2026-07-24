@@ -6,7 +6,10 @@
 
 # Ignore bundler config.
 /.bundle
-
+/vendor
+/tmp
+/log
+/storage
 # Ignore all environment files.
 /.env*
 
