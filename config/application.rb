@@ -12,6 +12,7 @@ require "action_mailbox/engine"
 require "action_text/engine"
 require "action_view/railtie"
 require "action_cable/engine"
+require "sprockets/railtie" # serves RailsAdmin's bundled assets (see config/initializers/rails_admin.rb)
 # require "rails/test_unit/railtie"
 
 # Require the gems listed in Gemfile, including any gems

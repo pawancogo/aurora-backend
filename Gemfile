@@ -43,6 +43,12 @@ gem "rack-attack"
 # Pagination
 gem "kaminari"
 
+# Super-admin data console — full model CRUD/inspection, mounted at /superadmin.
+# sprockets-rails serves RailsAdmin's bundled CSS/JS (this app is otherwise api_only).
+gem "rails_admin", "~> 3.0"
+gem "sprockets-rails"
+gem "sassc-rails" # compiles RailsAdmin's SCSS under sprockets
+
 # File/media uploads — one GenericUploader, provider chosen via STORAGE_PROVIDER.
 gem "carrierwave", "~> 3.0"
 # Optional storage providers — required lazily only when selected (config/initializers/carrierwave.rb),

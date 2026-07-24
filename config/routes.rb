@@ -57,6 +57,10 @@ Rails.application.routes.draw do
     end
   end
 
+  # Super-admin data console (full model CRUD/inspection). Session-authenticated,
+  # gated to Super Admins in config/initializers/rails_admin.rb.
+  mount RailsAdmin::Engine => "/superadmin", as: "rails_admin"
+
   # Server-rendered admin portal (session-authenticated ERB).
   namespace :admin do
     root to: "dashboard#show"
@@ -107,5 +111,6 @@ Rails.application.routes.draw do
   root to: redirect("/admin")
 
   # Anything else unmatched returns the standard JSON 404 envelope.
-  match "*unmatched", to: "errors#not_found", via: :all, constraints: ->(req) { !req.path.start_with?("/admin") }
+  match "*unmatched", to: "errors#not_found", via: :all,
+        constraints: ->(req) { !req.path.start_with?("/admin", "/superadmin") }
 end
