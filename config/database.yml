@@ -1,0 +1,25 @@
+# PostgreSQL configuration.
+#
+# All connection parameters are environment-driven with sensible local defaults so
+# the same file works for native development, Docker Compose, and CI. When DATABASE_URL
+# is present (Compose / CI / production), Rails merges it on top of these values.
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS", 5) %>
+  host: <%= ENV.fetch("DATABASE_HOST", "localhost") %>
+  port: <%= ENV.fetch("DATABASE_PORT", 5432) %>
+  username: <%= ENV.fetch("DATABASE_USERNAME", ENV["USER"]) %>
+  password: <%= ENV.fetch("DATABASE_PASSWORD", "") %>
+
+development:
+  <<: *default
+  database: ecom_development
+
+test:
+  <<: *default
+  database: ecom_test
+
+production:
+  <<: *default
+  url: <%= ENV["DATABASE_URL"] %>

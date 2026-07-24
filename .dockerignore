@@ -1,0 +1,12 @@
+.git
+.gitignore
+.github
+tmp
+log
+vendor/bundle
+storage
+.env
+.env.*
+!.env.example
+spec
+docker-compose.yml
