@@ -1,0 +1,33 @@
+<%#
+  Reusable data-driven table.
+  Locals:
+    columns : Array of hashes. Each: label (header text), cell (a lambda taking a row and
+              returning the cell content), and optional class (applied to th/td).
+    rows    : Enumerable of records passed to each column's cell lambda.
+    empty   : optional message shown when rows is blank.
+  Render with: render "admin/ui/table", rows: @brands, columns: columns, empty: "No brands yet."
+%>
+<table class="table">
+  <thead>
+    <tr>
+      <% columns.each do |col| %>
+        <th class="<%= col[:class] %>"><%= col[:label] %></th>
+      <% end %>
+    </tr>
+  </thead>
+  <tbody>
+    <% if rows.blank? %>
+      <tr>
+        <td colspan="<%= columns.size %>" class="muted-sm"><%= local_assigns[:empty] || "No records found." %></td>
+      </tr>
+    <% else %>
+      <% rows.each do |row| %>
+        <tr>
+          <% columns.each do |col| %>
+            <td class="<%= col[:class] %>"><%= col[:cell].call(row) %></td>
+          <% end %>
+        </tr>
+      <% end %>
+    <% end %>
+  </tbody>
+</table>

@@ -1,0 +1,18 @@
+<h1 class="page-title">Dashboard</h1>
+<p class="page-sub">Welcome back, <%= current_admin_user.full_name || current_admin_user.email %>.</p>
+
+<div class="stat-grid">
+  <% @stats.each do |stat| %>
+    <div class="stat-card">
+      <div class="stat-value"><%= stat[:value] %></div>
+      <div class="stat-label"><%= stat[:label] %></div>
+    </div>
+  <% end %>
+</div>
+
+<div class="panel">
+  <h2>Your access</h2>
+  <p>Roles: <%= current_admin_user.roles.map(&:name).join(", ").presence || "—" %></p>
+  <p><%= current_admin_user.permission_keys.size %> permission(s) granted</p>
+  <p>Full CRUD screens (products, orders, CMS, settings) arrive in the sprints noted in the sidebar.</p>
+</div>

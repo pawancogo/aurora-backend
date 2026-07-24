@@ -1,0 +1,21 @@
+<%#
+  Reusable media uploader. POSTs the chosen file(s) to /admin/uploads and writes
+  the returned URL into `target`. Reuse anywhere a URL field backs an image/video.
+  Locals:
+    target   : CSS selector of the field to receive the URL(s).
+    mode     : "set" (replace the field value) or "append" (add as a new line — for a URL list). Default "set".
+    kind     : "image" or "video". Default "image".
+    label    : button text. Default "Upload".
+    multiple : allow selecting several files (append mode). Default false.
+%>
+<div class="uploader" data-uploader
+     data-target="<%= target %>"
+     data-mode="<%= local_assigns[:mode] || 'set' %>"
+     data-kind="<%= local_assigns[:kind] || 'image' %>">
+  <label class="btn-sm uploader-btn">
+    <%= local_assigns[:label] || "Upload" %>
+    <input type="file" accept="<%= local_assigns[:kind].to_s == 'video' ? 'video/*' : 'image/*' %>"
+           <%= "multiple" if local_assigns[:multiple] %>>
+  </label>
+  <span class="uploader-status muted-sm"></span>
+</div>

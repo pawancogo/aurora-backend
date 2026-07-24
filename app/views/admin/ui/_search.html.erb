@@ -1,0 +1,24 @@
+<%#
+  Reusable search + filter bar (GET form — SEO/bookmark friendly).
+  Locals:
+    url         : form action path.
+    query       : current value of the q param.
+    placeholder : optional search input placeholder.
+    filters     : optional Array of hashes, each with name, prompt, selected,
+                  options (an Array of [label, value] pairs) rendered as a <select>,
+                  and optional searchable: true to force a search box in the dropdown.
+  Render with: render "admin/ui/search", url: admin_products_path, query: params[:q], filters: [...]
+%>
+<% filters = Array(local_assigns[:filters]) %>
+<form method="get" action="<%= url %>" class="search-bar <%= 'has-filters' if filters.any? %>">
+  <input type="text" name="q" value="<%= query %>" placeholder="<%= local_assigns[:placeholder] || 'Search' %>" />
+  <% filters.each do |filter| %>
+    <select name="<%= filter[:name] %>" class="search-filter" <%= "data-searchable" if filter[:searchable] %>>
+      <option value=""><%= filter[:prompt] %></option>
+      <% filter[:options].each do |label, value| %>
+        <option value="<%= value %>" <%= "selected" if filter[:selected].to_s == value.to_s %>><%= label %></option>
+      <% end %>
+    </select>
+  <% end %>
+  <button type="submit" class="btn-sm">Search</button>
+</form>

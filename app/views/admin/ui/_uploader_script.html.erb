@@ -1,0 +1,65 @@
+<script>
+(function () {
+  function csrfToken() {
+    var meta = document.querySelector('meta[name="csrf-token"]');
+    return meta ? meta.getAttribute("content") : "";
+  }
+
+  function upload(file, kind) {
+    var body = new FormData();
+    body.append("file", file);
+    body.append("kind", kind);
+    return fetch("/admin/uploads", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "X-CSRF-Token": csrfToken(), Accept: "application/json" },
+      body: body
+    }).then(function (r) { return r.json().then(function (json) { return { ok: r.ok, json: json }; }); });
+  }
+
+  function writeUrl(target, mode, url) {
+    if (!target) return;
+    if (mode === "append") {
+      target.value = (target.value.trim() ? target.value.replace(/\s*$/, "") + "\n" : "") + url;
+    } else {
+      target.value = url;
+    }
+    target.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+
+  function handle(input) {
+    var wrap = input.closest("[data-uploader]");
+    var target = document.querySelector(wrap.getAttribute("data-target"));
+    var mode = wrap.getAttribute("data-mode") || "set";
+    var kind = wrap.getAttribute("data-kind") || "image";
+    var status = wrap.querySelector(".uploader-status");
+    var files = Array.prototype.slice.call(input.files);
+    if (!files.length) return;
+
+    var done = 0, failed = 0, lastError = "";
+    status.textContent = "Uploading…";
+    files.forEach(function (file) {
+      upload(file, kind).then(function (res) {
+        done++;
+        if (res.ok && res.json && res.json.url) {
+          writeUrl(target, mode, res.json.url);
+        } else {
+          failed++;
+          lastError = (res.json && res.json.error) || "upload failed";
+        }
+        if (done === files.length) {
+          status.textContent = failed ? (failed + " failed — " + lastError) : ("Uploaded " + (done - failed) + " file(s)");
+          input.value = "";
+        }
+      }).catch(function () {
+        done++; failed++;
+        if (done === files.length) { status.textContent = "Upload failed"; input.value = ""; }
+      });
+    });
+  }
+
+  document.addEventListener("change", function (e) {
+    if (e.target.matches("[data-uploader] input[type=file]")) handle(e.target);
+  });
+})();
+</script>

@@ -1,0 +1,25 @@
+<%#
+  Reusable modal built on the native <dialog> element (backdrop + Esc handled by the browser).
+  Render as a LAYOUT partial (render layout: "admin/ui/modal") so the caller supplies the
+  body as a block; the block content appears where yield is below.
+  Locals:
+    id            : unique DOM id for the dialog.
+    title         : heading text.
+    trigger_label : text for the button that opens the modal.
+    trigger_class : optional CSS class for the trigger button (default "btn-sm").
+  The open/close behaviour is wired globally in layouts/admin.html.erb via data-modal-open
+  and data-modal-close attributes.
+%>
+<button type="button" class="<%= local_assigns[:trigger_class] || 'btn-sm' %>" data-modal-open="<%= id %>">
+  <%= trigger_label %>
+</button>
+
+<dialog id="<%= id %>" class="ui-modal">
+  <div class="ui-modal-head">
+    <h2><%= title %></h2>
+    <button type="button" class="ui-modal-x" data-modal-close aria-label="Close">&times;</button>
+  </div>
+  <div class="ui-modal-body">
+    <%= yield %>
+  </div>
+</dialog>

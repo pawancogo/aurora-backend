@@ -1,0 +1,52 @@
+<%#
+  Reusable "Login sessions" panel — used for both customers and admin users.
+  Locals:
+    sessions        : Enumerable of RefreshToken records.
+    can_manage      : boolean — whether to show the revoke controls.
+    revoke_all_path : path for the DELETE "revoke all active" action.
+    revoke_path     : lambda taking a session, returning the DELETE path for a single revoke.
+%>
+<div class="panel">
+  <div class="panel-head">
+    <h2>Login sessions</h2>
+    <% if can_manage && sessions.any?(&:active?) %>
+      <%= render layout: "admin/ui/modal",
+            locals: { id: "revoke-all-sessions", title: "Revoke all active sessions",
+                      trigger_label: "Revoke all active", trigger_class: "link danger" } do %>
+        <p>This signs the account out of every device with an active session. It can't be undone.</p>
+        <div class="form-actions">
+          <%= button_to "Yes, revoke all", revoke_all_path, method: :delete, class: "btn-sm" %>
+          <button type="button" class="link" data-modal-close>Cancel</button>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+
+  <p class="muted-sm" style="margin-top:0;">
+    Active sessions issued through the API. Portal (browser) sign-ins are cookie-based and expire on sign-out.
+  </p>
+
+  <%
+    columns = [
+      { label: "Started", class: "muted-sm", cell: ->(session) { session.created_at.strftime("%d %b %H:%M") } },
+      { label: "Expires", class: "muted-sm", cell: ->(session) { session.expires_at.strftime("%d %b %Y") } },
+      { label: "IP",      class: "muted-sm", cell: ->(session) { session.ip_address.presence || "—" } },
+      { label: "Device",  class: "muted-sm",
+        cell: ->(session) { truncate(session.user_agent.to_s, length: 42).presence || "—" } },
+      { label: "Status",  cell: ->(session) {
+          state = session.active? ? "active" : (session.revoked_at ? "revoked" : "expired")
+          content_tag(:span, state, class: "chip #{session.active? ? 'ok' : 'off'}")
+        } }
+    ]
+    if can_manage
+      columns << { label: "", cell: ->(session) {
+          if session.active?
+            button_to("Revoke", revoke_path.call(session), method: :delete, class: "link danger")
+          else
+            "".html_safe
+          end
+        } }
+    end
+  %>
+  <%= render "admin/ui/table", rows: sessions, columns: columns, empty: "No sessions yet." %>
+</div>

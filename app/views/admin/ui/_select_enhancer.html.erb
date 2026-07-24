@@ -1,0 +1,197 @@
+<%#
+  Progressively enhances native <select> elements inside .content into a custom
+  dropdown that opens BELOW the trigger, has a fixed max-height + scroll, and a
+  search box for long lists. The native <select> is kept (hidden) and stays the
+  source of truth, so GET/POST forms submit unchanged.
+
+  Two modes:
+    • static  — options come from the server-rendered <select> (client-side search).
+    • async   — add data-endpoint="/admin/options/<resource>"; options are fetched
+                as the user types (server returns the top 20), so it scales to
+                millions of rows without ever rendering them all.
+%>
+<script>
+(function () {
+  function debounce(fn, ms) {
+    var t;
+    return function () { var a = arguments, s = this; clearTimeout(t); t = setTimeout(function () { fn.apply(s, a); }, ms); };
+  }
+
+  // Every enhanced control registers its close(); opening one closes the rest,
+  // so only a single dropdown is ever open at a time.
+  var closers = [];
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, function (ch) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch];
+    });
+  }
+
+  // Escape the label, wrapping each case-insensitive match of `term` in <mark>.
+  function highlight(text, term) {
+    if (!term) return escapeHtml(text);
+    var lower = text.toLowerCase(), needle = String(term).toLowerCase(), out = "", i = 0, idx;
+    while ((idx = lower.indexOf(needle, i)) !== -1) {
+      out += escapeHtml(text.slice(i, idx)) +
+             '<mark class="ui-select-mark">' + escapeHtml(text.slice(idx, idx + needle.length)) + "</mark>";
+      i = idx + needle.length;
+    }
+    return out + escapeHtml(text.slice(i));
+  }
+
+  function enhance(select) {
+    if (select.dataset.uiEnhanced || select.multiple) return;
+    select.dataset.uiEnhanced = "1";
+    var endpoint = select.dataset.endpoint || null;
+
+    var wrap = document.createElement("div");
+    wrap.className = "ui-select";
+    select.parentNode.insertBefore(wrap, select);
+    wrap.appendChild(select);
+    select.classList.add("ui-select-native");
+    select.tabIndex = -1;
+
+    var trigger = document.createElement("button");
+    trigger.type = "button";
+    trigger.className = "ui-select-trigger";
+    var label = document.createElement("span");
+    label.className = "ui-select-label";
+    var caret = document.createElement("span");
+    caret.className = "ui-select-caret";
+    caret.textContent = "▾";
+    trigger.appendChild(label);
+    trigger.appendChild(caret);
+    wrap.appendChild(trigger);
+
+    var panel = document.createElement("div");
+    panel.className = "ui-select-panel";
+    panel.hidden = true;
+    var searchable = endpoint || select.hasAttribute("data-searchable") || select.options.length > 8;
+    var search = null;
+    if (searchable) {
+      search = document.createElement("input");
+      search.type = "text";
+      search.className = "ui-select-search";
+      search.placeholder = endpoint ? "Type to search…" : "Search…";
+      panel.appendChild(search);
+    }
+    var list = document.createElement("div");
+    list.className = "ui-select-list";
+    panel.appendChild(list);
+    wrap.appendChild(panel);
+
+    function syncLabel() {
+      var opt = select.options[select.selectedIndex];
+      label.textContent = opt ? opt.textContent.trim() : "";
+    }
+    syncLabel();
+
+    function optionButton(value, text, selected, term) {
+      var item = document.createElement("button");
+      item.type = "button";
+      item.className = "ui-select-option" + (selected ? " selected" : "");
+      item.innerHTML = highlight(text, term);
+      item.addEventListener("click", function () { choose(value, text); });
+      return item;
+    }
+
+    function choose(value, text) {
+      var existing = Array.prototype.find.call(select.options, function (o) { return o.value === String(value); });
+      if (!existing) { select.add(new Option(text, value)); }
+      select.value = String(value);
+      select.dispatchEvent(new Event("change", { bubbles: true }));
+      syncLabel();
+      close();
+    }
+
+    function renderStatic(filter) {
+      list.innerHTML = "";
+      var f = (filter || "").toLowerCase();
+      var shown = 0;
+      Array.prototype.forEach.call(select.options, function (opt) {
+        if (f && opt.textContent.toLowerCase().indexOf(f) === -1) return;
+        shown++;
+        list.appendChild(optionButton(opt.value, opt.textContent.trim(), opt.selected, f));
+      });
+      if (!shown) { list.innerHTML = '<div class="ui-select-empty">No matches</div>'; }
+    }
+
+    // Async pagination state. `token` bumps only on a fresh search so stale
+    // responses are discarded; the loading guard serialises scroll-append pages.
+    var remote = { term: "", page: 0, hasMore: false, loading: false, token: 0 };
+
+    function loadPage(term, page, append) {
+      if (!append) {
+        remote.token++;
+        remote.term = term;
+        remote.page = 0;
+        remote.hasMore = false;
+        list.innerHTML = '<div class="ui-select-loading">Searching…</div>';
+      }
+      remote.loading = true;
+      var token = remote.token;
+      var url = endpoint + (endpoint.indexOf("?") === -1 ? "?" : "&") +
+                "q=" + encodeURIComponent(term) + "&page=" + page;
+      fetch(url, { credentials: "same-origin", headers: { Accept: "application/json" } })
+        .then(function (r) { return r.json(); })
+        .then(function (payload) {
+          remote.loading = false;
+          if (token !== remote.token) return; // superseded by a newer search
+          if (!append) {
+            list.innerHTML = "";
+            var blank = Array.prototype.find.call(select.options, function (o) { return o.value === ""; });
+            if (blank) { list.appendChild(optionButton("", blank.textContent.trim(), select.value === "", "")); }
+          }
+          ((payload && payload.data) || []).forEach(function (row) {
+            list.appendChild(optionButton(row.value, row.label, String(row.value) === select.value, term));
+          });
+          remote.page = page;
+          remote.hasMore = !!(payload && payload.meta && payload.meta.next_page);
+          if (!list.querySelector(".ui-select-option")) { list.innerHTML = '<div class="ui-select-empty">No matches</div>'; }
+        })
+        .catch(function () {
+          remote.loading = false;
+          if (!append) { list.innerHTML = '<div class="ui-select-empty">Search failed</div>'; }
+        });
+    }
+
+    var fetchRemote = debounce(function (term) { loadPage(term, 1, false); }, 250);
+
+    function render(filter) { endpoint ? fetchRemote(filter || "") : renderStatic(filter); }
+
+    if (endpoint) {
+      list.addEventListener("scroll", function () {
+        if (remote.loading || !remote.hasMore) return;
+        if (list.scrollTop + list.clientHeight >= list.scrollHeight - 24) {
+          loadPage(remote.term, remote.page + 1, true);
+        }
+      });
+    }
+
+    function open() {
+      closers.forEach(function (other) { if (other !== close) other(); });
+      panel.hidden = false;
+      wrap.classList.add("open");
+      render("");
+      if (search) { search.value = ""; search.focus(); }
+    }
+    function close() {
+      panel.hidden = true;
+      wrap.classList.remove("open");
+    }
+    closers.push(close);
+
+    trigger.addEventListener("click", function (e) { e.stopPropagation(); panel.hidden ? open() : close(); });
+    if (search) { search.addEventListener("input", function () { render(search.value); }); }
+    wrap.addEventListener("click", function (e) { e.stopPropagation(); });
+    document.addEventListener("click", close);
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
+  }
+
+  function enhanceAll() {
+    document.querySelectorAll("main.content select:not([data-no-enhance])").forEach(enhance);
+  }
+  if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", enhanceAll); }
+  else { enhanceAll(); }
+})();
+</script>

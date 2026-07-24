@@ -1,0 +1,11 @@
+<%#
+  Reusable link-based tab bar.
+  Locals:
+    tabs : Array of hashes, each with label, path, and active (boolean).
+  Render with: render "admin/ui/tabs", tabs: [{ label: "Roles", path: some_path, active: true }]
+%>
+<div class="tabs">
+  <% tabs.each do |tab| %>
+    <%= link_to tab[:label], tab[:path], class: "tab #{'active' if tab[:active]}" %>
+  <% end %>
+</div>

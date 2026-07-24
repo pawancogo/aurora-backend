@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Aurora Admin</title>
+    <%= csrf_meta_tags %>
+    <%= render "admin/styles" %>
+  </head>
+  <body class="admin-body">
+    <aside class="sidebar">
+      <div class="brand">AURORA <span>Admin</span></div>
+      <nav>
+        <a class="nav-link <%= "active" if controller_name == "dashboard" %>" href="<%= admin_root_path %>">Dashboard</a>
+
+        <div class="nav-section">Catalog</div>
+        <a class="nav-link <%= "active" if controller_name == "products" %>" href="<%= admin_products_path %>">Products</a>
+        <a class="nav-link <%= "active" if controller_name == "categories" %>" href="<%= admin_categories_path %>">Categories</a>
+        <a class="nav-link <%= "active" if controller_name == "brands" %>" href="<%= admin_brands_path %>">Brands</a>
+
+        <div class="nav-section">Operations</div>
+        <a class="nav-link <%= "active" if controller_name == "customers" %>" href="<%= admin_customers_path %>">Customers</a>
+        <span class="nav-link disabled">Orders <em>S9</em></span>
+        <span class="nav-link disabled">CMS <em>S6</em></span>
+        <a class="nav-link <%= "active" if %w[settings roles].include?(controller_name) %>" href="<%= admin_settings_path %>">Settings</a>
+      </nav>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <div></div>
+        <% menu_name = current_admin_user.full_name.presence || current_admin_user.email %>
+        <details class="user-menu">
+          <summary class="avatar" aria-label="Account menu" aria-haspopup="menu">
+            <%= menu_name.to_s.split(/\s+/).first(2).filter_map { |part| part[0] }.join.upcase %>
+          </summary>
+          <div class="user-menu-panel" role="menu">
+            <div class="user-menu-head">
+              <p class="user-menu-name"><%= menu_name %></p>
+              <p class="user-menu-email"><%= current_admin_user.email %></p>
+            </div>
+            <div class="user-menu-info">
+              <span>Roles: <%= current_admin_user.roles.map(&:name).join(", ").presence || "—" %></span>
+              <span><%= current_admin_user.permission_keys.size %> permission(s)</span>
+            </div>
+            <div class="user-menu-foot">
+              <%= button_to "Sign out", admin_logout_path, method: :delete, class: "user-menu-signout" %>
+            </div>
+          </div>
+        </details>
+      </header>
+
+      <main class="content">
+        <% flash.each do |type, message| %>
+          <div class="flash flash-<%= type %>"><%= message %></div>
+        <% end %>
+        <%= yield %>
+      </main>
+    </div>
+
+    <script>
+      document.addEventListener("click", function (event) {
+        // Close the account dropdown when clicking outside it.
+        document.querySelectorAll("details.user-menu[open]").forEach(function (menu) {
+          if (!menu.contains(event.target)) menu.removeAttribute("open");
+        });
+
+        // Reusable modal (admin/ui/_modal): open/close the native <dialog>.
+        var opener = event.target.closest("[data-modal-open]");
+        if (opener) {
+          document.getElementById(opener.getAttribute("data-modal-open"))?.showModal();
+          return;
+        }
+        if (event.target.closest("[data-modal-close]")) {
+          event.target.closest("dialog")?.close();
+          return;
+        }
+        // Click on the backdrop (the dialog element itself) closes it.
+        if (event.target.matches("dialog.ui-modal")) event.target.close();
+      });
+    </script>
+    <%= render "admin/ui/select_enhancer" %>
+    <%= render "admin/ui/uploader_script" %>
+  </body>
+</html>
