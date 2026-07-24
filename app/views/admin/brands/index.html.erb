@@ -1,0 +1,32 @@
+<% can_manage = allowed_to?("brands.manage") %>
+
+<h1 class="page-title">Brands</h1>
+<p class="page-sub">Manufacturers and labels you sell. Products link to a brand.</p>
+
+<% if can_manage %>
+  <div class="toolbar">
+    <%= link_to "+ New brand", new_admin_brand_path, class: "btn-sm" %>
+  </div>
+<% end %>
+
+<%= render "admin/ui/search", url: admin_brands_path, query: params[:q], placeholder: "Search brands" %>
+
+<%
+  columns = [
+    { label: "Brand",    cell: ->(brand) { brand.name } },
+    { label: "Slug",     cell: ->(brand) { content_tag(:code, brand.slug) } },
+    { label: "Products", cell: ->(brand) { brand.products.kept.count } }
+  ]
+  if can_manage
+    columns << { label: "", class: "row-actions", cell: ->(brand) {
+        safe_join([
+          link_to("Edit", edit_admin_brand_path(brand), class: "link"),
+          button_to("Delete", admin_brand_path(brand), method: :delete, class: "link danger",
+                    form: { onsubmit: "return confirm('Archive brand “#{brand.name}”?');" })
+        ])
+      } }
+  end
+%>
+<%= render "admin/ui/table", rows: @brands, columns: columns, empty: "No brands yet." %>
+
+<%= render "admin/ui/pagination", collection: @brands, path: admin_brands_path %>

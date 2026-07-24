@@ -1,0 +1,42 @@
+<%= form_with model: brand, url: form_url, method: form_method do |form| %>
+  <% if brand.errors.any? %>
+    <div class="flash flash-alert"><%= brand.errors.full_messages.to_sentence %></div>
+  <% end %>
+
+  <div class="form-row">
+    <label>Name</label>
+    <%= form.text_field :name, required: true %>
+  </div>
+
+  <div class="form-row">
+    <label>Slug</label>
+    <%= form.text_field :slug, placeholder: "Auto-generated from the name if left blank" %>
+  </div>
+
+  <div class="form-row">
+    <label>Logo URL</label>
+    <%= form.text_field :logo_url %>
+    <%= render "admin/ui/uploader", target: "#brand_logo_url", mode: "set", kind: "image", label: "Upload logo" %>
+  </div>
+
+  <div class="form-row">
+    <label>Description</label>
+    <%= form.text_area :description %>
+  </div>
+
+  <div class="admin-form-grid" style="max-width:640px;">
+    <div class="form-row">
+      <label>Meta title (SEO)</label>
+      <%= form.text_field :meta_title %>
+    </div>
+    <div class="form-row">
+      <label>Meta description (SEO)</label>
+      <%= form.text_field :meta_description %>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <%= form.submit submit_label, class: "btn-sm" %>
+    <%= link_to "Cancel", admin_brands_path, class: "link" %>
+  </div>
+<% end %>

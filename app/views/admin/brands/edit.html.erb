@@ -1,0 +1,6 @@
+<p><%= link_to "← Brands", admin_brands_path, class: "link" %></p>
+<h1 class="page-title">Edit brand</h1>
+<p class="page-sub"><%= @brand.name %></p>
+
+<%= render "form", brand: @brand, form_url: admin_brand_path(@brand),
+      form_method: :patch, submit_label: "Save changes" %>

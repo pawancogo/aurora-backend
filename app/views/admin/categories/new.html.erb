@@ -1,0 +1,6 @@
+<p><%= link_to "← Categories", admin_categories_path, class: "link" %></p>
+<h1 class="page-title">New category</h1>
+<p class="page-sub">Add a node to the catalog hierarchy.</p>
+
+<%= render "form", category: @category, form_url: admin_categories_path,
+      form_method: :post, submit_label: "Create category" %>

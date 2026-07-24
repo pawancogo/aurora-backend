@@ -1,0 +1,6 @@
+<p><%= link_to "← Products", admin_products_path, class: "link" %></p>
+<h1 class="page-title">Edit product</h1>
+<p class="page-sub"><%= @product.name %> · <code><%= @product.sku %></code></p>
+
+<%= render "form", product: @product, form_url: admin_product_path(@product),
+      form_method: :patch, submit_label: "Save changes" %>

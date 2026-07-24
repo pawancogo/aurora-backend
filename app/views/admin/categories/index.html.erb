@@ -1,0 +1,90 @@
+<% can_manage = allowed_to?("categories.manage") %>
+<%
+  # Distinct colour per depth (cycles for very deep trees); depth is 0-indexed → "Level depth+1".
+  level_colors = %w[#4f46e5 #0891b2 #d97706 #db2777 #16a34a #7c3aed]
+  color_for = ->(depth) { level_colors[depth % level_colors.size] }
+%>
+
+<h1 class="page-title">Categories</h1>
+<p class="page-sub">Organise the catalog into a browsable hierarchy. The coloured dot and <strong>L#</strong> badge show each category's depth.</p>
+
+<% if can_manage %>
+  <div class="toolbar">
+    <%= link_to "+ New category", new_admin_category_path, class: "btn-sm" %>
+  </div>
+<% end %>
+
+<%= render "admin/ui/search", url: admin_categories_path, query: params[:q],
+      placeholder: "Search categories",
+      filters: [
+        { name: "visible", prompt: "Any visibility", selected: params[:visible],
+          options: [["Visible", "true"], ["Hidden", "false"]] }
+      ] %>
+
+<% if @filtering %>
+  <%# Searching/filtering → flat, paginated results (the hierarchy is set aside). %>
+  <%
+    flat_columns = [
+      { label: "Name", cell: ->(category) {
+          depth = category.ancestors.size
+          dot = content_tag(:span, "", class: "lvl-dot", style: "background: #{color_for.call(depth)}")
+          badge = content_tag(:span, "L#{depth + 1}", class: "lvl-badge")
+          content_tag(:span, safe_join([dot, category.name, badge]))
+        } },
+      { label: "Slug",       cell: ->(category) { content_tag(:code, category.slug) } },
+      { label: "Parent",     cell: ->(category) { category.parent&.name || "—" } },
+      { label: "Visibility", cell: ->(category) {
+          category.visible ? content_tag(:span, "visible", class: "chip ok") : content_tag(:span, "hidden", class: "chip off")
+        } }
+    ]
+    if can_manage
+      flat_columns << { label: "", class: "row-actions", cell: ->(category) {
+          safe_join([
+            link_to("Edit", edit_admin_category_path(category), class: "link"),
+            button_to("Delete", admin_category_path(category), method: :delete, class: "link danger",
+                      form: { onsubmit: "return confirm('Archive “#{category.name}”? Its products become uncategorised.');" })
+          ])
+        } }
+    end
+  %>
+  <%= render "admin/ui/table", rows: @results, columns: flat_columns, empty: "No categories match your search." %>
+  <%= render "admin/ui/pagination", collection: @results, path: admin_categories_path %>
+<% else %>
+  <%# Default → full hierarchy with level legend. %>
+  <% max_depth = @ordered.map { |_category, depth| depth }.max || 0 %>
+  <% if @ordered.any? %>
+    <div class="lvl-legend">
+      <span>Levels:</span>
+      <% (0..max_depth).each do |depth| %>
+        <span class="lvl-item">
+          <span class="lvl-dot" style="background: <%= color_for.call(depth) %>"></span>Level <%= depth + 1 %>
+        </span>
+      <% end %>
+    </div>
+  <% end %>
+  <%
+    columns = [
+      { label: "Name", cell: ->((category, depth)) {
+          dot = content_tag(:span, "", class: "lvl-dot", style: "background: #{color_for.call(depth)}")
+          badge = content_tag(:span, "L#{depth + 1}", class: "lvl-badge")
+          content_tag(:span, safe_join([dot, category.name, badge]), style: "padding-left: #{depth * 22}px;")
+        } },
+      { label: "Slug",       cell: ->((category, _)) { content_tag(:code, category.slug) } },
+      { label: "Parent",     cell: ->((category, _)) { category.parent&.name || "—" } },
+      { label: "Position",   cell: ->((category, _)) { category.position } },
+      { label: "Visibility", cell: ->((category, _)) {
+          category.visible ? content_tag(:span, "visible", class: "chip ok") : content_tag(:span, "hidden", class: "chip off")
+        } }
+    ]
+    if can_manage
+      columns << { label: "", class: "row-actions", cell: ->((category, _)) {
+          safe_join([
+            link_to("Edit", edit_admin_category_path(category), class: "link"),
+            button_to("Delete", admin_category_path(category), method: :delete, class: "link danger",
+                      form: { onsubmit: "return confirm('Archive “#{category.name}”? Its products become uncategorised.');" })
+          ])
+        } }
+    end
+  %>
+  <%= render "admin/ui/table", rows: @ordered, columns: columns, empty: "No categories yet." %>
+<% end %>

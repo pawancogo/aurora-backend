@@ -1,0 +1,5 @@
+<p><%= link_to "← Brands", admin_brands_path, class: "link" %></p>
+<h1 class="page-title">New brand</h1>
+
+<%= render "form", brand: @brand, form_url: admin_brands_path,
+      form_method: :post, submit_label: "Create brand" %>

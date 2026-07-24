@@ -1,0 +1,49 @@
+<% can_manage = allowed_to?("products.manage") %>
+
+<h1 class="page-title">Products</h1>
+<p class="page-sub">Your catalog. Click a product to edit its details, pricing and images.</p>
+
+<% if can_manage %>
+  <div class="toolbar">
+    <%= link_to "+ New product", new_admin_product_path, class: "btn-sm" %>
+  </div>
+<% end %>
+
+<%
+  facet_options = ->(key) { Array(@facets[key]).map { |facet| ["#{facet[:label]} (#{facet[:count]})", facet[:value]] } }
+%>
+<%= render "admin/ui/search", url: admin_products_path, query: params[:q],
+      placeholder: "Search by name or SKU",
+      filters: [
+        { name: "status",      prompt: "Any status",   selected: params[:status],      options: facet_options.call("status") },
+        { name: "brand_id",    prompt: "Any brand",     selected: params[:brand_id],    options: facet_options.call("brand_id"),    searchable: true },
+        { name: "category_id", prompt: "Any category",  selected: params[:category_id], options: facet_options.call("category_id"), searchable: true }
+      ] %>
+
+<%
+  columns = [
+    { label: "Product",  cell: ->(product) {
+        can_manage ? link_to(product.name, edit_admin_product_path(product)) : product.name
+      } },
+    { label: "SKU",      cell: ->(product) { content_tag(:code, product.sku) } },
+    { label: "Brand",    cell: ->(product) { product.brand&.name || "—" } },
+    { label: "Category", cell: ->(product) { product.category&.name || "—" } },
+    { label: "Price",    cell: ->(product) { "₹#{number_with_delimiter(product.price.round)}" } },
+    { label: "Status",   cell: ->(product) {
+        chip = product.active? ? "ok" : (product.archived? ? "off" : "")
+        content_tag(:span, product.status, class: "chip #{chip}")
+      } }
+  ]
+  if can_manage
+    columns << { label: "", class: "row-actions", cell: ->(product) {
+        safe_join([
+          link_to("Edit", edit_admin_product_path(product), class: "link"),
+          button_to("Delete", admin_product_path(product), method: :delete, class: "link danger",
+                    form: { onsubmit: "return confirm('Archive product “#{product.name}”?');" })
+        ])
+      } }
+  end
+%>
+<%= render "admin/ui/table", rows: @products, columns: columns, empty: "No products found." %>
+
+<%= render "admin/ui/pagination", collection: @products, path: admin_products_path %>

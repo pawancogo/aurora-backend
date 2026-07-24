@@ -1,0 +1,6 @@
+<p><%= link_to "← Products", admin_products_path, class: "link" %></p>
+<h1 class="page-title">New product</h1>
+<p class="page-sub">Add an item to the catalog.</p>
+
+<%= render "form", product: @product, form_url: admin_products_path,
+      form_method: :post, submit_label: "Create product" %>

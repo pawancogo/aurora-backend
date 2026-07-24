@@ -1,0 +1,134 @@
+<%= form_with model: product, url: form_url, method: form_method do |form| %>
+  <% if product.errors.any? %>
+    <div class="flash flash-alert"><%= product.errors.full_messages.to_sentence %></div>
+  <% end %>
+
+  <h2 class="section-title">Basics</h2>
+  <div class="admin-form-grid" style="max-width:680px;">
+    <div class="form-row">
+      <label>Name</label>
+      <%= form.text_field :name, required: true %>
+    </div>
+    <div class="form-row">
+      <label>SKU</label>
+      <%= form.text_field :sku, placeholder: "Auto-generated if blank" %>
+    </div>
+  </div>
+
+  <div class="admin-form-grid" style="max-width:680px;">
+    <div class="form-row">
+      <label>Slug</label>
+      <%= form.text_field :slug, placeholder: "Auto-generated if blank" %>
+    </div>
+    <div class="form-row">
+      <label>Status</label>
+      <%= form.select :status, options_for_select(
+            Product.statuses.keys.map { |key| [key.humanize, key] }, product.status) %>
+    </div>
+  </div>
+
+  <div class="admin-form-grid" style="max-width:680px;">
+    <div class="form-row">
+      <label>Brand</label>
+      <select name="product[brand_id]" data-endpoint="<%= admin_options_path("brands") %>">
+        <option value="">— None —</option>
+        <% if product.brand %><option value="<%= product.brand_id %>" selected><%= product.brand.name %></option><% end %>
+      </select>
+    </div>
+    <div class="form-row">
+      <label>Category</label>
+      <select name="product[category_id]" data-endpoint="<%= admin_options_path("categories") %>">
+        <option value="">— None —</option>
+        <% if product.category %><option value="<%= product.category_id %>" selected><%= product.category.name %></option><% end %>
+      </select>
+    </div>
+  </div>
+
+  <h2 class="section-title">Pricing</h2>
+  <div class="admin-form-grid" style="max-width:680px;">
+    <div class="form-row">
+      <label>Selling price (₹)</label>
+      <%= number_field_tag "product[price]", (product.price_cents.positive? ? product.price : nil),
+            step: "0.01", min: 0 %>
+    </div>
+    <div class="form-row">
+      <label>MRP (₹)</label>
+      <%= number_field_tag "product[mrp]", (product.mrp_cents.positive? ? product.mrp : nil),
+            step: "0.01", min: 0 %>
+    </div>
+  </div>
+  <div class="admin-form-grid" style="max-width:680px;">
+    <div class="form-row">
+      <label>Currency</label>
+      <%= form.text_field :currency %>
+    </div>
+    <div class="form-row">
+      <label>Tax class</label>
+      <%= form.select :tax_class_id, options_from_collection_for_select(@tax_classes, :id, :name, product.tax_class_id),
+            { include_blank: "— None —" } %>
+    </div>
+  </div>
+
+  <h2 class="section-title">Merchandising</h2>
+  <div class="form-row">
+    <label>Flags</label>
+    <div class="check-grid">
+      <label class="check"><%= form.check_box :featured %> <span>Featured</span></label>
+      <label class="check"><%= form.check_box :new_arrival %> <span>New arrival</span></label>
+      <label class="check"><%= form.check_box :best_seller %> <span>Best seller</span></label>
+    </div>
+  </div>
+
+  <div class="form-row" style="max-width:680px;">
+    <label>Description</label>
+    <%= form.text_area :description, rows: 4 %>
+  </div>
+
+  <div class="form-row" style="max-width:680px;">
+    <label>Highlights <span class="muted-sm">(one per line)</span></label>
+    <%= text_area_tag "product[highlights_text]", Array(product.highlights).join("\n"), rows: 4 %>
+  </div>
+
+  <h2 class="section-title">Images</h2>
+  <div class="form-row" style="max-width:680px;">
+    <label>Image URLs <span class="muted-sm">(one per line — the first becomes the primary image)</span></label>
+    <%= text_area_tag "product[image_urls]", product.product_images.map(&:source_url).join("\n"), rows: 4 %>
+    <%= render "admin/ui/uploader", target: "#product_image_urls", mode: "append",
+          kind: "image", label: "Upload images", multiple: true %>
+  </div>
+
+  <h2 class="section-title">Logistics &amp; SEO</h2>
+  <div class="admin-form-grid" style="max-width:680px;">
+    <div class="form-row">
+      <label>Warranty</label>
+      <%= form.text_field :warranty %>
+    </div>
+    <div class="form-row">
+      <label>Weight (grams)</label>
+      <%= form.number_field :weight_grams, min: 0 %>
+    </div>
+  </div>
+  <div class="form-row" style="max-width:680px;">
+    <label>Publish at <span class="muted-sm">(leave blank to publish immediately when active)</span></label>
+    <%= form.datetime_local_field :published_at %>
+  </div>
+  <div class="admin-form-grid" style="max-width:680px;">
+    <div class="form-row">
+      <label>Meta title (SEO)</label>
+      <%= form.text_field :meta_title %>
+    </div>
+    <div class="form-row">
+      <label>Meta description (SEO)</label>
+      <%= form.text_field :meta_description %>
+    </div>
+  </div>
+  <div class="form-row" style="max-width:680px;">
+    <label>Search keywords</label>
+    <%= form.text_field :search_keywords %>
+  </div>
+
+  <div class="form-actions">
+    <%= form.submit submit_label, class: "btn-sm" %>
+    <%= link_to "Cancel", admin_products_path, class: "link" %>
+  </div>
+<% end %>

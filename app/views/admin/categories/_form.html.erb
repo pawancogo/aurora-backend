@@ -1,0 +1,65 @@
+<%= form_with model: category, url: form_url, method: form_method do |form| %>
+  <% if category.errors.any? %>
+    <div class="flash flash-alert"><%= category.errors.full_messages.to_sentence %></div>
+  <% end %>
+
+  <div class="form-row">
+    <label>Name</label>
+    <%= form.text_field :name, required: true %>
+  </div>
+
+  <div class="form-row">
+    <label>Slug</label>
+    <%= form.text_field :slug, placeholder: "Auto-generated from the name if left blank" %>
+    <p class="muted-sm">Lowercase letters, numbers and hyphens. Used in the storefront URL.</p>
+  </div>
+
+  <div class="form-row">
+    <label>Parent category</label>
+    <select name="category[parent_id]" data-endpoint="<%= admin_options_path("categories", exclude: category.id) %>">
+      <option value="">— None (top level) —</option>
+      <% if category.parent %><option value="<%= category.parent_id %>" selected><%= category.parent.name %></option><% end %>
+    </select>
+  </div>
+
+  <div class="admin-form-grid" style="max-width:640px;">
+    <div class="form-row">
+      <label>Position</label>
+      <%= form.number_field :position, min: 0 %>
+    </div>
+    <div class="form-row">
+      <label>Visibility</label>
+      <label class="check" style="margin-top:8px;">
+        <%= form.check_box :visible %>
+        <span>Visible in storefront navigation</span>
+      </label>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <label>Image URL</label>
+    <%= form.text_field :image_url %>
+    <%= render "admin/ui/uploader", target: "#category_image_url", mode: "set", kind: "image", label: "Upload image" %>
+  </div>
+
+  <div class="form-row">
+    <label>Description</label>
+    <%= form.text_area :description %>
+  </div>
+
+  <div class="admin-form-grid" style="max-width:640px;">
+    <div class="form-row">
+      <label>Meta title (SEO)</label>
+      <%= form.text_field :meta_title %>
+    </div>
+    <div class="form-row">
+      <label>Meta description (SEO)</label>
+      <%= form.text_field :meta_description %>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <%= form.submit submit_label, class: "btn-sm" %>
+    <%= link_to "Cancel", admin_categories_path, class: "link" %>
+  </div>
+<% end %>
