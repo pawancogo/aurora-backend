@@ -1,0 +1,46 @@
+<%= render "admin/settings/tabs" %>
+
+<p><%= link_to "← Permissions", admin_settings_permissions_path, class: "link" %></p>
+<h1 class="page-title">Edit permission</h1>
+<p class="page-sub"><code><%= @permission.key %></code></p>
+
+<%= form_with model: @permission, url: admin_settings_permission_path(@permission), method: :patch do |form| %>
+  <% if @permission.errors.any? %>
+    <div class="flash flash-alert"><%= @permission.errors.full_messages.to_sentence %></div>
+  <% end %>
+
+  <div class="form-row">
+    <label>Key</label>
+    <input type="text" value="<%= @permission.key %>" disabled>
+    <p class="muted-sm">Fixed — this key is referenced directly by the code that enforces access, so it can't change.</p>
+  </div>
+
+  <div class="form-row">
+    <label>Name</label>
+    <%= form.text_field :name, required: true %>
+  </div>
+
+  <div class="form-row">
+    <label>Description</label>
+    <%= form.text_area :description %>
+  </div>
+
+  <div class="form-row">
+    <label>Roles that grant this permission</label>
+    <div class="check-grid">
+      <%= hidden_field_tag "role_ids[]", "" %>
+      <% @roles.each do |role| %>
+        <label class="check">
+          <%= check_box_tag "role_ids[]", role.id, @permission.role_ids.include?(role.id), id: nil %>
+          <%= role.name %>
+        </label>
+      <% end %>
+    </div>
+    <p class="muted-sm">Super Admin always holds every permission and isn't listed.</p>
+  </div>
+
+  <div class="form-actions">
+    <%= form.submit "Save changes", class: "btn-sm" %>
+    <%= link_to "Cancel", admin_settings_permissions_path, class: "link" %>
+  </div>
+<% end %>

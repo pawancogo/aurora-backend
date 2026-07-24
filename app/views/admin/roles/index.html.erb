@@ -1,0 +1,44 @@
+<%= render "admin/settings/tabs" %>
+
+<% can_manage = allowed_to?("roles.manage") %>
+
+<% if can_manage %>
+  <div class="toolbar">
+    <%= link_to "+ New role", new_admin_settings_role_path, class: "btn-sm" %>
+  </div>
+<% end %>
+
+<%= render "admin/ui/search", url: admin_settings_roles_path, query: params[:q], placeholder: "Search roles" %>
+
+<%
+  columns = [
+    { label: "Role", cell: ->(role) {
+        parts = [role.name]
+        parts << content_tag(:span, "system", class: "chip sys") if role.system?
+        safe_join(parts, " ")
+      } },
+    { label: "Key", cell: ->(role) { content_tag(:code, role.key) } },
+    { label: "Permissions", cell: ->(role) {
+        if role.key == "super_admin"
+          content_tag(:span, "all permissions", class: "chip sys")
+        elsif role.permissions.any?
+          safe_join(role.permissions.sort_by(&:key).map { |permission| content_tag(:span, permission.key, class: "chip") })
+        else
+          content_tag(:span, "—", class: "muted-sm")
+        end
+      } }
+  ]
+  if can_manage
+    columns << { label: "", class: "row-actions", cell: ->(role) {
+        actions = [link_to("Edit", edit_admin_settings_role_path(role), class: "link")]
+        unless role.system?
+          actions << button_to("Delete", admin_settings_role_path(role), method: :delete, class: "link danger",
+                               form: { onsubmit: "return confirm('Delete role “#{role.name}”?');" })
+        end
+        safe_join(actions)
+      } }
+  end
+%>
+<%= render "admin/ui/table", rows: @roles, columns: columns, empty: "No roles yet." %>
+
+<%= render "admin/ui/pagination", collection: @roles, path: admin_settings_roles_path %>

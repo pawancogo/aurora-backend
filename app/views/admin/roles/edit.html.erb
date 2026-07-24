@@ -1,0 +1,6 @@
+<%= render "admin/settings/tabs" %>
+
+<h2 class="section-title">Edit role</h2>
+<div class="panel">
+  <%= render "form", role: @role, form_url: admin_settings_role_path(@role), submit_label: "Save changes" %>
+</div>

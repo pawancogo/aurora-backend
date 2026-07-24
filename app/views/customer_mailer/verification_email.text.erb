@@ -1,0 +1,9 @@
+Hi <%= @customer.first_name.presence || "there" %>,
+
+Welcome to Aurora! Please confirm your email address by opening the link below:
+
+<%= @verification_url %>
+
+This link expires in 2 days. If you didn't create an account, you can ignore this email.
+
+— The Aurora Team

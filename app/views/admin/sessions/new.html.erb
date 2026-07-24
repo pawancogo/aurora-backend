@@ -1,0 +1,19 @@
+<div class="auth-card">
+  <div class="auth-brand">AURORA <span>Admin</span></div>
+  <h1>Sign in</h1>
+  <p class="muted">Staff access only.</p>
+
+  <% flash.each do |type, message| %>
+    <div class="flash flash-<%= type %>"><%= message %></div>
+  <% end %>
+
+  <%= form_with url: admin_login_path, method: :post do |form| %>
+    <label for="email">Email</label>
+    <%= form.email_field :email, id: "email", autofocus: true, autocomplete: "email", required: true %>
+
+    <label for="password">Password</label>
+    <%= form.password_field :password, id: "password", autocomplete: "current-password", required: true %>
+
+    <%= form.submit "Sign in", class: "btn-primary" %>
+  <% end %>
+</div>
