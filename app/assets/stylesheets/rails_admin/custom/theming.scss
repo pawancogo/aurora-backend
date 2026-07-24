@@ -1,0 +1,39 @@
+// Aurora Data Console — app-level overrides for RailsAdmin's bundled theme.
+// RailsAdmin imports this file (rails_admin/custom/theming) from its
+// application.scss; the app copy takes precedence over the gem's empty stub.
+//
+// RailsAdmin caps every table cell at 150px with `text-overflow: ellipsis`
+// via `body.rails_admin .table td`, which clips values we specifically want to
+// read in a data console. Override it where full content matters — matching the
+// `body.rails_admin .table` prefix so these rules win on specificity — scoped so
+// ordinary list columns keep their compact layout.
+
+// Activity log (the only table with a `message` column): show the full
+// changeset by wrapping instead of clipping.
+body.rails_admin .table:has(th.message) td {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  max-width: 720px;
+  word-break: break-word;
+}
+
+// Image-URL columns in list views: show the thumbnail + the full link, uncut.
+body.rails_admin .table td.logo_url_field,
+body.rails_admin .table td.image_url_field,
+body.rails_admin .table td.source_url_field {
+  max-width: none;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  word-break: break-all;
+}
+
+// The URL text shown beneath an image thumbnail.
+.img-url-link {
+  display: inline-block;
+  max-width: 320px;
+  font-size: 11px;
+  line-height: 1.3;
+  word-break: break-all;
+}

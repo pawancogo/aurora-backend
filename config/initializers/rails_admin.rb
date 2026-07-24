@@ -10,6 +10,17 @@ RailsAdmin.config do |config|
 
   config.main_app_name = [ "Aurora", "Data Console" ]
 
+  ## This is a "see everything" back office, so show the complete record.
+  # By default RailsAdmin hides blank fields and the id/timestamps on the show
+  # view; turn both off so every column is visible. Edit forms still omit
+  # id/timestamps since those are managed automatically.
+  config.compact_show_view = false
+  config.default_hidden_fields = {
+    base: [ :_type ],
+    show: [],
+    edit: %i[id _id created_at created_on deleted_at updated_at updated_on deleted_on]
+  }
+
   ## Authentication — require a signed-in, active admin (same session as /admin).
   config.authenticate_with do
     admin = (AdminUser.kept.find_by(id: session[:admin_user_id]) if session[:admin_user_id])
@@ -43,17 +54,21 @@ RailsAdmin.config do |config|
     history_show    # per-record history
   end
 
-  ## Render image-URL fields as thumbnails (not just links) in list + show views.
+  ## Render image-URL fields as a thumbnail preview AND a clickable link in
+  # list + show views (the user wants to see both the image and the URL).
   # `configure` customizes the field wherever it appears without restricting the
   # visible field set; `pretty_value` applies in read-only views (list + show).
   image_thumb = proc do
     if value.present?
-      bindings[:view].tag.a(href: value, target: "_blank", rel: "noopener") do
-        bindings[:view].tag.img(
+      v = bindings[:view]
+      thumb = v.tag.a(href: value, target: "_blank", rel: "noopener") do
+        v.tag.img(
           src: value,
-          style: "max-height:56px;max-width:96px;border-radius:4px;object-fit:cover;display:block"
+          style: "max-height:56px;max-width:96px;border-radius:4px;object-fit:cover;display:block;margin-bottom:4px"
         )
       end
+      link = v.tag.a(value, href: value, target: "_blank", rel: "noopener", class: "img-url-link")
+      v.safe_join([ thumb, link ])
     end
   end
 
