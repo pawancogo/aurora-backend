@@ -102,6 +102,7 @@
       select.dispatchEvent(new Event("change", { bubbles: true }));
       syncLabel();
       close();
+      if (select.hasAttribute("data-autosubmit") && select.form) { select.form.requestSubmit(); }
     }
 
     function renderStatic(filter) {

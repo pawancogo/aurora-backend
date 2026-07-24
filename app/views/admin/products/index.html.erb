@@ -22,8 +22,12 @@
 
 <%
   columns = [
+    { label: "ID", class: "id-cell", cell: ->(product) { product.id } },
     { label: "Product",  cell: ->(product) {
-        can_manage ? link_to(product.name, edit_admin_product_path(product)) : product.name
+        image = product.primary_image&.source_url
+        thumb = image ? tag.img(src: image, class: "list-thumb", loading: "lazy", alt: "") : tag.span(class: "list-thumb-empty")
+        name = can_manage ? link_to(product.name, edit_admin_product_path(product)) : product.name
+        content_tag(:span, safe_join([thumb, name]), class: "list-cell")
       } },
     { label: "SKU",      cell: ->(product) { content_tag(:code, product.sku) } },
     { label: "Brand",    cell: ->(product) { product.brand&.name || "—" } },

@@ -28,6 +28,7 @@
 
   <%
     columns = [
+      { label: "ID", class: "id-cell", cell: ->(session) { session.id } },
       { label: "Started", class: "muted-sm", cell: ->(session) { session.created_at.strftime("%d %b %H:%M") } },
       { label: "Expires", class: "muted-sm", cell: ->(session) { session.expires_at.strftime("%d %b %Y") } },
       { label: "IP",      class: "muted-sm", cell: ->(session) { session.ip_address.presence || "—" } },

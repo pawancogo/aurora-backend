@@ -5,6 +5,7 @@
 
 <div class="panel">
   <div class="panel-head"><h2>Profile</h2></div>
+  <p>ID: #<%= @customer.id %></p>
   <p>Email: <%= @customer.email %> — <%= @customer.confirmed? ? "verified" : "unverified" %></p>
   <p>Status: <span class="chip <%= @customer.status == "active" ? "ok" : "off" %>"><%= @customer.status %></span></p>
   <p>Joined: <%= @customer.created_at.strftime("%d %b %Y, %H:%M") %></p>

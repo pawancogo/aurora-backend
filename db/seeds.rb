@@ -133,7 +133,11 @@ upsert_nav(label: "Sale", slug: "sale", url: "/c/sale", position: 4)
   { key: "site.tagline", value: "Premium commerce, built to scale.", value_type: "string", category: "general", public_read: true },
   { key: "site.support_email", value: "support@aurora.test", value_type: "string", category: "general", public_read: true },
   { key: "site.currency", value: "INR", value_type: "string", category: "general", public_read: true },
-  { key: "checkout.min_order_value", value: 0, value_type: "number", category: "checkout", public_read: false }
+  { key: "checkout.min_order_value", value: 0, value_type: "number", category: "checkout", public_read: false },
+  { key: "pagination.per_page_options", value: [ 10, 15, 20, 30, 50 ], value_type: "json", category: "pagination",
+    public_read: false, description: "Selectable page sizes for admin lists" },
+  { key: "pagination.default_per_page", value: 10, value_type: "number", category: "pagination",
+    public_read: false, description: "Default page size for admin lists" }
 ].each do |attrs|
   SiteSetting.find_or_create_by!(key: attrs[:key]) do |setting|
     setting.assign_attributes(attrs.except(:key))

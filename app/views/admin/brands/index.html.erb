@@ -13,7 +13,11 @@
 
 <%
   columns = [
-    { label: "Brand",    cell: ->(brand) { brand.name } },
+    { label: "ID", class: "id-cell", cell: ->(brand) { brand.id } },
+    { label: "Brand", cell: ->(brand) {
+        thumb = brand.logo_url.present? ? tag.img(src: brand.logo_url, class: "list-thumb", loading: "lazy", alt: "") : tag.span(class: "list-thumb-empty")
+        content_tag(:span, safe_join([thumb, brand.name]), class: "list-cell")
+      } },
     { label: "Slug",     cell: ->(brand) { content_tag(:code, brand.slug) } },
     { label: "Products", cell: ->(brand) { brand.products.kept.count } }
   ]

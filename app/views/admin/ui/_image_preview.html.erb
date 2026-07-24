@@ -1,0 +1,8 @@
+<%#
+  Live thumbnail + link preview for image URL field(s). Reads `source` (a text
+  input or textarea holding one URL per line) and re-renders whenever it changes
+  — so it updates as URLs are typed or added by the uploader widget.
+  Locals:
+    source : CSS selector of the input/textarea holding the URL(s).
+%>
+<div class="img-preview" data-image-preview="<%= source %>"></div>

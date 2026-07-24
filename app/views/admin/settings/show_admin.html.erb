@@ -5,6 +5,7 @@
 
 <div class="panel">
   <div class="panel-head"><h2>Profile</h2></div>
+  <p>ID: #<%= @admin.id %></p>
   <p>Email: <%= @admin.email %></p>
   <p>Status: <span class="chip <%= @admin.status == "active" ? "ok" : "off" %>"><%= @admin.status %></span></p>
   <p>Roles:

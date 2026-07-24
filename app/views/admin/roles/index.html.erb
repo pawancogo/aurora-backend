@@ -12,6 +12,7 @@
 
 <%
   columns = [
+    { label: "ID", class: "id-cell", cell: ->(role) { role.id } },
     { label: "Role", cell: ->(role) {
         parts = [role.name]
         parts << content_tag(:span, "system", class: "chip sys") if role.system?

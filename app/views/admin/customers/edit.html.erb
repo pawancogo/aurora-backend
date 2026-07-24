@@ -1,6 +1,6 @@
 <p><%= link_to "← Back to customer", admin_customer_path(@customer), class: "link" %></p>
 <h1 class="page-title">Edit customer</h1>
-<p class="page-sub">Update contact details. Email changes go through the customer's own verified flow.</p>
+<p class="page-sub">ID #<%= @customer.id %> · Update contact details. Email changes go through the customer's own verified flow.</p>
 
 <%= form_with model: @customer, url: admin_customer_path(@customer), method: :patch do |form| %>
   <% if @customer.errors.any? %>

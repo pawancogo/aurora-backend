@@ -95,6 +95,7 @@
     <%= text_area_tag "product[image_urls]", product.product_images.map(&:source_url).join("\n"), rows: 4 %>
     <%= render "admin/ui/uploader", target: "#product_image_urls", mode: "append",
           kind: "image", label: "Upload images", multiple: true %>
+    <%= render "admin/ui/image_preview", source: "#product_image_urls" %>
   </div>
 
   <h2 class="section-title">Logistics &amp; SEO</h2>

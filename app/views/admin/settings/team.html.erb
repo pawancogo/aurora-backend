@@ -21,6 +21,7 @@
 
 <%
   columns = [
+    { label: "ID", class: "id-cell", cell: ->(admin) { admin.id } },
     { label: "Admin", cell: ->(admin) {
         name = admin.full_name.presence || "—"
         heading = can_manage ? link_to(name, admin_settings_admin_path(admin)) : name

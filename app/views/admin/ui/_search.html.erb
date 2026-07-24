@@ -10,7 +10,7 @@
   Render with: render "admin/ui/search", url: admin_products_path, query: params[:q], filters: [...]
 %>
 <% filters = Array(local_assigns[:filters]) %>
-<form method="get" action="<%= url %>" class="search-bar <%= 'has-filters' if filters.any? %>">
+<form method="get" action="<%= url %>" class="search-bar has-filters">
   <input type="text" name="q" value="<%= query %>" placeholder="<%= local_assigns[:placeholder] || 'Search' %>" />
   <% filters.each do |filter| %>
     <select name="<%= filter[:name] %>" class="search-filter" <%= "data-searchable" if filter[:searchable] %>>
@@ -20,5 +20,13 @@
       <% end %>
     </select>
   <% end %>
+
+  <%# Page size — options come from the SiteSetting config model; applies on change. %>
+  <select name="per_page" class="search-filter" data-autosubmit aria-label="Results per page">
+    <% per_page_options.each do |size| %>
+      <option value="<%= size %>" <%= "selected" if current_per_page == size %>><%= size %> / page</option>
+    <% end %>
+  </select>
+
   <button type="submit" class="btn-sm">Search</button>
 </form>

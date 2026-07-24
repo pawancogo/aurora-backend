@@ -167,6 +167,26 @@
   .uploader-btn { display: inline-flex; align-items: center; cursor: pointer; }
   .uploader-btn input[type=file] { display: none; }
   .uploader-status { min-height: 1em; }
+
+  /* Image URL previews (thumbnail + link) */
+  .img-preview { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
+  .img-preview-item { width: 120px; }
+  .img-preview-item img { display: block; width: 120px; height: 120px; object-fit: cover;
+    border: 1px solid var(--border); border-radius: 8px; background: var(--bg); }
+  .img-preview-item a { display: block; margin-top: 4px; font-size: .72rem; color: var(--muted); word-break: break-all; }
+  .img-preview-item a:hover { color: var(--ink); text-decoration: underline; }
+  .img-preview-fallback { display: none; width: 120px; height: 120px; align-items: center; justify-content: center;
+    text-align: center; border: 1px dashed var(--border); border-radius: 8px; color: var(--muted); font-size: .7rem; }
+  .img-preview-item.broken img { display: none; }
+  .img-preview-item.broken .img-preview-fallback { display: flex; }
+
+  /* Small thumbnail shown in list rows */
+  .list-thumb { display: inline-block; width: 40px; height: 40px; object-fit: cover; vertical-align: middle;
+    border: 1px solid var(--border); border-radius: 6px; background: var(--bg); }
+  .list-thumb-empty { display: inline-block; width: 40px; height: 40px; vertical-align: middle;
+    border: 1px dashed var(--border); border-radius: 6px; background: var(--bg); }
+  .list-cell { display: inline-flex; align-items: center; gap: 10px; }
+  .id-cell { color: var(--muted); font-variant-numeric: tabular-nums; }
   .ui-select-empty, .ui-select-loading { padding: 10px 12px; color: var(--muted); font-size: .85rem; }
   .panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
   .admin-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }

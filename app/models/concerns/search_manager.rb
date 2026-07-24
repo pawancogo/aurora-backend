@@ -48,7 +48,7 @@ module SearchManager
         range_on: @search_range_on,
         search_key: @search_key || :q,
         facet_limit: @search_facet_limit || DEFAULT_FACET_LIMIT,
-        per_page: @search_per_page || DEFAULT_PER_PAGE
+        per_page: @search_per_page # nil → fall back to the configured default
       }
     end
 
@@ -70,17 +70,33 @@ module SearchManager
 
     def paginate_relation(relation, params, config)
       requested = params[:per_page].presence&.to_i
-      per_page = requested&.positive? ? [ requested, MAX_PER_PAGE ].min : config[:per_page]
+      per_page = if requested&.positive?
+                   [ requested, MAX_PER_PAGE ].min
+      else
+                   config[:per_page] || configured_default_per_page
+      end
       relation.page(params[:page].presence || 1).per(per_page)
     end
 
-    def apply_text_search(relation, term, columns)
-      valid = columns.select { |column| column_names.include?(column.to_s) }
-      return relation if term.blank? || valid.empty?
+    # App-wide default page size from the SiteSetting config model, falling back
+    # to the constant when unset (e.g. in test, where seeds don't run).
+    def configured_default_per_page
+      value = SiteSetting.get("pagination.default_per_page", DEFAULT_PER_PAGE).to_i
+      value.positive? ? value : DEFAULT_PER_PAGE
+    end
 
-      pattern = "%#{term.to_s.strip}%"
-      clause = valid.map { |column| arel_table[column].matches(pattern) }.reduce(:or)
-      relation.where(clause)
+    def apply_text_search(relation, term, columns)
+      term = term.to_s.strip
+      return relation if term.blank?
+
+      valid = columns.select { |column| column_names.include?(column.to_s) }
+      clauses = valid.map { |column| arel_table[column].matches("%#{term}%") }
+      # A purely numeric term also matches the record ID exactly, so lists are
+      # searchable by the id shown in their ID column.
+      clauses << arel_table[primary_key].eq(term.to_i) if term.match?(/\A\d+\z/)
+      return relation if clauses.empty?
+
+      relation.where(clauses.reduce(:or))
     end
 
     def apply_range(relation, params, column)

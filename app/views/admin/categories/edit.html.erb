@@ -1,6 +1,6 @@
 <p><%= link_to "← Categories", admin_categories_path, class: "link" %></p>
 <h1 class="page-title">Edit category</h1>
-<p class="page-sub"><%= @category.name %></p>
+<p class="page-sub">ID #<%= @category.id %> · <%= @category.name %></p>
 
 <%= render "form", category: @category, form_url: admin_category_path(@category),
       form_method: :patch, submit_label: "Save changes" %>

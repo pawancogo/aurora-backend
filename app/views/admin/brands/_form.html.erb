@@ -17,6 +17,7 @@
     <label>Logo URL</label>
     <%= form.text_field :logo_url %>
     <%= render "admin/ui/uploader", target: "#brand_logo_url", mode: "set", kind: "image", label: "Upload logo" %>
+    <%= render "admin/ui/image_preview", source: "#brand_logo_url" %>
   </div>
 
   <div class="form-row">

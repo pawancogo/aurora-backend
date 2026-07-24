@@ -10,6 +10,7 @@
 
 <%
   columns = [
+    { label: "ID", class: "id-cell", cell: ->(customer) { customer.id } },
     { label: "Customer", cell: ->(customer) {
         safe_join([
           link_to(customer.full_name.presence || "—", admin_customer_path(customer)),

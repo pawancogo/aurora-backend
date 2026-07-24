@@ -25,11 +25,14 @@
   <%# Searching/filtering → flat, paginated results (the hierarchy is set aside). %>
   <%
     flat_columns = [
+      { label: "ID", class: "id-cell", cell: ->(category) { category.id } },
       { label: "Name", cell: ->(category) {
           depth = category.ancestors.size
-          dot = content_tag(:span, "", class: "lvl-dot", style: "background: #{color_for.call(depth)}")
-          badge = content_tag(:span, "L#{depth + 1}", class: "lvl-badge")
-          content_tag(:span, safe_join([dot, category.name, badge]))
+          parts = [ content_tag(:span, "", class: "lvl-dot", style: "background: #{color_for.call(depth)}") ]
+          parts << tag.img(src: category.image_url, class: "list-thumb", loading: "lazy", alt: "") if category.image_url.present?
+          parts << category.name
+          parts << content_tag(:span, "L#{depth + 1}", class: "lvl-badge")
+          content_tag(:span, safe_join(parts), class: "list-cell")
         } },
       { label: "Slug",       cell: ->(category) { content_tag(:code, category.slug) } },
       { label: "Parent",     cell: ->(category) { category.parent&.name || "—" } },
@@ -64,10 +67,13 @@
   <% end %>
   <%
     columns = [
+      { label: "ID", class: "id-cell", cell: ->((category, _)) { category.id } },
       { label: "Name", cell: ->((category, depth)) {
-          dot = content_tag(:span, "", class: "lvl-dot", style: "background: #{color_for.call(depth)}")
-          badge = content_tag(:span, "L#{depth + 1}", class: "lvl-badge")
-          content_tag(:span, safe_join([dot, category.name, badge]), style: "padding-left: #{depth * 22}px;")
+          parts = [ content_tag(:span, "", class: "lvl-dot", style: "background: #{color_for.call(depth)}") ]
+          parts << tag.img(src: category.image_url, class: "list-thumb", loading: "lazy", alt: "") if category.image_url.present?
+          parts << category.name
+          parts << content_tag(:span, "L#{depth + 1}", class: "lvl-badge")
+          content_tag(:span, safe_join(parts), class: "list-cell", style: "padding-left: #{depth * 22}px;")
         } },
       { label: "Slug",       cell: ->((category, _)) { content_tag(:code, category.slug) } },
       { label: "Parent",     cell: ->((category, _)) { category.parent&.name || "—" } },

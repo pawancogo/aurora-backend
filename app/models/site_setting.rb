@@ -13,4 +13,13 @@ class SiteSetting < ApplicationRecord
   def self.to_map(scope = all)
     scope.each_with_object({}) { |setting, map| map[setting.key] = setting.value }
   end
+
+  # Typed value for a key (jsonb → native Ruby type), or `default` if unset.
+  # Resilient to a missing table (e.g. before migrate) so boot never breaks.
+  def self.get(key, default = nil)
+    setting = find_by(key: key)
+    setting ? setting.value : default
+  rescue ActiveRecord::StatementInvalid
+    default
+  end
 end

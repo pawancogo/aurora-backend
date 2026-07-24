@@ -27,6 +27,13 @@ RSpec.describe SearchManager, type: :model do
       expect(result.records).to contain_exactly(keep)
     end
 
+    it "finds a record by its numeric id" do
+      target = create(:product, name: "Alpha")
+      create(:product, name: "Beta")
+
+      expect(Product.search({ q: target.id.to_s }).records.to_a).to include(target)
+    end
+
     it "maps enum facet values (status keys) to their integer" do
       create(:product, status: :active)
       draft = create(:product, status: :draft)

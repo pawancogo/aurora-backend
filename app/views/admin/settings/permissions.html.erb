@@ -14,6 +14,7 @@
 
 <%
   columns = [
+    { label: "ID", class: "id-cell", cell: ->(permission) { permission.id } },
     { label: "Permission",  cell: ->(permission) { permission.name } },
     { label: "Key",         cell: ->(permission) { content_tag(:code, permission.key) } },
     { label: "Description", class: "muted-sm", cell: ->(permission) { permission.description } },

@@ -8,7 +8,7 @@ module Admin
     before_action :load_form_options, only: %i[new create edit update]
 
     def index
-      result = Product.search(params, scope: Product.kept.includes(:brand, :category).order(created_at: :desc))
+      result = Product.search(params, scope: Product.kept.includes(:brand, :category, :product_images).order(created_at: :desc))
       @facets = result.facets
       @products = result.records
     end

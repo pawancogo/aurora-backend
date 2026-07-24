@@ -2,7 +2,7 @@
 
 <p><%= link_to "← Permissions", admin_settings_permissions_path, class: "link" %></p>
 <h1 class="page-title">Edit permission</h1>
-<p class="page-sub"><code><%= @permission.key %></code></p>
+<p class="page-sub">ID #<%= @permission.id %> · <code><%= @permission.key %></code></p>
 
 <%= form_with model: @permission, url: admin_settings_permission_path(@permission), method: :patch do |form| %>
   <% if @permission.errors.any? %>

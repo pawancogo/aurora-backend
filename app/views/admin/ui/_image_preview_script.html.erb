@@ -1,0 +1,51 @@
+<script>
+(function () {
+  function render(container, source) {
+    var multiline = source.tagName === "TEXTAREA";
+    var urls = (source.value || "")
+      .split(multiline ? "\n" : "\n")
+      .map(function (u) { return u.trim(); })
+      .filter(Boolean);
+
+    container.innerHTML = "";
+    urls.forEach(function (url) {
+      var item = document.createElement("div");
+      item.className = "img-preview-item";
+
+      var img = document.createElement("img");
+      img.src = url;
+      img.alt = "";
+      img.loading = "lazy";
+      img.addEventListener("error", function () { item.classList.add("broken"); });
+
+      var fallback = document.createElement("div");
+      fallback.className = "img-preview-fallback";
+      fallback.textContent = "image unavailable";
+
+      var link = document.createElement("a");
+      link.href = url;
+      link.target = "_blank";
+      link.rel = "noopener";
+      link.textContent = url;
+
+      item.appendChild(img);
+      item.appendChild(fallback);
+      item.appendChild(link);
+      container.appendChild(item);
+    });
+  }
+
+  function bind() {
+    document.querySelectorAll("[data-image-preview]").forEach(function (container) {
+      var source = document.querySelector(container.getAttribute("data-image-preview"));
+      if (!source || source.dataset.previewBound) return;
+      source.dataset.previewBound = "1";
+      source.addEventListener("input", function () { render(container, source); });
+      render(container, source);
+    });
+  }
+
+  if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", bind); }
+  else { bind(); }
+})();
+</script>

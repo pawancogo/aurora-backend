@@ -40,6 +40,7 @@
     <label>Image URL</label>
     <%= form.text_field :image_url %>
     <%= render "admin/ui/uploader", target: "#category_image_url", mode: "set", kind: "image", label: "Upload image" %>
+    <%= render "admin/ui/image_preview", source: "#category_image_url" %>
   </div>
 
   <div class="form-row">
