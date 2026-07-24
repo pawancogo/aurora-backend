@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_24_205009) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_25_120009) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -36,6 +36,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_24_205009) do
     t.datetime "updated_at", null: false
     t.index ["deleted_at"], name: "index_admin_users_on_deleted_at"
     t.index ["email"], name: "index_admin_users_on_email", unique: true
+  end
+
+  create_table "attribute_values", force: :cascade do |t|
+    t.string "code", null: false
+    t.datetime "created_at", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.integer "position", default: 0, null: false
+    t.bigint "product_attribute_id", null: false
+    t.datetime "updated_at", null: false
+    t.string "value", null: false
+    t.index ["product_attribute_id", "code"], name: "index_attribute_values_on_product_attribute_id_and_code", unique: true
+    t.index ["product_attribute_id"], name: "index_attribute_values_on_product_attribute_id"
   end
 
   create_table "brands", force: :cascade do |t|
@@ -103,6 +115,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_24_205009) do
     t.index ["key"], name: "index_feature_flags_on_key", unique: true
   end
 
+  create_table "inventory_items", force: :cascade do |t|
+    t.boolean "backorderable", default: false, null: false
+    t.datetime "created_at", null: false
+    t.integer "low_stock_threshold", default: 0, null: false
+    t.integer "on_hand", default: 0, null: false
+    t.bigint "product_variant_id", null: false
+    t.integer "reserved", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["product_variant_id"], name: "index_inventory_items_on_product_variant_id", unique: true
+  end
+
   create_table "navigation_items", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "ends_at"
@@ -135,6 +158,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_24_205009) do
     t.index ["key"], name: "index_permissions_on_key", unique: true
   end
 
+  create_table "product_attributes", force: :cascade do |t|
+    t.string "code", null: false
+    t.datetime "created_at", null: false
+    t.boolean "filterable", default: false, null: false
+    t.string "name", null: false
+    t.integer "position", default: 0, null: false
+    t.boolean "searchable", default: false, null: false
+    t.datetime "updated_at", null: false
+    t.index ["code"], name: "index_product_attributes_on_code", unique: true
+  end
+
   create_table "product_images", force: :cascade do |t|
     t.string "alt_text"
     t.datetime "created_at", null: false
@@ -145,6 +179,46 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_24_205009) do
     t.datetime "updated_at", null: false
     t.index ["product_id", "position"], name: "index_product_images_on_product_id_and_position"
     t.index ["product_id"], name: "index_product_images_on_product_id"
+  end
+
+  create_table "product_relations", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "position", default: 0, null: false
+    t.bigint "product_id", null: false
+    t.bigint "related_product_id", null: false
+    t.integer "relation_kind", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["product_id", "related_product_id", "relation_kind"], name: "index_product_relations_uniqueness", unique: true
+    t.index ["product_id"], name: "index_product_relations_on_product_id"
+    t.index ["related_product_id"], name: "index_product_relations_on_related_product_id"
+  end
+
+  create_table "product_specifications", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.integer "position", default: 0, null: false
+    t.bigint "product_id", null: false
+    t.string "spec_group"
+    t.datetime "updated_at", null: false
+    t.string "value", null: false
+    t.index ["product_id"], name: "index_product_specifications_on_product_id"
+  end
+
+  create_table "product_variants", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.string "barcode"
+    t.datetime "created_at", null: false
+    t.string "image_url"
+    t.boolean "is_master", default: false, null: false
+    t.integer "mrp_cents"
+    t.integer "position", default: 0, null: false
+    t.integer "price_cents"
+    t.bigint "product_id", null: false
+    t.string "sku", null: false
+    t.datetime "updated_at", null: false
+    t.index ["product_id", "is_master"], name: "index_product_variants_on_product_id_and_is_master"
+    t.index ["product_id"], name: "index_product_variants_on_product_id"
+    t.index ["sku"], name: "index_product_variants_on_sku", unique: true
   end
 
   create_table "products", force: :cascade do |t|
@@ -234,6 +308,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_24_205009) do
     t.index ["key"], name: "index_site_settings_on_key", unique: true
   end
 
+  create_table "stock_movements", force: :cascade do |t|
+    t.bigint "admin_user_id"
+    t.datetime "created_at", null: false
+    t.bigint "inventory_item_id", null: false
+    t.string "note"
+    t.integer "quantity", null: false
+    t.integer "reason", default: 0, null: false
+    t.index ["admin_user_id"], name: "index_stock_movements_on_admin_user_id"
+    t.index ["inventory_item_id", "created_at"], name: "index_stock_movements_on_inventory_item_id_and_created_at"
+    t.index ["inventory_item_id"], name: "index_stock_movements_on_inventory_item_id"
+  end
+
   create_table "tax_classes", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "hsn_code"
@@ -241,6 +327,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_24_205009) do
     t.decimal "rate", precision: 5, scale: 2, default: "0.0", null: false
     t.datetime "updated_at", null: false
     t.index ["name"], name: "index_tax_classes_on_name", unique: true
+  end
+
+  create_table "variant_option_values", force: :cascade do |t|
+    t.bigint "attribute_value_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "product_variant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["attribute_value_id"], name: "index_variant_option_values_on_attribute_value_id"
+    t.index ["product_variant_id", "attribute_value_id"], name: "index_variant_option_values_uniqueness", unique: true
+    t.index ["product_variant_id"], name: "index_variant_option_values_on_product_variant_id"
   end
 
   create_table "versions", force: :cascade do |t|
@@ -256,12 +352,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_24_205009) do
 
   add_foreign_key "admin_user_roles", "admin_users"
   add_foreign_key "admin_user_roles", "roles"
+  add_foreign_key "attribute_values", "product_attributes"
   add_foreign_key "categories", "categories", column: "parent_id"
+  add_foreign_key "inventory_items", "product_variants"
   add_foreign_key "navigation_items", "navigation_items", column: "parent_id"
   add_foreign_key "product_images", "products"
+  add_foreign_key "product_relations", "products"
+  add_foreign_key "product_relations", "products", column: "related_product_id"
+  add_foreign_key "product_specifications", "products"
+  add_foreign_key "product_variants", "products"
   add_foreign_key "products", "brands"
   add_foreign_key "products", "categories"
   add_foreign_key "products", "tax_classes"
   add_foreign_key "role_permissions", "permissions"
   add_foreign_key "role_permissions", "roles"
+  add_foreign_key "stock_movements", "admin_users", on_delete: :nullify
+  add_foreign_key "stock_movements", "inventory_items"
+  add_foreign_key "variant_option_values", "attribute_values"
+  add_foreign_key "variant_option_values", "product_variants"
 end

@@ -4,6 +4,7 @@ class Product < ApplicationRecord
   include Sluggable
   include Discardable
   include SearchManager
+  include HasSku
 
   search_manager on: %i[name sku search_keywords],
                  aggs_on: %i[status brand_id category_id featured new_arrival best_seller],
@@ -20,11 +21,19 @@ class Product < ApplicationRecord
            dependent: :destroy, inverse_of: :product
   accepts_nested_attributes_for :product_images, allow_destroy: true
 
-  # Auto-generate a unique SKU when none is supplied (a manual one is still allowed).
-  before_validation :generate_sku, if: -> { sku.blank? }
+  has_many :variants, -> { order(:position, :id) },
+           class_name: "ProductVariant", dependent: :destroy, inverse_of: :product
+  has_many :specifications, -> { order(:position, :id) },
+           class_name: "ProductSpecification", dependent: :destroy, inverse_of: :product
+  accepts_nested_attributes_for :specifications, allow_destroy: true
+  has_many :product_relations, -> { order(:position, :id) }, dependent: :destroy, inverse_of: :product
+  has_many :related_products, through: :product_relations
+
+  # Every product owns one hidden master variant that carries default price +
+  # inventory until real option variants exist.
+  after_create :ensure_master_variant
 
   validates :name, presence: true
-  validates :sku, presence: true, uniqueness: true
   validates :price_cents, :mrp_cents, numericality: { greater_than_or_equal_to: 0 }
 
   # Publicly visible = active and past its (optional) publish time.
@@ -51,13 +60,46 @@ class Product < ApplicationRecord
     product_images.detect(&:primary) || product_images.first
   end
 
+  # The option-less master variant (created automatically).
+  def master_variant
+    variants.detect(&:is_master?) || variants.find_by(is_master: true)
+  end
+
+  # Real, non-master variants define this product's options.
+  def has_variants?
+    variants.non_master.exists?
+  end
+
+  # The distinct attributes this product varies on (drives the PDP selector),
+  # ordered by the attribute registry position.
+  def option_attributes
+    ProductAttribute
+      .where(id: AttributeValue.where(id: variant_option_value_ids).select(:product_attribute_id))
+      .ordered
+  end
+
+  # Total sellable stock across sellable variants.
+  def total_available
+    sellable_variants.sum { |variant| variant.available }
+  end
+
+  def in_stock?
+    sellable_variants.any?(&:in_stock?)
+  end
+
+  # Variants a customer can actually buy: real active variants, or the master
+  # when the product has no options.
+  def sellable_variants
+    has_variants? ? variants.non_master.active : variants.master
+  end
+
   private
 
-  # "SKU-XXXXXXXX" with a random suffix; the DB unique index is the final guard.
-  def generate_sku
-    loop do
-      candidate = "SKU-#{SecureRandom.alphanumeric(8).upcase}"
-      break self.sku = candidate unless self.class.where.not(id: id).exists?(sku: candidate)
-    end
+  def variant_option_value_ids
+    VariantOptionValue.where(product_variant_id: variants.select(:id)).select(:attribute_value_id)
+  end
+
+  def ensure_master_variant
+    variants.create!(is_master: true) unless master_variant
   end
 end

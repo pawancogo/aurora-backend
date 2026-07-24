@@ -48,4 +48,43 @@ RSpec.describe Product do
       expect(Product.create!(name: "Manual", sku: "MANUAL-1").sku).to eq("MANUAL-1")
     end
   end
+
+  describe "variants & inventory" do
+    it "auto-creates a master variant on create" do
+      product = create(:product)
+      expect(product.variants.master.count).to eq(1)
+      expect(product).not_to have_variants
+    end
+
+    it "reports has_variants? once a real variant exists" do
+      product = create(:product)
+      product.variants.create!(price_cents: 500)
+      expect(product.reload).to have_variants
+    end
+
+    it "exposes the distinct option attributes, registry-ordered" do
+      product = create(:product)
+      color = create(:product_attribute, :color, position: 1)
+      size = create(:product_attribute, :size, position: 2)
+      red = color.attribute_values.create!(value: "Red")
+      medium = size.attribute_values.create!(value: "M")
+
+      variant = product.variants.create!
+      variant.variant_option_values.create!(attribute_value: red)
+      variant.variant_option_values.create!(attribute_value: medium)
+
+      expect(product.option_attributes.map(&:name)).to eq(%w[Color Size])
+    end
+
+    it "sums available stock across sellable variants" do
+      product = create(:product)
+      v1 = product.variants.create!(price_cents: 500)
+      v2 = product.variants.create!(price_cents: 600)
+      v1.inventory_item.update!(on_hand: 4)
+      v2.inventory_item.update!(on_hand: 6, reserved: 1)
+
+      expect(product.total_available).to eq(9)
+      expect(product).to be_in_stock
+    end
+  end
 end
