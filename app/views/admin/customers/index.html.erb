@@ -1,0 +1,31 @@
+<h1 class="page-title">Customers</h1>
+<p class="page-sub">View accounts and manage their login sessions.</p>
+
+<%= render "admin/ui/search", url: admin_customers_path, query: params[:q],
+      placeholder: "Search by email, name or phone",
+      filters: [
+        { name: "status", prompt: "Any status", selected: params[:status],
+          options: Array(@facets["status"]).map { |facet| ["#{facet[:label]} (#{facet[:count]})", facet[:value]] } }
+      ] %>
+
+<%
+  columns = [
+    { label: "Customer", cell: ->(customer) {
+        safe_join([
+          link_to(customer.full_name.presence || "—", admin_customer_path(customer)),
+          tag.br,
+          content_tag(:span, customer.email, class: "muted-sm")
+        ])
+      } },
+    { label: "Status", cell: ->(customer) {
+        content_tag(:span, customer.status, class: "chip #{customer.status == 'active' ? 'ok' : 'off'}")
+      } },
+    { label: "Email", cell: ->(customer) {
+        content_tag(:span, customer.confirmed? ? "Verified" : "Unverified", class: "muted-sm")
+      } },
+    { label: "Joined", class: "muted-sm", cell: ->(customer) { customer.created_at.strftime("%d %b %Y") } }
+  ]
+%>
+<%= render "admin/ui/table", rows: @customers, columns: columns, empty: "No customers found." %>
+
+<%= render "admin/ui/pagination", collection: @customers, path: admin_customers_path %>

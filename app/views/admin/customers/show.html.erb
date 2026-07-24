@@ -1,0 +1,23 @@
+<% can_manage = allowed_to?("customers.manage") %>
+
+<p><%= link_to "← Customers", admin_customers_path, class: "link" %></p>
+<h1 class="page-title"><%= @customer.full_name.presence || @customer.email %></h1>
+
+<div class="panel">
+  <div class="panel-head"><h2>Profile</h2></div>
+  <p>Email: <%= @customer.email %> — <%= @customer.confirmed? ? "verified" : "unverified" %></p>
+  <p>Status: <span class="chip <%= @customer.status == "active" ? "ok" : "off" %>"><%= @customer.status %></span></p>
+  <p>Joined: <%= @customer.created_at.strftime("%d %b %Y, %H:%M") %></p>
+  <p>Phone: <%= @customer.phone.presence || "—" %></p>
+  <% if can_manage %>
+    <div class="form-actions" style="margin-top:12px;">
+      <%= link_to "Edit details", admin_edit_customer_path(@customer), class: "btn-sm" %>
+      <%= button_to (@customer.status == "active" ? "Deactivate account" : "Activate account"),
+            admin_customer_status_path(@customer), method: :patch, class: "link" %>
+    </div>
+  <% end %>
+</div>
+
+<%= render "admin/ui/sessions", sessions: @sessions, can_manage: can_manage,
+      revoke_all_path: admin_customer_sessions_path(@customer),
+      revoke_path: ->(session) { admin_customer_session_path(@customer, session) } %>
