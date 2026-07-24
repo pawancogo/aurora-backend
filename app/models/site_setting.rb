@@ -3,6 +3,8 @@
 class SiteSetting < ApplicationRecord
   VALUE_TYPES = %w[string number boolean json].freeze
 
+  has_paper_trail
+
   validates :key, presence: true, uniqueness: true, format: { with: /\A[a-z0-9_.]+\z/ }
   validates :value_type, inclusion: { in: VALUE_TYPES }
   validates :category, presence: true

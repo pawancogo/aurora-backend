@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class FeatureFlag < ApplicationRecord
+  has_paper_trail
+
   validates :key, presence: true, uniqueness: true, format: { with: /\A[a-z0-9_.]+\z/ }
   validates :name, presence: true
 

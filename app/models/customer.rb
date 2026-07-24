@@ -5,6 +5,7 @@ class Customer < ApplicationRecord
   include SearchManager
 
   search_manager on: %i[email first_name last_name phone], aggs_on: %i[status]
+  has_paper_trail skip: %i[password_digest confirmation_token_digest reset_password_token_digest]
 
   has_secure_password
 

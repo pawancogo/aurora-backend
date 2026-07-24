@@ -3,6 +3,8 @@
 class NavigationItem < ApplicationRecord
   LINK_TYPES = %w[internal external].freeze
 
+  has_paper_trail
+
   belongs_to :parent, class_name: "NavigationItem", optional: true
   has_many :children,
            class_name: "NavigationItem",

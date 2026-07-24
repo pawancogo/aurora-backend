@@ -4,6 +4,7 @@ class Permission < ApplicationRecord
   include SearchManager
 
   search_manager on: %i[key name description]
+  has_paper_trail
 
   has_many :role_permissions, dependent: :destroy
   has_many :roles, through: :role_permissions

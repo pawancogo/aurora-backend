@@ -27,6 +27,9 @@ RailsAdmin.config do |config|
     end
   end
 
+  ## Activity log — PaperTrail versions, with whodunnit resolved to the admin.
+  config.audit_with :paper_trail, "AdminUser", "PaperTrail::Version"
+
   config.actions do
     dashboard
     index
@@ -36,5 +39,33 @@ RailsAdmin.config do |config|
     edit
     delete
     bulk_delete
+    history_index   # global activity log
+    history_show    # per-record history
+  end
+
+  ## Render image-URL fields as thumbnails (not just links) in list + show views.
+  # `configure` customizes the field wherever it appears without restricting the
+  # visible field set; `pretty_value` applies in read-only views (list + show).
+  image_thumb = proc do
+    if value.present?
+      bindings[:view].tag.a(href: value, target: "_blank", rel: "noopener") do
+        bindings[:view].tag.img(
+          src: value,
+          style: "max-height:56px;max-width:96px;border-radius:4px;object-fit:cover;display:block"
+        )
+      end
+    end
+  end
+
+  config.model "ProductImage" do
+    configure(:source_url) { pretty_value(&image_thumb) }
+  end
+
+  config.model "Category" do
+    configure(:image_url) { pretty_value(&image_thumb) }
+  end
+
+  config.model "Brand" do
+    configure(:logo_url) { pretty_value(&image_thumb) }
   end
 end

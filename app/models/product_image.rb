@@ -2,6 +2,7 @@
 
 class ProductImage < ApplicationRecord
   belongs_to :product
+  has_paper_trail
 
   validates :source_url, presence: true
 

@@ -43,6 +43,9 @@ gem "rack-attack"
 # Pagination
 gem "kaminari"
 
+# Activity/audit trail — records every change with who performed it (whodunnit).
+gem "paper_trail"
+
 # Super-admin data console — full model CRUD/inspection, mounted at /superadmin.
 # sprockets-rails serves RailsAdmin's bundled CSS/JS (this app is otherwise api_only).
 gem "rails_admin", "~> 3.0"

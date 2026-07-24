@@ -6,6 +6,7 @@ class Category < ApplicationRecord
   include SearchManager
 
   search_manager on: %i[name slug], aggs_on: %i[visible]
+  has_paper_trail
 
   belongs_to :parent, class_name: "Category", optional: true
   has_many :children,

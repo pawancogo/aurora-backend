@@ -6,6 +6,7 @@ class Brand < ApplicationRecord
   include SearchManager
 
   search_manager on: %i[name slug]
+  has_paper_trail
 
   has_many :products, dependent: :nullify
 

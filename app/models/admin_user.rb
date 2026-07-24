@@ -5,6 +5,7 @@ class AdminUser < ApplicationRecord
   include SearchManager
 
   search_manager on: %i[email first_name last_name], aggs_on: %i[status]
+  has_paper_trail skip: %i[password_digest]
 
   has_secure_password
 

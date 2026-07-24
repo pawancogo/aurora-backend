@@ -9,6 +9,8 @@ class Product < ApplicationRecord
                  aggs_on: %i[status brand_id category_id featured new_arrival best_seller],
                  range_on: :price_cents
 
+  has_paper_trail
+
   enum :status, { draft: 0, active: 1, archived: 2 }
 
   belongs_to :brand, optional: true

@@ -10,8 +10,15 @@ module Admin
     helper_method :current_admin_user, :admin_signed_in?, :allowed_to?
 
     before_action :authenticate_admin!
+    before_action :set_paper_trail_whodunnit
 
     private
+
+    # PaperTrail attributes every change to the signed-in admin (stored as the id;
+    # RailsAdmin's activity history resolves it back to the admin's email).
+    def user_for_paper_trail
+      current_admin_user&.id
+    end
 
     # Permission check for the portal (mirrors AdminUser#can?; super admins get everything).
     def allowed_to?(permission_key)
