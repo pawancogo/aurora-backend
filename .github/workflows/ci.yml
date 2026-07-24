@@ -42,7 +42,7 @@ jobs:
       REDIS_URL: redis://localhost:6379/0
       FRONTEND_ORIGIN: http://localhost:3000
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: "3.4.2"
