@@ -107,10 +107,9 @@
         <%= spec_fields.text_field :value, placeholder: "Value (e.g. Cotton)", class: "attr-value-input" %>
         <%= spec_fields.text_field :spec_group, placeholder: "Group (optional)", class: "attr-value-code" %>
         <% if spec_fields.object&.persisted? %>
-          <label class="attr-value-remove"><%= spec_fields.check_box :_destroy %> Remove</label>
-        <% else %>
-          <span></span>
+          <%= spec_fields.hidden_field :_destroy, data: { destroy_flag: "" } %>
         <% end %>
+        <button type="button" class="row-remove" data-remove-row aria-label="Remove specification" title="Remove">✕</button>
       </div>
     <% end %>
   </div>
@@ -119,18 +118,27 @@
       <input type="text" name="product[specifications_attributes][NEW_RECORD][name]" placeholder="Name (e.g. Material)" class="attr-value-input" />
       <input type="text" name="product[specifications_attributes][NEW_RECORD][value]" placeholder="Value (e.g. Cotton)" class="attr-value-input" />
       <input type="text" name="product[specifications_attributes][NEW_RECORD][spec_group]" placeholder="Group (optional)" class="attr-value-code" />
-      <span></span>
+      <button type="button" class="row-remove" data-remove-row aria-label="Remove specification" title="Remove">✕</button>
     </div>
   </template>
   <p><button type="button" class="btn-ghost" data-add-spec>+ Add specification</button></p>
   <script>
     (function () {
-      var btn = document.querySelector("[data-add-spec]");
-      if (!btn) return;
-      btn.addEventListener("click", function () {
-        var tpl = document.querySelector("[data-spec-template]");
-        var container = document.querySelector("[data-specs]");
-        container.insertAdjacentHTML("beforeend", tpl.innerHTML.replace(/NEW_RECORD/g, String(Date.now())));
+      var addBtn = document.querySelector("[data-add-spec]");
+      var tpl = document.querySelector("[data-spec-template]");
+      var container = document.querySelector("[data-specs]");
+      if (addBtn && tpl && container) {
+        addBtn.addEventListener("click", function () {
+          container.insertAdjacentHTML("beforeend", tpl.innerHTML.replace(/NEW_RECORD/g, String(Date.now())));
+        });
+      }
+      document.addEventListener("click", function (event) {
+        var btn = event.target.closest("[data-remove-row]");
+        if (!btn) return;
+        var row = btn.closest("[data-spec-row]");
+        if (!row) return;
+        var flag = row.querySelector("[data-destroy-flag]");
+        if (flag) { flag.value = "1"; row.style.display = "none"; } else { row.remove(); }
       });
     })();
   </script>

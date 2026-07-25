@@ -34,10 +34,9 @@
         <%= value_fields.text_field :code, placeholder: "code (optional)", class: "attr-value-code" %>
         <%= value_fields.number_field :position, placeholder: "Pos", class: "attr-value-pos", value: value_fields.object&.position || 0 %>
         <% if value_fields.object&.persisted? %>
-          <label class="attr-value-remove"><%= value_fields.check_box :_destroy %> Remove</label>
-        <% else %>
-          <span></span>
+          <%= value_fields.hidden_field :_destroy, data: { destroy_flag: "" } %>
         <% end %>
+        <button type="button" class="row-remove" data-remove-row aria-label="Remove value" title="Remove">✕</button>
       </div>
     <% end %>
   </div>
@@ -47,7 +46,7 @@
       <input type="text" name="product_attribute[attribute_values_attributes][NEW_RECORD][value]" placeholder="Value (e.g. Red)" class="attr-value-input" />
       <input type="text" name="product_attribute[attribute_values_attributes][NEW_RECORD][code]" placeholder="code (optional)" class="attr-value-code" />
       <input type="number" name="product_attribute[attribute_values_attributes][NEW_RECORD][position]" placeholder="Pos" class="attr-value-pos" value="0" />
-      <span></span>
+      <button type="button" class="row-remove" data-remove-row aria-label="Remove value" title="Remove">✕</button>
     </div>
   </template>
 
@@ -61,13 +60,23 @@
 
 <script>
   (function () {
-    var btn = document.querySelector("[data-add-value]");
-    if (!btn) return;
-    btn.addEventListener("click", function () {
-      var tpl = document.querySelector("[data-value-template]");
-      var container = document.querySelector("[data-values]");
-      var html = tpl.innerHTML.replace(/NEW_RECORD/g, String(Date.now()));
-      container.insertAdjacentHTML("beforeend", html);
+    var addBtn = document.querySelector("[data-add-value]");
+    var tpl = document.querySelector("[data-value-template]");
+    var container = document.querySelector("[data-values]");
+    if (addBtn && tpl && container) {
+      addBtn.addEventListener("click", function () {
+        container.insertAdjacentHTML("beforeend", tpl.innerHTML.replace(/NEW_RECORD/g, String(Date.now())));
+      });
+    }
+    // Remove a value row: persisted rows are marked for deletion (_destroy) and
+    // hidden; unsaved rows are just dropped from the DOM.
+    document.addEventListener("click", function (event) {
+      var btn = event.target.closest("[data-remove-row]");
+      if (!btn) return;
+      var row = btn.closest("[data-value-row]");
+      if (!row) return;
+      var flag = row.querySelector("[data-destroy-flag]");
+      if (flag) { flag.value = "1"; row.style.display = "none"; } else { row.remove(); }
     });
   })();
 </script>

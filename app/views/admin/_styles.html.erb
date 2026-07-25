@@ -235,6 +235,9 @@
   .attr-value-row.spec-row { grid-template-columns: 1fr 1fr 160px auto; }
   .attr-value-row input { height: 36px; }
   .attr-value-remove { display: flex; align-items: center; gap: 6px; font-size: .8rem; color: var(--muted); margin: 0; white-space: nowrap; }
+  .row-remove { justify-self: end; width: 32px; height: 32px; border: 1px solid var(--border); background: #fff; color: var(--muted);
+    border-radius: 8px; cursor: pointer; font-size: .85rem; line-height: 1; }
+  .row-remove:hover { border-color: #fecaca; background: #fef2f2; color: var(--danger); }
 
   /* Variant + inventory tables */
   .stock-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: .72rem; font-weight: 600; }
