@@ -22,7 +22,8 @@ module Admin
       @product = Product.new(product_params)
       apply_images(@product)
       if @product.save
-        redirect_to admin_products_path, notice: "Product “#{@product.name}” created."
+        redirect_to edit_admin_product_path(@product),
+                    notice: "Product “#{@product.name}” created. Add variants, inventory and related products below."
       else
         render :new, status: :unprocessable_content
       end
@@ -69,6 +70,11 @@ module Admin
       permitted[:mrp_cents]   = to_cents(raw[:mrp])   if raw.key?(:mrp)
       if raw.key?(:highlights_text)
         permitted[:highlights] = raw[:highlights_text].to_s.split("\n").map(&:strip).reject(&:blank?)
+      end
+      if raw.key?(:dimensions)
+        dims = raw[:dimensions].permit(:length, :width, :height).to_h
+                  .reject { |_, value| value.blank? }.transform_values(&:to_f)
+        permitted[:dimensions] = dims
       end
       permitted
     end

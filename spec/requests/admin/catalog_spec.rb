@@ -89,7 +89,8 @@ RSpec.describe "Admin catalog management", type: :request do
             name: "Runner X", sku: "RUN-X-1", status: "active", brand_id: brand.id,
             price: "1299.50", mrp: "1999", currency: "INR",
             highlights_text: "Breathable\nLightweight",
-            image_urls: "https://cdn.test/a.jpg\nhttps://cdn.test/b.jpg"
+            image_urls: "https://cdn.test/a.jpg\nhttps://cdn.test/b.jpg",
+            dimensions: { length: "30", width: "20", height: "5" }
           }
         }
       end.to change(Product, :count).by(1)
@@ -100,6 +101,9 @@ RSpec.describe "Admin catalog management", type: :request do
       expect(product.highlights).to eq(%w[Breathable Lightweight])
       expect(product.product_images.count).to eq(2)
       expect(product.product_images.first.primary).to be(true)
+      expect(product.dimensions).to eq("length" => 30.0, "width" => 20.0, "height" => 5.0)
+      # lands on the edit page so variants/inventory/related can be added next
+      expect(response).to redirect_to("/admin/products/#{product.id}/edit")
     end
 
     it "replaces images on update" do
