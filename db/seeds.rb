@@ -271,6 +271,84 @@ customer_first_names = %w[Aarav Isha Kabir Meera Rohan Sara Vivaan Anaya Dev Pri
   end
 end
 
+# ---------------------------------------------------------------------------
+# Sprint 5 — attributes, variants & inventory demo data (idempotent)
+# ---------------------------------------------------------------------------
+color_attr = ProductAttribute.find_or_create_by!(code: "color") do |a|
+  a.name = "Color"
+  a.filterable = true
+  a.position = 1
+end
+size_attr = ProductAttribute.find_or_create_by!(code: "size") do |a|
+  a.name = "Size"
+  a.filterable = true
+  a.position = 2
+end
+
+seed_value = lambda do |attribute, value, position|
+  attribute.attribute_values.find_or_create_by!(code: value.parameterize(separator: "_")) do |v|
+    v.value = value
+    v.position = position
+  end
+end
+colors = %w[Black White Navy].each_with_index.map { |v, i| seed_value.call(color_attr, v, i) }
+sizes  = %w[S M L XL].each_with_index.map  { |v, i| seed_value.call(size_attr, v, i) }
+
+# Give a couple of apparel products a Color × Size variant matrix with a mixed
+# stock profile (out / low / healthy) so the storefront + inventory screens have
+# something real to show.
+seed_matrix = lambda do |sku, base_price|
+  product = Product.find_by(sku: sku)
+  next if product.nil? || product.variants.non_master.exists?
+
+  colors.first(2).each do |c|
+    sizes.each_with_index do |s, idx|
+      variant = product.variants.create!(price_cents: base_price * 100)
+      variant.variant_option_values.create!(attribute_value: c)
+      variant.variant_option_values.create!(attribute_value: s)
+      variant.inventory_item.update!(low_stock_threshold: 5)
+      qty = [ 0, 3, 25, 40 ][idx % 4] # out of stock, low, healthy, healthy
+      Inventory::AdjustStock.new(inventory_item: variant.inventory_item, quantity: qty, reason: "restock", note: "seed").call if qty.positive?
+    end
+  end
+end
+seed_matrix.call("TS-001", 799)
+seed_matrix.call("SH-001", 1899)
+
+# Descriptive specifications.
+seed_specs = lambda do |sku, specs|
+  product = Product.find_by(sku: sku)
+  next if product.nil? || product.specifications.exists?
+
+  specs.each_with_index { |(name, value), i| product.specifications.create!(name: name, value: value, position: i) }
+end
+seed_specs.call("TS-001", [ [ "Material", "100% Cotton" ], [ "Fit", "Regular" ], [ "Care", "Machine wash cold" ] ])
+seed_specs.call("MB-001", [ [ "Display", "6.1-inch OLED" ], [ "RAM", "8 GB" ], [ "Storage", "128 GB" ], [ "Battery", "4000 mAh" ] ])
+
+# Stock the master variants of option-less products so the catalog isn't all
+# "out of stock" (guarded so re-seeding never clobbers adjusted stock).
+Product.kept.find_each do |product|
+  next if product.has_variants?
+
+  item = product.master_variant&.inventory_item
+  next if item.nil? || item.on_hand.positive? || item.stock_movements.exists?
+
+  Inventory::AdjustStock.new(inventory_item: item, quantity: 25 + (product.id % 30), reason: "restock", note: "seed").call
+end
+
+# A few related-product links for the PDP recommendation rail.
+seed_relation = lambda do |from_sku, to_sku, kind|
+  from = Product.find_by(sku: from_sku)
+  to = Product.find_by(sku: to_sku)
+  next if from.nil? || to.nil? || from == to
+
+  ProductRelation.find_or_create_by!(product: from, related_product: to, relation_kind: kind)
+end
+seed_relation.call("TS-001", "TS-002", :related)
+seed_relation.call("TS-001", "SH-001", :recommended)
+seed_relation.call("JN-001", "TS-001", :cross_sell)
+
 Rails.logger.info("Seeded #{Permission.count} permissions, #{Role.count} roles, " \
-                  "#{Category.count} categories, #{Brand.count} brands, #{Product.count} products; " \
+                  "#{Category.count} categories, #{Brand.count} brands, #{Product.count} products, " \
+                  "#{ProductAttribute.count} attributes, #{ProductVariant.count} variants; " \
                   "super admin: #{admin_email}")
