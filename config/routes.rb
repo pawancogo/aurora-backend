@@ -102,9 +102,19 @@ Rails.application.routes.draw do
     post "uploads", to: "uploads#create", as: :uploads
 
     # Catalog management (server-rendered)
-    resources :products,   only: %i[index new create edit update destroy]
+    resources :products, only: %i[index new create edit update destroy] do
+      resources :variants, only: %i[index new create edit update destroy], controller: "product_variants"
+      resources :relations, only: %i[create destroy], controller: "product_relations"
+    end
     resources :categories, only: %i[index new create edit update destroy]
     resources :brands,     only: %i[index new create edit update destroy]
+    resources :attributes, only: %i[index new create edit update destroy], controller: "attributes"
+
+    # Inventory operations (stock adjust, low-stock filter, movement history)
+    get   "inventory",                     to: "inventory#index",           as: :inventory
+    get   "inventory/:variant_id",         to: "inventory#show",            as: :inventory_item
+    post  "inventory/:variant_id/adjust",  to: "inventory#adjust",          as: :adjust_inventory
+    patch "inventory/:variant_id/settings", to: "inventory#update_settings", as: :inventory_settings
   end
 
   # Backend root goes to the admin portal (which redirects to login or dashboard).

@@ -15,6 +15,7 @@ module Admin
 
     def new
       @product = Product.new(status: :draft, currency: "INR")
+      2.times { @product.specifications.build }
     end
 
     def create
@@ -61,7 +62,8 @@ module Admin
       permitted = raw.permit(
         :name, :slug, :sku, :brand_id, :category_id, :tax_class_id, :status, :currency,
         :featured, :new_arrival, :best_seller, :description, :warranty, :weight_grams,
-        :meta_title, :meta_description, :search_keywords, :published_at
+        :meta_title, :meta_description, :search_keywords, :published_at,
+        specifications_attributes: %i[id name value spec_group position _destroy]
       )
       permitted[:price_cents] = to_cents(raw[:price]) if raw.key?(:price)
       permitted[:mrp_cents]   = to_cents(raw[:mrp])   if raw.key?(:mrp)

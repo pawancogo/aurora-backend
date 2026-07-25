@@ -98,6 +98,43 @@
     <%= render "admin/ui/image_preview", source: "#product_image_urls" %>
   </div>
 
+  <h2 class="section-title">Specifications</h2>
+  <p class="page-sub">Descriptive spec rows shown on the product page (e.g. Material · Cotton). Optionally grouped.</p>
+  <div class="attr-values" data-specs>
+    <%= form.fields_for :specifications do |spec_fields| %>
+      <div class="attr-value-row spec-row" data-spec-row>
+        <%= spec_fields.text_field :name, placeholder: "Name (e.g. Material)", class: "attr-value-input" %>
+        <%= spec_fields.text_field :value, placeholder: "Value (e.g. Cotton)", class: "attr-value-input" %>
+        <%= spec_fields.text_field :spec_group, placeholder: "Group (optional)", class: "attr-value-code" %>
+        <% if spec_fields.object&.persisted? %>
+          <label class="attr-value-remove"><%= spec_fields.check_box :_destroy %> Remove</label>
+        <% else %>
+          <span></span>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+  <template data-spec-template>
+    <div class="attr-value-row spec-row" data-spec-row>
+      <input type="text" name="product[specifications_attributes][NEW_RECORD][name]" placeholder="Name (e.g. Material)" class="attr-value-input" />
+      <input type="text" name="product[specifications_attributes][NEW_RECORD][value]" placeholder="Value (e.g. Cotton)" class="attr-value-input" />
+      <input type="text" name="product[specifications_attributes][NEW_RECORD][spec_group]" placeholder="Group (optional)" class="attr-value-code" />
+      <span></span>
+    </div>
+  </template>
+  <p><button type="button" class="btn-ghost" data-add-spec>+ Add specification</button></p>
+  <script>
+    (function () {
+      var btn = document.querySelector("[data-add-spec]");
+      if (!btn) return;
+      btn.addEventListener("click", function () {
+        var tpl = document.querySelector("[data-spec-template]");
+        var container = document.querySelector("[data-specs]");
+        container.insertAdjacentHTML("beforeend", tpl.innerHTML.replace(/NEW_RECORD/g, String(Date.now())));
+      });
+    })();
+  </script>
+
   <h2 class="section-title">Logistics &amp; SEO</h2>
   <div class="admin-form-grid" style="max-width:680px;">
     <div class="form-row">

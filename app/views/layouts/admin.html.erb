@@ -14,11 +14,13 @@
         <a class="nav-link <%= "active" if controller_name == "dashboard" %>" href="<%= admin_root_path %>">Dashboard</a>
 
         <div class="nav-section">Catalog</div>
-        <a class="nav-link <%= "active" if controller_name == "products" %>" href="<%= admin_products_path %>">Products</a>
+        <a class="nav-link <%= "active" if controller_name == "products" || controller_name == "product_variants" || controller_name == "product_relations" %>" href="<%= admin_products_path %>">Products</a>
         <a class="nav-link <%= "active" if controller_name == "categories" %>" href="<%= admin_categories_path %>">Categories</a>
         <a class="nav-link <%= "active" if controller_name == "brands" %>" href="<%= admin_brands_path %>">Brands</a>
+        <a class="nav-link <%= "active" if controller_name == "attributes" %>" href="<%= admin_attributes_path %>">Attributes</a>
 
         <div class="nav-section">Operations</div>
+        <a class="nav-link <%= "active" if controller_name == "inventory" %>" href="<%= admin_inventory_path %>">Inventory</a>
         <a class="nav-link <%= "active" if controller_name == "customers" %>" href="<%= admin_customers_path %>">Customers</a>
         <span class="nav-link disabled">Orders <em>S9</em></span>
         <span class="nav-link disabled">CMS <em>S6</em></span>

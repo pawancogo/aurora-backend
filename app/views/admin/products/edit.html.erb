@@ -4,3 +4,57 @@
 
 <%= render "form", product: @product, form_url: admin_product_path(@product),
       form_method: :patch, submit_label: "Save changes" %>
+
+<% if allowed_to?("products.manage") %>
+  <div class="panel">
+    <div class="panel-head">
+      <h2 class="panel-title">Variants &amp; inventory</h2>
+      <%= link_to "Manage variants", admin_product_variants_path(@product), class: "btn-sm" %>
+    </div>
+    <% variant_count = @product.variants.non_master.count %>
+    <% if variant_count.positive? %>
+      <p><%= pluralize(variant_count, "variant") %> · <%= @product.total_available %> available in total.</p>
+    <% else %>
+      <p>No variants — this product sells as a single item at its base price
+        (<%= @product.total_available %> in stock via its <%= link_to "master inventory", admin_inventory_item_path(@product.master_variant), class: "link" %>).</p>
+    <% end %>
+  </div>
+
+  <div class="panel" id="related">
+    <h2 class="panel-title">Related products</h2>
+    <p class="page-sub">Cross-sell / recommendation links shown on the storefront product page.</p>
+
+    <%= form_with url: admin_product_relations_path(@product), method: :post do %>
+      <div class="adjust-grid">
+        <div class="form-row" style="grid-column:1/2;">
+          <label>Product</label>
+          <select name="related_product_id" data-endpoint="<%= admin_options_path("products", exclude: @product.id) %>" required>
+            <option value="">Search a product…</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Relation</label>
+          <select name="relation_kind">
+            <% ProductRelation.relation_kinds.each_key do |kind| %>
+              <option value="<%= kind %>"><%= kind.humanize %></option>
+            <% end %>
+          </select>
+        </div>
+        <div class="form-row"><label>&nbsp;</label><%= submit_tag "Add", class: "btn-sm" %></div>
+      </div>
+    <% end %>
+
+    <%
+      relations = @product.product_relations.includes(:related_product).ordered
+      columns = [
+        { label: "Product", cell: ->(rel) { rel.related_product&.name || "—" } },
+        { label: "Relation", cell: ->(rel) { content_tag(:span, rel.relation_kind.humanize, class: "opt-chip") } },
+        { label: "", class: "row-actions", cell: ->(rel) {
+            button_to("Remove", admin_product_relation_path(@product, rel), method: :delete, class: "link danger",
+                      form: { onsubmit: "return confirm('Remove this related product?');" })
+          } }
+      ]
+    %>
+    <%= render "admin/ui/table", rows: relations, columns: columns, empty: "No related products yet." %>
+  </div>
+<% end %>

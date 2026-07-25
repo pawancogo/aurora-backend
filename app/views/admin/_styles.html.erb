@@ -97,6 +97,7 @@
 
   .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 22px; margin-top: 24px; }
   .panel h2 { font-size: 1rem; margin: 0 0 10px; }
+  .panel-title { font-size: 1rem; margin: 0 0 10px; font-weight: 600; }
   .panel p { margin: 4px 0; color: var(--muted); font-size: .9rem; }
 
   /* Tabs + tables (Settings) */
@@ -227,4 +228,22 @@
   .flash { border-radius: 10px; padding: 10px 14px; font-size: .88rem; margin-bottom: 16px; }
   .flash-alert { background: #fef2f2; color: var(--danger); border: 1px solid #fecaca; }
   .flash-notice { background: #ecfdf5; color: var(--ok); border: 1px solid #a7f3d0; }
+
+  /* Attribute value rows (nested editor) */
+  .attr-values { display: flex; flex-direction: column; gap: 8px; max-width: 640px; margin-bottom: 12px; }
+  .attr-value-row { display: grid; grid-template-columns: 1fr 160px 80px auto; gap: 8px; align-items: center; }
+  .attr-value-row.spec-row { grid-template-columns: 1fr 1fr 160px auto; }
+  .attr-value-row input { height: 36px; }
+  .attr-value-remove { display: flex; align-items: center; gap: 6px; font-size: .8rem; color: var(--muted); margin: 0; white-space: nowrap; }
+
+  /* Variant + inventory tables */
+  .stock-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: .72rem; font-weight: 600; }
+  .stock-badge.low { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
+  .stock-badge.out { background: #fef2f2; color: var(--danger); border: 1px solid #fecaca; }
+  .stock-badge.ok { background: #ecfdf5; color: var(--ok); border: 1px solid #a7f3d0; }
+  .opt-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .opt-chip { font-size: .72rem; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 1px 7px; }
+  .adjust-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; max-width: 640px; align-items: end; }
+  .movement-in { color: var(--ok); font-weight: 600; }
+  .movement-out { color: var(--danger); font-weight: 600; }
 </style>

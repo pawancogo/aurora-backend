@@ -1,0 +1,41 @@
+<% can_manage = allowed_to?("inventory.manage") %>
+
+<h1 class="page-title">Inventory</h1>
+<p class="page-sub">
+  Stock across every purchasable variant. Available = on hand − reserved.
+  <% if @low_stock_count.positive? %>
+    <strong class="movement-out"><%= @low_stock_count %> item(s) low on stock.</strong>
+  <% end %>
+</p>
+
+<div class="toolbar">
+  <% if params[:low_stock].present? %>
+    <%= link_to "Show all", admin_inventory_path(q: params[:q]), class: "btn-sm" %>
+  <% else %>
+    <%= link_to "Show low stock only", admin_inventory_path(low_stock: 1, q: params[:q]), class: "btn-sm" %>
+  <% end %>
+</div>
+
+<%= render "admin/ui/search", url: admin_inventory_path, query: params[:q],
+      placeholder: "Search by product or SKU" %>
+
+<%
+  columns = [
+    { label: "ID", class: "id-cell", cell: ->(v) { v.id } },
+    { label: "Product", cell: ->(v) {
+        name = link_to(v.product.name, admin_inventory_item_path(v))
+        content_tag(:span, safe_join([name, tag.br, variant_option_chips(v)]))
+      } },
+    { label: "SKU",       cell: ->(v) { content_tag(:code, v.sku) } },
+    { label: "On hand",   cell: ->(v) { v.inventory_item&.on_hand.to_i } },
+    { label: "Reserved",  cell: ->(v) { v.inventory_item&.reserved.to_i } },
+    { label: "Available", cell: ->(v) { stock_badge(v.inventory_item) } },
+    { label: "Threshold", cell: ->(v) { v.inventory_item&.low_stock_threshold.to_i } },
+    { label: "", class: "row-actions", cell: ->(v) {
+        link_to(can_manage ? "Manage" : "History", admin_inventory_item_path(v), class: "link")
+      } }
+  ]
+%>
+<%= render "admin/ui/table", rows: @variants, columns: columns, empty: "No inventory to show." %>
+
+<%= render "admin/ui/pagination", collection: @variants, path: admin_inventory_path %>

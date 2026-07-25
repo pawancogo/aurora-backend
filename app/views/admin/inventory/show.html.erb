@@ -1,0 +1,85 @@
+<% can_manage = allowed_to?("inventory.manage") %>
+<% item = @item %>
+
+<p><%= link_to "← Inventory", admin_inventory_path, class: "link" %></p>
+<h1 class="page-title"><%= @variant.product.name %></h1>
+<p class="page-sub">
+  Variant #<%= @variant.id %> · SKU <code><%= @variant.sku %></code> · <%= variant_option_chips(@variant) %>
+</p>
+
+<div class="stat-grid" style="max-width:640px;margin-bottom:24px;">
+  <div class="stat-card"><span class="stat-label">On hand</span><span class="stat-value"><%= item.on_hand %></span></div>
+  <div class="stat-card"><span class="stat-label">Reserved</span><span class="stat-value"><%= item.reserved %></span></div>
+  <div class="stat-card"><span class="stat-label">Available</span><span class="stat-value"><%= stock_badge(item) %></span></div>
+</div>
+
+<% if can_manage %>
+  <div class="panel">
+    <h2 class="panel-title">Adjust stock</h2>
+    <%= form_with url: admin_adjust_inventory_path(@variant), method: :post do |f| %>
+      <div class="adjust-grid">
+        <div class="form-row">
+          <label>Mode</label>
+          <select name="mode">
+            <option value="add">Add / remove (delta)</option>
+            <option value="set">Set on-hand to…</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Quantity</label>
+          <%= number_field_tag :quantity, nil, placeholder: "e.g. 10 or -2" %>
+        </div>
+        <div class="form-row">
+          <label>Reason (delta mode)</label>
+          <select name="reason">
+            <% %w[restock sale adjustment return].each do |r| %>
+              <option value="<%= r %>"><%= r.capitalize %></option>
+            <% end %>
+          </select>
+        </div>
+        <div class="form-row" style="grid-column:1/-1;">
+          <label>Note (optional)</label>
+          <%= text_field_tag :note, nil, placeholder: "e.g. Received PO #123" %>
+        </div>
+      </div>
+      <div class="form-actions"><%= f.submit "Apply", class: "btn-sm" %></div>
+    <% end %>
+  </div>
+
+  <div class="panel">
+    <h2 class="panel-title">Inventory settings</h2>
+    <%= form_with url: admin_inventory_settings_path(@variant), method: :patch do |f| %>
+      <div class="adjust-grid">
+        <div class="form-row">
+          <label>Low-stock threshold</label>
+          <%= number_field_tag "inventory_item[low_stock_threshold]", item.low_stock_threshold, min: 0 %>
+        </div>
+        <div class="form-row">
+          <label class="check" style="margin-top:24px;">
+            <%= hidden_field_tag "inventory_item[backorderable]", "0" %>
+            <%= check_box_tag "inventory_item[backorderable]", "1", item.backorderable? %> Allow backorders
+          </label>
+        </div>
+      </div>
+      <div class="form-actions"><%= f.submit "Save settings", class: "btn-sm" %></div>
+    <% end %>
+  </div>
+<% end %>
+
+<div class="panel">
+  <h2 class="panel-title">Movement history</h2>
+  <%
+    columns = [
+      { label: "When", cell: ->(m) { m.created_at.strftime("%b %-d, %Y %H:%M") } },
+      { label: "Change", cell: ->(m) {
+          klass = m.quantity.positive? ? "movement-in" : "movement-out"
+          content_tag(:span, "#{m.quantity.positive? ? '+' : ''}#{m.quantity}", class: klass)
+        } },
+      { label: "Reason", cell: ->(m) { m.reason.humanize } },
+      { label: "Note", cell: ->(m) { m.note.presence || content_tag(:span, "—", class: "muted") } },
+      { label: "By", cell: ->(m) { m.admin_user&.email || content_tag(:span, "system", class: "muted") } }
+    ]
+  %>
+  <%= render "admin/ui/table", rows: @movements, columns: columns, empty: "No movements recorded yet." %>
+  <%= render "admin/ui/pagination", collection: @movements, path: admin_inventory_item_path(@variant) %>
+</div>

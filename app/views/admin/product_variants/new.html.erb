@@ -1,0 +1,5 @@
+<h1 class="page-title">New variant</h1>
+<p class="page-sub"><%= @product.name %></p>
+
+<%= render "form", variant: @variant, form_url: admin_product_variants_path(@product),
+      form_method: :post, submit_label: "Create variant" %>

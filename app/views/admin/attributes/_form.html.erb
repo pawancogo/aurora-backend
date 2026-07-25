@@ -1,0 +1,73 @@
+<%= form_with model: attribute, url: form_url, method: form_method do |form| %>
+  <% if attribute.errors.any? %>
+    <div class="flash flash-alert"><%= attribute.errors.full_messages.to_sentence %></div>
+  <% end %>
+
+  <div class="admin-form-grid" style="max-width:640px;">
+    <div class="form-row">
+      <label>Name</label>
+      <%= form.text_field :name, required: true, placeholder: "e.g. Color" %>
+    </div>
+    <div class="form-row">
+      <label>Code</label>
+      <%= form.text_field :code, placeholder: "Auto-generated from the name if blank" %>
+    </div>
+  </div>
+
+  <div class="check-grid" style="max-width:640px;">
+    <label class="check"><%= form.check_box :filterable %> Filterable (show as a storefront facet)</label>
+    <label class="check"><%= form.check_box :searchable %> Searchable</label>
+  </div>
+
+  <div class="form-row" style="max-width:200px;">
+    <label>Position</label>
+    <%= form.number_field :position, value: attribute.position || 0 %>
+  </div>
+
+  <h2 class="panel-title" style="margin-top:24px;">Values</h2>
+  <p class="page-sub">Each value can become part of a variant (e.g. Red, Blue). The code auto-fills from the value.</p>
+
+  <div class="attr-values" data-values>
+    <%= form.fields_for :attribute_values do |value_fields| %>
+      <div class="attr-value-row" data-value-row>
+        <%= value_fields.text_field :value, placeholder: "Value (e.g. Red)", class: "attr-value-input" %>
+        <%= value_fields.text_field :code, placeholder: "code (optional)", class: "attr-value-code" %>
+        <%= value_fields.number_field :position, placeholder: "Pos", class: "attr-value-pos", value: value_fields.object&.position || 0 %>
+        <% if value_fields.object&.persisted? %>
+          <label class="attr-value-remove"><%= value_fields.check_box :_destroy %> Remove</label>
+        <% else %>
+          <span></span>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <template data-value-template>
+    <div class="attr-value-row" data-value-row>
+      <input type="text" name="product_attribute[attribute_values_attributes][NEW_RECORD][value]" placeholder="Value (e.g. Red)" class="attr-value-input" />
+      <input type="text" name="product_attribute[attribute_values_attributes][NEW_RECORD][code]" placeholder="code (optional)" class="attr-value-code" />
+      <input type="number" name="product_attribute[attribute_values_attributes][NEW_RECORD][position]" placeholder="Pos" class="attr-value-pos" value="0" />
+      <span></span>
+    </div>
+  </template>
+
+  <p><button type="button" class="btn-ghost" data-add-value>+ Add value</button></p>
+
+  <div class="form-actions">
+    <%= form.submit submit_label, class: "btn-sm" %>
+    <%= link_to "Cancel", admin_attributes_path, class: "link" %>
+  </div>
+<% end %>
+
+<script>
+  (function () {
+    var btn = document.querySelector("[data-add-value]");
+    if (!btn) return;
+    btn.addEventListener("click", function () {
+      var tpl = document.querySelector("[data-value-template]");
+      var container = document.querySelector("[data-values]");
+      var html = tpl.innerHTML.replace(/NEW_RECORD/g, String(Date.now()));
+      container.insertAdjacentHTML("beforeend", html);
+    });
+  })();
+</script>

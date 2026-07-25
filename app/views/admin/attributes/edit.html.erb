@@ -1,0 +1,6 @@
+<p><%= link_to "← Attributes", admin_attributes_path, class: "link" %></p>
+<h1 class="page-title">Edit attribute</h1>
+<p class="page-sub">ID #<%= @attribute.id %> · <%= @attribute.name %></p>
+
+<%= render "form", attribute: @attribute, form_url: admin_attribute_path(@attribute),
+      form_method: :patch, submit_label: "Save changes" %>

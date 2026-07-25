@@ -12,7 +12,8 @@ class ProductAttribute < ApplicationRecord
 
   has_many :attribute_values, -> { order(:position, :id) },
            dependent: :destroy, inverse_of: :product_attribute
-  accepts_nested_attributes_for :attribute_values, allow_destroy: true
+  accepts_nested_attributes_for :attribute_values, allow_destroy: true,
+                                reject_if: ->(attrs) { attrs[:value].blank? }
 
   before_validation :normalize_code
 

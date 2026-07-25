@@ -23,6 +23,14 @@ class ProductVariant < ApplicationRecord
   scope :active, -> { where(active: true) }
   scope :ordered, -> { order(:position, :id) }
 
+  # The variants a product actually sells: every non-master variant, plus the
+  # master only when the product has no real variants. Used by the inventory list.
+  scope :purchasable, lambda {
+    where("product_variants.is_master = FALSE OR NOT EXISTS (" \
+          "SELECT 1 FROM product_variants m WHERE m.product_id = product_variants.product_id " \
+          "AND m.is_master = FALSE)")
+  }
+
   # Price falls back to the parent product's price when the variant doesn't set one.
   def price_cents_effective
     price_cents || product&.price_cents || 0

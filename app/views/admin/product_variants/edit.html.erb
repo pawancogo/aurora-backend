@@ -1,0 +1,5 @@
+<h1 class="page-title">Edit variant</h1>
+<p class="page-sub">Variant #<%= @variant.id %> · <%= @product.name %></p>
+
+<%= render "form", variant: @variant, form_url: admin_product_variant_path(@product, @variant),
+      form_method: :patch, submit_label: "Save changes" %>

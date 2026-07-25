@@ -1,0 +1,67 @@
+<% selected_by_attr = variant.attribute_values.index_by(&:product_attribute_id) %>
+
+<%= form_with model: variant, url: form_url, method: form_method do |form| %>
+  <% if variant.errors.any? %>
+    <div class="flash flash-alert"><%= variant.errors.full_messages.to_sentence %></div>
+  <% end %>
+
+  <h2 class="panel-title">Options</h2>
+  <% if @attributes.empty? %>
+    <p class="page-sub">No attributes with values exist yet. <%= link_to "Create an attribute", new_admin_attribute_path, class: "link" %> first.</p>
+  <% else %>
+    <p class="page-sub">Pick a value for the attributes that apply. The combination must be unique for this product.</p>
+    <div class="admin-form-grid" style="max-width:640px;">
+      <% @attributes.each do |attribute| %>
+        <div class="form-row">
+          <label><%= attribute.name %></label>
+          <select name="option_values[<%= attribute.id %>]">
+            <option value="">— none —</option>
+            <% attribute.attribute_values.each do |value| %>
+              <option value="<%= value.id %>" <%= "selected" if selected_by_attr[attribute.id]&.id == value.id %>><%= value.value %></option>
+            <% end %>
+          </select>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <h2 class="panel-title" style="margin-top:24px;">Pricing & identity</h2>
+  <div class="admin-form-grid" style="max-width:640px;">
+    <div class="form-row">
+      <label>Price (₹)</label>
+      <%= number_field_tag "product_variant[price]", (variant.price_cents ? variant.price_cents / 100.0 : nil),
+            step: "0.01", placeholder: "Inherits ₹#{@product.price.round} if blank" %>
+    </div>
+    <div class="form-row">
+      <label>MRP (₹)</label>
+      <%= number_field_tag "product_variant[mrp]", (variant.mrp_cents ? variant.mrp_cents / 100.0 : nil),
+            step: "0.01", placeholder: "Inherits ₹#{@product.mrp.round} if blank" %>
+    </div>
+    <div class="form-row">
+      <label>SKU</label>
+      <%= form.text_field :sku, placeholder: "Auto-generated (VAR-…) if blank" %>
+    </div>
+    <div class="form-row">
+      <label>Barcode</label>
+      <%= form.text_field :barcode %>
+    </div>
+  </div>
+
+  <div class="check-grid" style="max-width:640px;">
+    <label class="check"><%= form.check_box :active %> Active (available to buy)</label>
+  </div>
+
+  <% if variant.new_record? %>
+    <div class="form-row" style="max-width:200px;">
+      <label>Initial stock</label>
+      <%= number_field_tag :initial_stock, 0, min: 0 %>
+    </div>
+  <% else %>
+    <p class="page-sub">Manage stock for this variant on its <%= link_to "inventory page", admin_inventory_item_path(variant), class: "link" %>.</p>
+  <% end %>
+
+  <div class="form-actions">
+    <%= form.submit submit_label, class: "btn-sm" %>
+    <%= link_to "Cancel", admin_product_variants_path(@product), class: "link" %>
+  </div>
+<% end %>

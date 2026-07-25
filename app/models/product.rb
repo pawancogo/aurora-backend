@@ -25,7 +25,8 @@ class Product < ApplicationRecord
            class_name: "ProductVariant", dependent: :destroy, inverse_of: :product
   has_many :specifications, -> { order(:position, :id) },
            class_name: "ProductSpecification", dependent: :destroy, inverse_of: :product
-  accepts_nested_attributes_for :specifications, allow_destroy: true
+  accepts_nested_attributes_for :specifications, allow_destroy: true,
+                                reject_if: ->(attrs) { attrs[:name].blank? && attrs[:value].blank? }
   has_many :product_relations, -> { order(:position, :id) }, dependent: :destroy, inverse_of: :product
   has_many :related_products, through: :product_relations
 
