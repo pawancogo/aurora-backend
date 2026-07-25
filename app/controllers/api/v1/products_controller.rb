@@ -13,7 +13,11 @@ module Api
       # GET /api/v1/products/:slug
       def show
         product = Product.kept.live
-                         .includes(:brand, :category, :tax_class, :product_images)
+                         .includes(
+                           :brand, :category, :tax_class, :product_images, :specifications,
+                           { variants: [ :inventory_item, { variant_option_values: { attribute_value: :product_attribute } } ] },
+                           { product_relations: :related_product }
+                         )
                          .find_by!(slug: params[:id])
         render_success(ProductDetailSerializer.new(product).as_json)
       end
