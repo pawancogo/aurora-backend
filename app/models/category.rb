@@ -15,6 +15,8 @@ class Category < ApplicationRecord
            inverse_of: :parent,
            dependent: :destroy
   has_many :products, dependent: :nullify
+  has_many :category_attributes, dependent: :destroy
+  has_many :variant_attributes, through: :category_attributes, source: :product_attribute
 
   validates :name, presence: true
   validate :parent_not_self

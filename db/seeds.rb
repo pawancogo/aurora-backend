@@ -294,6 +294,12 @@ end
 colors = %w[Black White Navy].each_with_index.map { |v, i| seed_value.call(color_attr, v, i) }
 sizes  = %w[S M L XL].each_with_index.map  { |v, i| seed_value.call(size_attr, v, i) }
 
+# Scope Color + Size to apparel categories so only those attributes appear on an
+# apparel product's variant form (electronics fall back to all attributes).
+[ cat[:tshirts], cat[:shirts], cat[:jeans], cat[:dresses] ].compact.each do |c|
+  [ color_attr, size_attr ].each { |a| CategoryAttribute.find_or_create_by!(category: c, product_attribute: a) }
+end
+
 # Give a couple of apparel products a Color × Size variant matrix with a mixed
 # stock profile (out / low / healthy) so the storefront + inventory screens have
 # something real to show.

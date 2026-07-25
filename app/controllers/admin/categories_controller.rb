@@ -5,6 +5,7 @@ module Admin
     before_action -> { require_permission!("categories.read") }, only: :index
     before_action -> { require_permission!("categories.manage") }, only: %i[new create edit update destroy]
     before_action :set_category, only: %i[edit update destroy]
+    before_action :load_attributes, only: %i[new create edit update]
 
     def index
       @filtering = params[:q].present? || params[:visible].present?
@@ -49,10 +50,14 @@ module Admin
       @category = Category.kept.find(params[:id])
     end
 
+    def load_attributes
+      @all_attributes = ProductAttribute.ordered
+    end
+
     def category_params
       params.require(:category).permit(
         :name, :slug, :parent_id, :description, :image_url, :position, :visible,
-        :meta_title, :meta_description
+        :meta_title, :meta_description, variant_attribute_ids: []
       )
     end
 

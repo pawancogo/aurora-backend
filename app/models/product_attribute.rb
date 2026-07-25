@@ -15,6 +15,9 @@ class ProductAttribute < ApplicationRecord
   accepts_nested_attributes_for :attribute_values, allow_destroy: true,
                                 reject_if: ->(attrs) { attrs[:value].blank? }
 
+  has_many :category_attributes, dependent: :destroy
+  has_many :categories, through: :category_attributes
+
   before_validation :normalize_code
 
   validates :name, presence: true

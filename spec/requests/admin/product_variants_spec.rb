@@ -62,4 +62,37 @@ RSpec.describe "Admin product variants", type: :request do
       delete "/admin/products/#{product.id}/variants/#{variant.id}"
     end.to change { product.variants.non_master.count }.by(-1)
   end
+
+  it "offers only the attributes scoped to the product's category on the new-variant form" do
+    sign_in_admin(super_admin)
+    size = create(:product_attribute, :size)
+    size.attribute_values.create!(value: "M")
+    red # ensure Color has a value
+    category = create(:category)
+    category.variant_attributes = [ color ] # only Color scoped to this category
+    scoped_product = create(:product, category: category)
+
+    get "/admin/products/#{scoped_product.id}/variants/new"
+
+    expect(response.body).to include("Color")
+    expect(response.body).not_to include(">Size<") # the Size option group label
+  end
+end
+
+RSpec.describe "Admin category → attribute links", type: :request do
+  def sign_in_admin(admin, password = "password1234")
+    post "/admin/login", params: { email: admin.email, password: password }
+  end
+
+  it "links variant attributes to a category" do
+    admin = create(:admin_user, :super_admin, password: "password1234")
+    sign_in_admin(admin)
+    color = create(:product_attribute, :color)
+    category = create(:category, name: "Footwear")
+
+    patch "/admin/categories/#{category.id}",
+          params: { category: { name: "Footwear", variant_attribute_ids: [ "", color.id.to_s ] } }
+
+    expect(category.reload.variant_attributes).to contain_exactly(color)
+  end
 end

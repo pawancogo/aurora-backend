@@ -87,4 +87,41 @@ RSpec.describe Product do
       expect(product).to be_in_stock
     end
   end
+
+  describe "#applicable_attributes" do
+    def attr_with_value(trait_or_name)
+      attribute = trait_or_name.is_a?(Symbol) ? create(:product_attribute, trait_or_name) : create(:product_attribute, name: trait_or_name)
+      attribute.attribute_values.create!(value: "v")
+      attribute
+    end
+
+    it "is scoped to the attributes linked to the product's category" do
+      color = attr_with_value(:color)
+      size = attr_with_value(:size)
+      attr_with_value("Shoe Size") # exists but not linked
+      category = create(:category)
+      category.variant_attributes = [ color, size ]
+
+      product = create(:product, category: category)
+      expect(product.applicable_attributes.map(&:name)).to contain_exactly("Color", "Size")
+    end
+
+    it "inherits attribute links from an ancestor category" do
+      color = attr_with_value(:color)
+      parent = create(:category)
+      child = create(:category, parent: parent)
+      parent.variant_attributes = [ color ]
+
+      product = create(:product, category: child)
+      expect(product.applicable_attributes.map(&:name)).to eq([ "Color" ])
+    end
+
+    it "falls back to all attributes with values when the category has no links" do
+      color = attr_with_value(:color)
+      create(:product_attribute) # no values → excluded from the fallback
+      product = create(:product, category: create(:category))
+
+      expect(product.applicable_attributes.map(&:name)).to eq([ "Color" ])
+    end
+  end
 end

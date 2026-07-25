@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_25_120009) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_25_130001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -82,6 +82,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_25_120009) do
     t.index ["parent_id"], name: "index_categories_on_parent_id"
     t.index ["slug"], name: "index_categories_on_slug", unique: true
     t.index ["visible"], name: "index_categories_on_visible"
+  end
+
+  create_table "category_attributes", force: :cascade do |t|
+    t.bigint "category_id", null: false
+    t.datetime "created_at", null: false
+    t.integer "position", default: 0, null: false
+    t.bigint "product_attribute_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["category_id", "product_attribute_id"], name: "index_category_attributes_uniqueness", unique: true
+    t.index ["category_id"], name: "index_category_attributes_on_category_id"
+    t.index ["product_attribute_id"], name: "index_category_attributes_on_product_attribute_id"
   end
 
   create_table "customers", force: :cascade do |t|
@@ -354,6 +365,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_25_120009) do
   add_foreign_key "admin_user_roles", "roles"
   add_foreign_key "attribute_values", "product_attributes"
   add_foreign_key "categories", "categories", column: "parent_id"
+  add_foreign_key "category_attributes", "categories"
+  add_foreign_key "category_attributes", "product_attributes"
   add_foreign_key "inventory_items", "product_variants"
   add_foreign_key "navigation_items", "navigation_items", column: "parent_id"
   add_foreign_key "product_images", "products"

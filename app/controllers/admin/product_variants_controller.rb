@@ -59,10 +59,10 @@ module Admin
                          .includes(:variant_option_values).find(params[:id])
     end
 
-    # Only attributes that actually have values are pickable.
+    # Attributes offered for this product: scoped to its category (with values),
+    # falling back to all when the category has no attribute links configured.
     def load_attributes
-      @attributes = ProductAttribute.includes(:attribute_values).ordered
-                                    .select { |attribute| attribute.attribute_values.any? }
+      @attributes = @product.applicable_attributes
     end
 
     def variant_params

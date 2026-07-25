@@ -71,6 +71,16 @@ class Product < ApplicationRecord
     variants.non_master.exists?
   end
 
+  # The variant attributes offered when building this product's variants:
+  # those linked to its category (or any ancestor category). Falls back to all
+  # attributes that have values when the category has no links configured, so
+  # nothing breaks for uncategorised products or before links are set up.
+  def applicable_attributes
+    base = category_linked_attributes
+    base = ProductAttribute.all unless base.exists?
+    base.ordered.includes(:attribute_values).select { |attribute| attribute.attribute_values.any? }
+  end
+
   # The distinct attributes this product varies on (drives the PDP selector),
   # ordered by the attribute registry position.
   def option_attributes
@@ -95,6 +105,15 @@ class Product < ApplicationRecord
   end
 
   private
+
+  # Attributes linked to this product's category or any of its ancestors.
+  def category_linked_attributes
+    return ProductAttribute.none unless category
+
+    category_ids = [ category.id ] + category.ancestors.map(&:id)
+    ProductAttribute.joins(:category_attributes)
+                    .where(category_attributes: { category_id: category_ids }).distinct
+  end
 
   def variant_option_value_ids
     VariantOptionValue.where(product_variant_id: variants.select(:id)).select(:attribute_value_id)

@@ -59,6 +59,25 @@
     </div>
   </div>
 
+  <div class="form-row">
+    <label>Variant attributes</label>
+    <p class="muted-sm">Which option types products in this category vary on. Only these appear on the variant form (inherited by sub-categories). Leave all unchecked to offer every attribute.</p>
+    <% if @all_attributes.blank? %>
+      <p class="muted-sm">No attributes yet — <%= link_to "create one", new_admin_attribute_path, class: "link" %>.</p>
+    <% else %>
+      <%= hidden_field_tag "category[variant_attribute_ids][]", "" %>
+      <div class="check-grid" style="max-width:640px;">
+        <% @all_attributes.each do |attribute| %>
+          <label class="check">
+            <%= check_box_tag "category[variant_attribute_ids][]", attribute.id,
+                  category.variant_attribute_ids.include?(attribute.id), id: "cat_attr_#{attribute.id}" %>
+            <%= attribute.name %>
+          </label>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
   <div class="form-actions">
     <%= form.submit submit_label, class: "btn-sm" %>
     <%= link_to "Cancel", admin_categories_path, class: "link" %>
