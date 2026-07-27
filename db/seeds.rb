@@ -333,22 +333,40 @@ seed_relation.call("JN-001", "TS-001", :cross_sell)
 Banner.find_or_create_by!(placement: "announcement", title: "Free delivery on every order — shop the new season") do |b|
   b.link_url = "/products"
 end
+# Hero carousel slides (multiple → the homepage hero cycles through them).
 [
   { title: "New season, new essentials", subtitle: "Premium quality, thoughtfully made",
-    image_url: "https://picsum.photos/seed/aurora-hero1/1600/700", link_url: "/products", cta_label: "Shop all", position: 1 },
+    image_url: "https://picsum.photos/seed/aurora-hero1/1600/900", link_url: "/products", cta_label: "Shop all", position: 1 },
   { title: "Tech that keeps up", subtitle: "The latest in electronics",
-    image_url: "https://picsum.photos/seed/aurora-hero2/1600/700", link_url: "/c/electronics", cta_label: "Explore", position: 2 }
+    image_url: "https://picsum.photos/seed/aurora-hero2/1600/900", link_url: "/c/electronics", cta_label: "Explore", position: 2 },
+  { title: "Wardrobe staples, restocked", subtitle: "Best sellers back in stock",
+    image_url: "https://picsum.photos/seed/aurora-hero3/1600/900", link_url: "/c/men", cta_label: "Shop men", position: 3 }
 ].each do |attrs|
   Banner.find_or_create_by!(placement: "hero", title: attrs[:title]) { |b| b.assign_attributes(attrs) }
 end
 
+# Promo strip banners (a row of clickable promo cards).
+[
+  { title: "Up to 40% off", subtitle: "Season sale", image_url: "https://picsum.photos/seed/aurora-promo1/800/500",
+    link_url: "/products", cta_label: "Shop the sale", position: 1 },
+  { title: "New arrivals", subtitle: "Fresh drops weekly", image_url: "https://picsum.photos/seed/aurora-promo2/800/500",
+    link_url: "/products", cta_label: "Discover", position: 2 },
+  { title: "Electronics", subtitle: "Gadgets & more", image_url: "https://picsum.photos/seed/aurora-promo3/800/500",
+    link_url: "/c/electronics", cta_label: "Browse", position: 3 }
+].each do |attrs|
+  Banner.find_or_create_by!(placement: "promo", title: attrs[:title]) { |b| b.assign_attributes(attrs) }
+end
+
+# Homepage sections in order. update! so re-seeding fixes positions/config even
+# for sections that already exist.
 [
   { title: "Hero", section_type: "hero", position: 1, config: { "placement" => "hero" } },
-  { title: "Shop by category", section_type: "category_grid", position: 2, config: { "limit" => 6 } },
-  { title: "New arrivals", section_type: "product_rail", position: 3, config: { "source" => "new_arrival", "limit" => 8 } },
-  { title: "Best sellers", section_type: "product_rail", position: 4, config: { "source" => "best_seller", "limit" => 8 } }
+  { title: "Featured deals", section_type: "promo", position: 2, config: { "placement" => "promo" } },
+  { title: "Shop by category", section_type: "category_grid", position: 3, config: { "limit" => 6 } },
+  { title: "New arrivals", section_type: "product_rail", position: 4, config: { "source" => "new_arrival", "limit" => 8 } },
+  { title: "Best sellers", section_type: "product_rail", position: 5, config: { "source" => "best_seller", "limit" => 8 } }
 ].each do |attrs|
-  HomepageSection.find_or_create_by!(title: attrs[:title]) { |s| s.assign_attributes(attrs.merge(visible: true)) }
+  HomepageSection.find_or_initialize_by(title: attrs[:title]).update!(attrs.merge(visible: true))
 end
 
 [
