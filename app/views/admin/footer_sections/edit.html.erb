@@ -1,0 +1,5 @@
+<p><%= link_to "← Footer", admin_footer_sections_path, class: "link" %></p>
+<h1 class="page-title">Edit footer column</h1>
+<p class="page-sub">ID #<%= @section.id %></p>
+
+<%= render "form", section: @section, form_url: admin_footer_section_path(@section), form_method: :patch, submit_label: "Save changes" %>

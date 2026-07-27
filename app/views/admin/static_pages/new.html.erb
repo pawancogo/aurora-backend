@@ -1,0 +1,4 @@
+<p><%= link_to "← Pages", admin_static_pages_path, class: "link" %></p>
+<h1 class="page-title">New page</h1>
+
+<%= render "form", page: @page, form_url: admin_static_pages_path, form_method: :post, submit_label: "Create page" %>

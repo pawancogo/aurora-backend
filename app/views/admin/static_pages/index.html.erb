@@ -1,0 +1,35 @@
+<% can_manage = allowed_to?("cms.manage") %>
+
+<h1 class="page-title">Pages</h1>
+<p class="page-sub">CMS pages (About, Contact, Privacy, …), shown on the storefront at <code>/p/&lt;slug&gt;</code> when published.</p>
+
+<% if can_manage %>
+  <div class="toolbar"><%= link_to "+ New page", new_admin_static_page_path, class: "btn-sm" %></div>
+<% end %>
+
+<%
+  facet_options = ->(key) { Array(@facets[key]).map { |f| [ "#{f[:label]} (#{f[:count]})", f[:value] ] } }
+%>
+<%= render "admin/ui/search", url: admin_static_pages_path, query: params[:q],
+      placeholder: "Search pages",
+      filters: [ { name: "published", prompt: "Any status", selected: params[:published], options: facet_options.call("published") } ] %>
+
+<%
+  columns = [
+    { label: "ID", class: "id-cell", cell: ->(p) { p.id } },
+    { label: "Title", cell: ->(p) { can_manage ? link_to(p.title, edit_admin_static_page_path(p)) : p.title } },
+    { label: "Slug", cell: ->(p) { content_tag(:code, "/p/#{p.slug}") } },
+    { label: "Status", cell: ->(p) { p.published? ? content_tag(:span, "Published", class: "stock-badge ok") : content_tag(:span, "Draft", class: "muted") } }
+  ]
+  if can_manage
+    columns << { label: "", class: "row-actions", cell: ->(p) {
+        safe_join([
+          link_to("Edit", edit_admin_static_page_path(p), class: "link"),
+          button_to("Delete", admin_static_page_path(p), method: :delete, class: "link danger",
+                    form: { onsubmit: "return confirm('Delete this page?');" })
+        ])
+      } }
+  end
+%>
+<%= render "admin/ui/table", rows: @pages, columns: columns, empty: "No pages yet." %>
+<%= render "admin/ui/pagination", collection: @pages, path: admin_static_pages_path %>

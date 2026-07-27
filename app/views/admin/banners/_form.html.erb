@@ -1,0 +1,74 @@
+<%= form_with model: banner, url: form_url, method: form_method do |form| %>
+  <% if banner.errors.any? %>
+    <div class="flash flash-alert"><%= banner.errors.full_messages.to_sentence %></div>
+  <% end %>
+
+  <div class="admin-form-grid" style="max-width:680px;">
+    <div class="form-row">
+      <label>Placement</label>
+      <%= form.select :placement, Banner.placements.keys.map { |p| [ p.humanize, p ] }, {} %>
+      <p class="muted-sm">Hero = homepage carousel · Promo = promo strip · Announcement = top bar (uses the title text).</p>
+    </div>
+    <div class="form-row">
+      <label>Position</label>
+      <%= form.number_field :position, value: banner.position || 0 %>
+    </div>
+  </div>
+
+  <div class="form-row" style="max-width:680px;">
+    <label>Title</label>
+    <%= form.text_field :title %>
+  </div>
+  <div class="form-row" style="max-width:680px;">
+    <label>Subtitle</label>
+    <%= form.text_field :subtitle %>
+  </div>
+
+  <div class="form-row" style="max-width:680px;">
+    <label>Image URL</label>
+    <%= form.text_field :image_url %>
+    <%= render "admin/ui/uploader", target: "#banner_image_url", mode: "set", kind: "image", label: "Upload image" %>
+    <%= render "admin/ui/image_preview", source: "#banner_image_url" %>
+  </div>
+  <div class="admin-form-grid" style="max-width:680px;">
+    <div class="form-row">
+      <label>Mobile image URL <span class="muted-sm">(optional)</span></label>
+      <%= form.text_field :mobile_image_url %>
+    </div>
+    <div class="form-row">
+      <label>Alt text</label>
+      <%= form.text_field :alt_text %>
+    </div>
+  </div>
+
+  <div class="admin-form-grid" style="max-width:680px;">
+    <div class="form-row">
+      <label>Link URL</label>
+      <%= form.text_field :link_url, placeholder: "/products or /c/men" %>
+    </div>
+    <div class="form-row">
+      <label>Button label (CTA)</label>
+      <%= form.text_field :cta_label, placeholder: "Shop now" %>
+    </div>
+  </div>
+
+  <h2 class="section-title">Visibility &amp; schedule</h2>
+  <div class="check-grid" style="max-width:680px;">
+    <label class="check"><%= form.check_box :visible %> Visible</label>
+  </div>
+  <div class="admin-form-grid" style="max-width:680px;">
+    <div class="form-row">
+      <label>Starts at <span class="muted-sm">(optional)</span></label>
+      <%= form.datetime_local_field :starts_at %>
+    </div>
+    <div class="form-row">
+      <label>Ends at <span class="muted-sm">(optional)</span></label>
+      <%= form.datetime_local_field :ends_at %>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <%= form.submit submit_label, class: "btn-sm" %>
+    <%= link_to "Cancel", admin_banners_path, class: "link" %>
+  </div>
+<% end %>

@@ -1,0 +1,45 @@
+<%= form_with model: page, url: form_url, method: form_method do |form| %>
+  <% if page.errors.any? %>
+    <div class="flash flash-alert"><%= page.errors.full_messages.to_sentence %></div>
+  <% end %>
+
+  <div class="admin-form-grid" style="max-width:680px;">
+    <div class="form-row">
+      <label>Title</label>
+      <%= form.text_field :title, required: true %>
+    </div>
+    <div class="form-row">
+      <label>Slug</label>
+      <%= form.text_field :slug, placeholder: "Auto-generated from the title if blank" %>
+    </div>
+  </div>
+
+  <div class="form-row" style="max-width:900px;">
+    <label>Body <span class="muted-sm">(HTML or plain text)</span></label>
+    <%= form.text_area :body, rows: 16, style: "font-family: ui-monospace, monospace; font-size:.85rem;" %>
+  </div>
+
+  <div class="check-grid" style="max-width:680px;">
+    <label class="check"><%= form.check_box :published %> Published (visible on the storefront)</label>
+  </div>
+
+  <div class="admin-form-grid" style="max-width:680px;">
+    <div class="form-row">
+      <label>Meta title (SEO)</label>
+      <%= form.text_field :meta_title %>
+    </div>
+    <div class="form-row">
+      <label>Meta description (SEO)</label>
+      <%= form.text_field :meta_description %>
+    </div>
+  </div>
+  <div class="form-row" style="max-width:200px;">
+    <label>Position</label>
+    <%= form.number_field :position, value: page.position || 0 %>
+  </div>
+
+  <div class="form-actions">
+    <%= form.submit submit_label, class: "btn-sm" %>
+    <%= link_to "Cancel", admin_static_pages_path, class: "link" %>
+  </div>
+<% end %>

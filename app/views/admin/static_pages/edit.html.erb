@@ -1,0 +1,5 @@
+<p><%= link_to "← Pages", admin_static_pages_path, class: "link" %></p>
+<h1 class="page-title">Edit page</h1>
+<p class="page-sub">ID #<%= @page.id %> · <code>/p/<%= @page.slug %></code></p>
+
+<%= render "form", page: @page, form_url: admin_static_page_path(@page), form_method: :patch, submit_label: "Save changes" %>

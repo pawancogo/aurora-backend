@@ -1,0 +1,4 @@
+<p><%= link_to "← Banners", admin_banners_path, class: "link" %></p>
+<h1 class="page-title">New banner</h1>
+
+<%= render "form", banner: @banner, form_url: admin_banners_path, form_method: :post, submit_label: "Create banner" %>

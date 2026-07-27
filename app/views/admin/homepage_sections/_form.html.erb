@@ -1,0 +1,80 @@
+<%= form_with model: section, url: form_url, method: form_method do |form| %>
+  <% if section.errors.any? %>
+    <div class="flash flash-alert"><%= section.errors.full_messages.to_sentence %></div>
+  <% end %>
+
+  <div class="admin-form-grid" style="max-width:680px;">
+    <div class="form-row">
+      <label>Type</label>
+      <%= form.select :section_type, HomepageSection::SECTION_TYPES.map { |t| [ t.humanize, t ] }, {} %>
+    </div>
+    <div class="form-row">
+      <label>Position</label>
+      <%= form.number_field :position, value: section.position || 0 %>
+    </div>
+  </div>
+
+  <div class="admin-form-grid" style="max-width:680px;">
+    <div class="form-row">
+      <label>Title <span class="muted-sm">(shown above the block)</span></label>
+      <%= form.text_field :title %>
+    </div>
+    <div class="form-row">
+      <label>Subtitle</label>
+      <%= form.text_field :subtitle %>
+    </div>
+  </div>
+
+  <h2 class="section-title">Block settings</h2>
+  <p class="page-sub">Fill only the fields for your chosen type.</p>
+  <div class="admin-form-grid" style="max-width:680px;">
+    <div class="form-row">
+      <label>Source <span class="muted-sm">(product row)</span></label>
+      <select name="homepage_section[config][source]">
+        <% ["", "new_arrival", "best_seller", "featured", "category"].each do |opt| %>
+          <option value="<%= opt %>" <%= "selected" if section.setting("source").to_s == opt %>><%= opt.presence ? opt.humanize : "—" %></option>
+        <% end %>
+      </select>
+    </div>
+    <div class="form-row">
+      <label>Category slug <span class="muted-sm">(product row, source = category)</span></label>
+      <%= text_field_tag "homepage_section[config][category_slug]", section.setting("category_slug"), placeholder: "men" %>
+    </div>
+    <div class="form-row">
+      <label>Limit <span class="muted-sm">(product row / category grid)</span></label>
+      <%= number_field_tag "homepage_section[config][limit]", section.setting("limit"), min: 1, max: 24 %>
+    </div>
+    <div class="form-row">
+      <label>Placement <span class="muted-sm">(hero / promo)</span></label>
+      <select name="homepage_section[config][placement]">
+        <% ["", "hero", "promo"].each do |opt| %>
+          <option value="<%= opt %>" <%= "selected" if section.setting("placement").to_s == opt %>><%= opt.presence ? opt.humanize : "—" %></option>
+        <% end %>
+      </select>
+    </div>
+  </div>
+  <div class="form-row" style="max-width:680px;">
+    <label>Body <span class="muted-sm">(text block)</span></label>
+    <%= text_area_tag "homepage_section[config][body]", section.setting("body"), rows: 4 %>
+  </div>
+
+  <h2 class="section-title">Visibility &amp; schedule</h2>
+  <div class="check-grid" style="max-width:680px;">
+    <label class="check"><%= form.check_box :visible %> Visible</label>
+  </div>
+  <div class="admin-form-grid" style="max-width:680px;">
+    <div class="form-row">
+      <label>Starts at <span class="muted-sm">(optional)</span></label>
+      <%= form.datetime_local_field :starts_at %>
+    </div>
+    <div class="form-row">
+      <label>Ends at <span class="muted-sm">(optional)</span></label>
+      <%= form.datetime_local_field :ends_at %>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <%= form.submit submit_label, class: "btn-sm" %>
+    <%= link_to "Cancel", admin_homepage_sections_path, class: "link" %>
+  </div>
+<% end %>

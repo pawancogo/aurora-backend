@@ -1,0 +1,4 @@
+<p><%= link_to "← Homepage", admin_homepage_sections_path, class: "link" %></p>
+<h1 class="page-title">New homepage section</h1>
+
+<%= render "form", section: @section, form_url: admin_homepage_sections_path, form_method: :post, submit_label: "Create section" %>

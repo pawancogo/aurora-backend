@@ -1,0 +1,5 @@
+<p><%= link_to "← Homepage", admin_homepage_sections_path, class: "link" %></p>
+<h1 class="page-title">Edit homepage section</h1>
+<p class="page-sub">ID #<%= @section.id %> · <%= @section.section_type.humanize %></p>
+
+<%= render "form", section: @section, form_url: admin_homepage_section_path(@section), form_method: :patch, submit_label: "Save changes" %>

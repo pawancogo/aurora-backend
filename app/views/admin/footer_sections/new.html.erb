@@ -1,0 +1,4 @@
+<p><%= link_to "← Footer", admin_footer_sections_path, class: "link" %></p>
+<h1 class="page-title">New footer column</h1>
+
+<%= render "form", section: @section, form_url: admin_footer_sections_path, form_method: :post, submit_label: "Create column" %>

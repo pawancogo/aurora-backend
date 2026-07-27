@@ -1,0 +1,27 @@
+<% can_manage = allowed_to?("cms.manage") %>
+
+<h1 class="page-title">Footer</h1>
+<p class="page-sub">Footer link columns shown across the storefront.</p>
+
+<% if can_manage %>
+  <div class="toolbar"><%= link_to "+ New column", new_admin_footer_section_path, class: "btn-sm" %></div>
+<% end %>
+
+<%
+  columns = [
+    { label: "ID", class: "id-cell", cell: ->(s) { s.id } },
+    { label: "Heading", cell: ->(s) { content_tag(:strong, s.heading) } },
+    { label: "Links", cell: ->(s) { s.link_items.map { |l| l["label"] }.join(", ").presence || content_tag(:span, "—", class: "muted") } },
+    { label: "Visible", cell: ->(s) { s.visible? ? "✓" : "—" } }
+  ]
+  if can_manage
+    columns << { label: "", class: "row-actions", cell: ->(s) {
+        safe_join([
+          link_to("Edit", edit_admin_footer_section_path(s), class: "link"),
+          button_to("Delete", admin_footer_section_path(s), method: :delete, class: "link danger",
+                    form: { onsubmit: "return confirm('Delete this footer column?');" })
+        ])
+      } }
+  end
+%>
+<%= render "admin/ui/table", rows: @sections, columns: columns, empty: "No footer columns yet." %>

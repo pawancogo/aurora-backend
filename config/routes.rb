@@ -112,6 +112,12 @@ Rails.application.routes.draw do
     get   "inventory/:variant_id",         to: "inventory#show",            as: :inventory_item
     post  "inventory/:variant_id/adjust",  to: "inventory#adjust",          as: :adjust_inventory
     patch "inventory/:variant_id/settings", to: "inventory#update_settings", as: :inventory_settings
+
+    # CMS / content management
+    resources :banners,           only: %i[index new create edit update destroy]
+    resources :homepage_sections, only: %i[index new create edit update destroy], path: "homepage-sections"
+    resources :static_pages,      only: %i[index new create edit update destroy], path: "pages"
+    resources :footer_sections,   only: %i[index new create edit update destroy], path: "footer"
   end
 
   # Backend root goes to the admin portal (which redirects to login or dashboard).
