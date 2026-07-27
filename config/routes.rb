@@ -11,7 +11,6 @@ Rails.application.routes.draw do
       get "ready",  to: "health#ready"
 
       # Public, API-driven site configuration.
-      get "navigation",    to: "navigation#index"
       get "settings",      to: "settings#index"
       get "feature_flags", to: "feature_flags#index"
 
@@ -43,9 +42,6 @@ Rails.application.routes.draw do
         resources :roles, only: :index
         resources :permissions, only: :index
 
-        resources :navigation_items, only: %i[index show create update destroy] do
-          post :reorder, on: :collection
-        end
         resources :site_settings, only: %i[index show create update destroy]
         resources :feature_flags, only: %i[index create update destroy]
 

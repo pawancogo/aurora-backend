@@ -8,7 +8,7 @@ module Admin
         { label: "Customers", value: Customer.kept.count, permission: "customers.read" },
         { label: "Admin users", value: AdminUser.kept.count, permission: "users.read" },
         { label: "Roles", value: Role.count, permission: "roles.read" },
-        { label: "Navigation items", value: NavigationItem.count, permission: "navigation.read" },
+        { label: "Categories", value: Category.kept.count, permission: "categories.read" },
         { label: "Feature flags", value: FeatureFlag.count, permission: "settings.read" }
       ]
     end

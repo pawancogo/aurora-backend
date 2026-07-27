@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_25_130001) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_27_120001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -135,29 +135,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_25_130001) do
     t.integer "reserved", default: 0, null: false
     t.datetime "updated_at", null: false
     t.index ["product_variant_id"], name: "index_inventory_items_on_product_variant_id", unique: true
-  end
-
-  create_table "navigation_items", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.datetime "ends_at"
-    t.string "icon"
-    t.string "image_url"
-    t.string "label", null: false
-    t.string "link_type", default: "internal", null: false
-    t.string "location", default: "header", null: false
-    t.string "meta_description"
-    t.string "meta_title"
-    t.boolean "open_in_new_tab", default: false, null: false
-    t.bigint "parent_id"
-    t.integer "position", default: 0, null: false
-    t.string "slug"
-    t.datetime "starts_at"
-    t.datetime "updated_at", null: false
-    t.string "url"
-    t.boolean "visible", default: true, null: false
-    t.index ["location", "parent_id", "position"], name: "index_navigation_items_on_location_and_parent_id_and_position"
-    t.index ["parent_id"], name: "index_navigation_items_on_parent_id"
-    t.index ["visible"], name: "index_navigation_items_on_visible"
   end
 
   create_table "permissions", force: :cascade do |t|
@@ -368,7 +345,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_25_130001) do
   add_foreign_key "category_attributes", "categories"
   add_foreign_key "category_attributes", "product_attributes"
   add_foreign_key "inventory_items", "product_variants"
-  add_foreign_key "navigation_items", "navigation_items", column: "parent_id"
   add_foreign_key "product_images", "products"
   add_foreign_key "product_relations", "products"
   add_foreign_key "product_relations", "products", column: "related_product_id"

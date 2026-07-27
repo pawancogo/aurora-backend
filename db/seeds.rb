@@ -33,8 +33,6 @@ PERMISSIONS = {
   "reviews.manage" => "Moderate reviews",
   "cms.read" => "View CMS content",
   "cms.manage" => "Manage CMS content",
-  "navigation.read" => "View navigation menus",
-  "navigation.manage" => "Manage navigation menus",
   "customers.read" => "View customers",
   "customers.manage" => "Manage customers",
   "reports.read" => "View reports",
@@ -72,7 +70,7 @@ ROLES = {
   "content_manager" => {
     name: "Content Manager",
     description: "Manages CMS content and catalog copy.",
-    permissions: %w[dashboard.read cms.read cms.manage navigation.read navigation.manage
+    permissions: %w[dashboard.read cms.read cms.manage
                     products.read categories.read brands.read reviews.read]
   },
   "support" => {
@@ -103,29 +101,6 @@ if super_admin.new_record?
   super_admin.save!
 end
 super_admin.roles = [ Role.find_by!(key: "super_admin") ] unless super_admin.roles.exists?(key: "super_admin")
-
-# --- Navigation (header mega-menu), idempotent -------------------------------
-def upsert_nav(label:, parent: nil, location: "header", **attrs)
-  NavigationItem.find_or_create_by!(label: label, location: location, parent_id: parent&.id) do |item|
-    attrs.each { |attr, value| item[attr] = value }
-  end
-end
-
-men = upsert_nav(label: "Men", slug: "men", url: "/c/men", position: 1)
-men_top = upsert_nav(label: "Topwear", slug: "topwear", url: "/c/men/topwear", parent: men, position: 1)
-upsert_nav(label: "T-Shirts", slug: "t-shirts", url: "/c/men/topwear/t-shirts", parent: men_top, position: 1)
-upsert_nav(label: "Shirts", slug: "shirts", url: "/c/men/topwear/shirts", parent: men_top, position: 2)
-men_bottom = upsert_nav(label: "Bottomwear", slug: "bottomwear", url: "/c/men/bottomwear", parent: men, position: 2)
-upsert_nav(label: "Jeans", slug: "jeans", url: "/c/men/bottomwear/jeans", parent: men_bottom, position: 1)
-
-women = upsert_nav(label: "Women", slug: "women", url: "/c/women", position: 2)
-upsert_nav(label: "Dresses", slug: "dresses", url: "/c/women/dresses", parent: women, position: 1)
-
-electronics = upsert_nav(label: "Electronics", slug: "electronics", url: "/c/electronics", position: 3)
-upsert_nav(label: "Mobiles", slug: "mobiles", url: "/c/electronics/mobiles", parent: electronics, position: 1)
-upsert_nav(label: "Laptops", slug: "laptops", url: "/c/electronics/laptops", parent: electronics, position: 2)
-
-upsert_nav(label: "Sale", slug: "sale", url: "/c/sale", position: 4)
 
 # --- Site settings -----------------------------------------------------------
 [
