@@ -3,8 +3,25 @@
 <h1 class="page-title">Variants</h1>
 <p class="page-sub">Every product variant across the catalog. Edit a variant's options, price and SKU here; adjust its stock under <%= link_to "Inventory", admin_inventory_path, class: "link" %>.</p>
 
+<%
+  filters = [
+    { name: "brand_id",    prompt: "Any brand",    selected: params[:brand_id],    options: @brands,     searchable: true },
+    { name: "category_id", prompt: "Any category", selected: params[:category_id], options: @categories, searchable: true }
+  ]
+  # One dropdown per option type (Color, Size, …)
+  @filter_attributes.each do |attribute|
+    filters << {
+      name: "opt[#{attribute.id}]",
+      prompt: "Any #{attribute.name.downcase}",
+      selected: params.dig(:opt, attribute.id.to_s),
+      options: attribute.attribute_values.map { |value| [ value.value, value.id ] }
+    }
+  end
+  filters << { name: "active", prompt: "Any status",   selected: params[:active], options: [ [ "Active", "1" ], [ "Inactive", "0" ] ] }
+  filters << { name: "stock",  prompt: "Any stock",    selected: params[:stock],  options: [ [ "In stock", "in" ], [ "Low stock", "low" ], [ "Out of stock", "out" ] ] }
+%>
 <%= render "admin/ui/search", url: admin_variants_path, query: params[:q],
-      placeholder: "Search by product or SKU" %>
+      placeholder: "Search by product or SKU", filters: filters %>
 
 <%
   columns = [

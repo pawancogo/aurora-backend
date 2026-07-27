@@ -49,6 +49,33 @@ RSpec.describe "Admin global variants list", type: :request do
     expect(response.body).not_to include(other.sku)
   end
 
+  it "filters by option value (e.g. Color = Red)" do
+    sign_in_admin(super_admin)
+    product = create(:product, name: "Multi")
+    blue = color.attribute_values.create!(value: "Blue")
+    red_v = product.variants.create!(sku: "VAR-RED")
+    red_v.variant_option_values.create!(attribute_value: red)
+    blue_v = product.variants.create!(sku: "VAR-BLUE")
+    blue_v.variant_option_values.create!(attribute_value: blue)
+
+    get "/admin/variants", params: { opt: { color.id.to_s => red.id.to_s } }
+
+    expect(response.body).to include("VAR-RED")
+    expect(response.body).not_to include("VAR-BLUE")
+  end
+
+  it "filters by stock status" do
+    sign_in_admin(super_admin)
+    stocked = variant_for("Stocked One")
+    stocked.inventory_item.update!(on_hand: 5)
+    empty = variant_for("Empty One") # auto inventory, 0 on hand
+
+    get "/admin/variants", params: { stock: "out" }
+
+    expect(response.body).to include(empty.sku)
+    expect(response.body).not_to include(stocked.sku)
+  end
+
   it "requires products.read" do
     plain = create(:admin_user, password: "password1234")
     sign_in_admin(plain)
