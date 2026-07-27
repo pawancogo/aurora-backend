@@ -102,6 +102,7 @@ Rails.application.routes.draw do
     post "uploads", to: "uploads#create", as: :uploads
 
     # Catalog management (server-rendered)
+    get "variants", to: "variants#index", as: :variants # global catalog list of all variants
     resources :products, only: %i[index new create edit update destroy] do
       resources :variants, only: %i[index new create edit update destroy], controller: "product_variants"
       resources :relations, only: %i[create destroy], controller: "product_relations"

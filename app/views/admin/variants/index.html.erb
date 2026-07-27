@@ -1,0 +1,30 @@
+<% can_manage = allowed_to?("products.manage") %>
+
+<h1 class="page-title">Variants</h1>
+<p class="page-sub">Every product variant across the catalog. Edit a variant's options, price and SKU here; adjust its stock under <%= link_to "Inventory", admin_inventory_path, class: "link" %>.</p>
+
+<%= render "admin/ui/search", url: admin_variants_path, query: params[:q],
+      placeholder: "Search by product or SKU" %>
+
+<%
+  columns = [
+    { label: "ID", class: "id-cell", cell: ->(v) { v.id } },
+    { label: "Product", cell: ->(v) {
+        can_manage ? link_to(v.product.name, edit_admin_product_path(v.product)) : v.product.name
+      } },
+    { label: "Options",  cell: ->(v) { variant_option_chips(v) } },
+    { label: "SKU",      cell: ->(v) { content_tag(:code, v.sku) } },
+    { label: "Price",    cell: ->(v) { "₹#{number_with_delimiter(v.price.round)}" } },
+    { label: "Active",   cell: ->(v) { v.active? ? "✓" : "—" } },
+    { label: "Stock",    cell: ->(v) { stock_badge(v.inventory_item) } },
+    { label: "", class: "row-actions", cell: ->(v) {
+        links = [ link_to("Stock", admin_inventory_item_path(v), class: "link") ]
+        links.unshift(link_to("Edit", edit_admin_product_variant_path(v.product, v), class: "link")) if can_manage
+        safe_join(links)
+      } }
+  ]
+%>
+<%= render "admin/ui/table", rows: @variants, columns: columns,
+      empty: "No variants yet — add options to a product from its edit page." %>
+
+<%= render "admin/ui/pagination", collection: @variants, path: admin_variants_path %>

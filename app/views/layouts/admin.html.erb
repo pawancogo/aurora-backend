@@ -14,7 +14,8 @@
         <a class="nav-link <%= "active" if controller_name == "dashboard" %>" href="<%= admin_root_path %>">Dashboard</a>
 
         <div class="nav-section">Catalog</div>
-        <a class="nav-link <%= "active" if controller_name == "products" || controller_name == "product_variants" || controller_name == "product_relations" %>" href="<%= admin_products_path %>">Products</a>
+        <a class="nav-link <%= "active" if controller_name == "products" || controller_name == "product_relations" %>" href="<%= admin_products_path %>">Products</a>
+        <a class="nav-link <%= "active" if controller_name == "variants" || controller_name == "product_variants" %>" href="<%= admin_variants_path %>">Variants</a>
         <a class="nav-link <%= "active" if controller_name == "categories" %>" href="<%= admin_categories_path %>">Categories</a>
         <a class="nav-link <%= "active" if controller_name == "brands" %>" href="<%= admin_brands_path %>">Brands</a>
         <a class="nav-link <%= "active" if controller_name == "attributes" %>" href="<%= admin_attributes_path %>">Attributes</a>
