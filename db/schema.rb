@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_27_120001) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_27_130004) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -48,6 +48,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_27_120001) do
     t.string "value", null: false
     t.index ["product_attribute_id", "code"], name: "index_attribute_values_on_product_attribute_id_and_code", unique: true
     t.index ["product_attribute_id"], name: "index_attribute_values_on_product_attribute_id"
+  end
+
+  create_table "banners", force: :cascade do |t|
+    t.string "alt_text"
+    t.datetime "created_at", null: false
+    t.string "cta_label"
+    t.datetime "ends_at"
+    t.string "image_url"
+    t.string "link_url"
+    t.string "mobile_image_url"
+    t.string "placement", default: "hero", null: false
+    t.integer "position", default: 0, null: false
+    t.datetime "starts_at"
+    t.string "subtitle"
+    t.string "title"
+    t.datetime "updated_at", null: false
+    t.boolean "visible", default: true, null: false
+    t.index ["placement", "position"], name: "index_banners_on_placement_and_position"
+    t.index ["visible"], name: "index_banners_on_visible"
   end
 
   create_table "brands", force: :cascade do |t|
@@ -124,6 +143,31 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_27_120001) do
     t.string "name", null: false
     t.datetime "updated_at", null: false
     t.index ["key"], name: "index_feature_flags_on_key", unique: true
+  end
+
+  create_table "footer_sections", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "heading", null: false
+    t.jsonb "links", default: [], null: false
+    t.integer "position", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.boolean "visible", default: true, null: false
+    t.index ["position"], name: "index_footer_sections_on_position"
+  end
+
+  create_table "homepage_sections", force: :cascade do |t|
+    t.jsonb "config", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "ends_at"
+    t.integer "position", default: 0, null: false
+    t.string "section_type", null: false
+    t.datetime "starts_at"
+    t.string "subtitle"
+    t.string "title"
+    t.datetime "updated_at", null: false
+    t.boolean "visible", default: true, null: false
+    t.index ["position"], name: "index_homepage_sections_on_position"
+    t.index ["visible"], name: "index_homepage_sections_on_visible"
   end
 
   create_table "inventory_items", force: :cascade do |t|
@@ -294,6 +338,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_27_120001) do
     t.string "value_type", default: "string", null: false
     t.index ["category"], name: "index_site_settings_on_category"
     t.index ["key"], name: "index_site_settings_on_key", unique: true
+  end
+
+  create_table "static_pages", force: :cascade do |t|
+    t.text "body"
+    t.datetime "created_at", null: false
+    t.string "meta_description"
+    t.string "meta_title"
+    t.integer "position", default: 0, null: false
+    t.boolean "published", default: false, null: false
+    t.string "slug", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["slug"], name: "index_static_pages_on_slug", unique: true
   end
 
   create_table "stock_movements", force: :cascade do |t|
