@@ -14,6 +14,11 @@ Rails.application.routes.draw do
       get "settings",      to: "settings#index"
       get "feature_flags", to: "feature_flags#index"
 
+      # CMS (public): homepage blocks, site chrome (announcement + footer), pages.
+      get "homepage",   to: "homepage#show"
+      get "site",       to: "site#show"
+      resources :pages, only: :show # :id = slug
+
       # Catalog (public). :id is the slug.
       resources :products, only: %i[index show]
       resources :categories, only: %i[index show]

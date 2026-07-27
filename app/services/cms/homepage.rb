@@ -8,11 +8,21 @@ module Cms
     MAX_LIMIT = 24
 
     def as_json
-      {
-        announcement: announcement_json,
-        sections: HomepageSection.live.ordered.map { |section| section_json(section) },
-        footer: FooterSection.visible.ordered.map { |f| { heading: f.heading, links: f.link_items } }
-      }
+      { announcement: announcement, sections: sections, footer: footer }
+    end
+
+    # Homepage blocks (the /homepage endpoint).
+    def sections
+      HomepageSection.live.ordered.map { |section| section_json(section) }
+    end
+
+    # Site-wide chrome (the /site endpoint): announcement bar + footer.
+    def announcement
+      announcement_json
+    end
+
+    def footer
+      FooterSection.visible.ordered.map { |section| { heading: section.heading, links: section.link_items } }
     end
 
     private

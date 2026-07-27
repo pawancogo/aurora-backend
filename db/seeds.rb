@@ -329,6 +329,51 @@ seed_relation.call("TS-001", "TS-002", :related)
 seed_relation.call("TS-001", "SH-001", :recommended)
 seed_relation.call("JN-001", "TS-001", :cross_sell)
 
+# --- CMS: banners, homepage sections, footer, static pages (idempotent) ------
+Banner.find_or_create_by!(placement: "announcement", title: "Free delivery on every order — shop the new season") do |b|
+  b.link_url = "/products"
+end
+[
+  { title: "New season, new essentials", subtitle: "Premium quality, thoughtfully made",
+    image_url: "https://picsum.photos/seed/aurora-hero1/1600/700", link_url: "/products", cta_label: "Shop all", position: 1 },
+  { title: "Tech that keeps up", subtitle: "The latest in electronics",
+    image_url: "https://picsum.photos/seed/aurora-hero2/1600/700", link_url: "/c/electronics", cta_label: "Explore", position: 2 }
+].each do |attrs|
+  Banner.find_or_create_by!(placement: "hero", title: attrs[:title]) { |b| b.assign_attributes(attrs) }
+end
+
+[
+  { title: "Hero", section_type: "hero", position: 1, config: { "placement" => "hero" } },
+  { title: "Shop by category", section_type: "category_grid", position: 2, config: { "limit" => 6 } },
+  { title: "New arrivals", section_type: "product_rail", position: 3, config: { "source" => "new_arrival", "limit" => 8 } },
+  { title: "Best sellers", section_type: "product_rail", position: 4, config: { "source" => "best_seller", "limit" => 8 } }
+].each do |attrs|
+  HomepageSection.find_or_create_by!(title: attrs[:title]) { |s| s.assign_attributes(attrs.merge(visible: true)) }
+end
+
+[
+  { heading: "Shop", links: [ { "label" => "All products", "url" => "/products" }, { "label" => "Men", "url" => "/c/men" }, { "label" => "Women", "url" => "/c/women" } ] },
+  { heading: "Company", links: [ { "label" => "About", "url" => "/p/about" }, { "label" => "Contact", "url" => "/p/contact" } ] },
+  { heading: "Help", links: [ { "label" => "Shipping", "url" => "/p/shipping" }, { "label" => "Returns", "url" => "/p/returns" }, { "label" => "Privacy", "url" => "/p/privacy" } ] }
+].each_with_index do |col, i|
+  FooterSection.find_or_create_by!(heading: col[:heading]) { |f| f.links = col[:links]; f.position = i }
+end
+
+[
+  { title: "About", body: "<p>Aurora is a premium commerce experience, built to scale.</p>" },
+  { title: "Contact", body: "<p>Questions? Email <a href='mailto:support@aurora.test'>support@aurora.test</a>.</p>" },
+  { title: "Privacy Policy", slug: "privacy", body: "<p>We respect your privacy. This is placeholder policy content.</p>" },
+  { title: "Terms", body: "<p>Placeholder terms of service.</p>" },
+  { title: "Shipping", body: "<p>Free delivery on every order. Placeholder shipping details.</p>" },
+  { title: "Returns", body: "<p>Easy 7-day returns. Placeholder returns policy.</p>" }
+].each do |page|
+  StaticPage.find_or_create_by!(slug: page[:slug] || page[:title].parameterize) do |sp|
+    sp.title = page[:title]
+    sp.body = page[:body]
+    sp.published = true
+  end
+end
+
 Rails.logger.info("Seeded #{Permission.count} permissions, #{Role.count} roles, " \
                   "#{Category.count} categories, #{Brand.count} brands, #{Product.count} products, " \
                   "#{ProductAttribute.count} attributes, #{ProductVariant.count} variants; " \
