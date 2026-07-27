@@ -5,9 +5,12 @@ module Api
     class ProductsController < BaseController
       # GET /api/v1/products — live products, filterable + paginated.
       def index
-        relation = Products::Query.new(Product.kept.live, params).call
-        products, meta = paginate(relation)
-        render_success(products.map { |product| ProductListSerializer.new(product).as_json }, meta: meta)
+        result = Products::Search.new(Product.kept.live, params).call
+        products, meta = paginate(result.records)
+        render_success(
+          products.map { |product| ProductListSerializer.new(product).as_json },
+          meta: meta.merge(facets: result.facets)
+        )
       end
 
       # GET /api/v1/products/:slug
