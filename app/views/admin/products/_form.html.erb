@@ -91,8 +91,16 @@
 
   <h2 class="section-title">Images</h2>
   <div class="form-row" style="max-width:680px;">
-    <label>Image URLs <span class="muted-sm">(one per line — the first becomes the primary image)</span></label>
-    <%= text_area_tag "product[image_urls]", product.product_images.map(&:source_url).join("\n"), rows: 4 %>
+    <label>Image URLs <span class="muted-sm">(one per line — the first becomes the primary image; append <code>| Option</code> e.g. <code>| Blue</code> to bind an image to a variant option)</span></label>
+    <%= text_area_tag "product[image_urls]",
+          product.product_images.ordered.map { |img|
+            img.attribute_value ? "#{img.source_url} | #{img.attribute_value.value}" : img.source_url
+          }.join("\n"),
+          rows: 4 %>
+    <% bindable = product.persisted? ? product.variants.non_master.flat_map(&:attribute_values).uniq.map(&:value) : [] %>
+    <% if bindable.any? %>
+      <p class="muted-sm">Bindable options: <%= bindable.join(", ") %></p>
+    <% end %>
     <%= render "admin/ui/uploader", target: "#product_image_urls", mode: "append",
           kind: "image", label: "Upload images", multiple: true %>
     <%= render "admin/ui/image_preview", source: "#product_image_urls" %>

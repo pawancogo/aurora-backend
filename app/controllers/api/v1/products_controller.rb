@@ -17,7 +17,8 @@ module Api
       def show
         product = Product.kept.live
                          .includes(
-                           :brand, :category, :tax_class, :product_images, :specifications,
+                           :brand, :category, :tax_class, :specifications,
+                           { product_images: { attribute_value: :product_attribute } },
                            { variants: [ :inventory_item, { variant_option_values: { attribute_value: :product_attribute } } ] },
                            { product_relations: :related_product }
                          )

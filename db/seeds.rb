@@ -259,6 +259,13 @@ size_attr = ProductAttribute.find_or_create_by!(code: "size") do |a|
   a.filterable = true
   a.position = 2
 end
+# Bottoms use a numeric waist scale, not S/M/L — modelled as its own attribute
+# so tops and jeans never share a size list.
+waist_attr = ProductAttribute.find_or_create_by!(code: "waist") do |a|
+  a.name = "Waist (in)"
+  a.filterable = true
+  a.position = 3
+end
 
 seed_value = lambda do |attribute, value, position|
   attribute.attribute_values.find_or_create_by!(code: value.parameterize(separator: "_")) do |v|
@@ -268,11 +275,18 @@ seed_value = lambda do |attribute, value, position|
 end
 colors = %w[Black White Navy].each_with_index.map { |v, i| seed_value.call(color_attr, v, i) }
 sizes  = %w[S M L XL].each_with_index.map  { |v, i| seed_value.call(size_attr, v, i) }
+waists = %w[30 32 34 36].each_with_index.map { |v, i| seed_value.call(waist_attr, v, i) }
 
-# Scope Color + Size to apparel categories so only those attributes appear on an
-# apparel product's variant form (electronics fall back to all attributes).
-[ cat[:tshirts], cat[:shirts], cat[:jeans], cat[:dresses] ].compact.each do |c|
+# Scope attributes per category so only the relevant ones appear on a product's
+# variant form (and, downstream, in the storefront facets): tops/dresses use
+# alpha Size, jeans use numeric Waist. Electronics fall back to all attributes.
+[ cat[:tshirts], cat[:shirts], cat[:dresses] ].compact.each do |c|
   [ color_attr, size_attr ].each { |a| CategoryAttribute.find_or_create_by!(category: c, product_attribute: a) }
+end
+[ cat[:jeans] ].compact.each do |c|
+  [ color_attr, waist_attr ].each { |a| CategoryAttribute.find_or_create_by!(category: c, product_attribute: a) }
+  # Drop any stale Size scoping so jeans only ever offer Waist.
+  CategoryAttribute.where(category: c, product_attribute: size_attr).delete_all
 end
 
 # Give a couple of apparel products a Color × Size variant matrix with a mixed
@@ -295,6 +309,46 @@ seed_matrix = lambda do |sku, base_price|
 end
 seed_matrix.call("TS-001", 799)
 seed_matrix.call("SH-001", 1899)
+
+# Same, but Color × Waist for a pair of jeans so bottoms show a numeric waist
+# facet where tops show S/M/L.
+seed_waist_matrix = lambda do |sku, base_price|
+  product = Product.find_by(sku: sku)
+  next if product.nil? || product.variants.non_master.exists?
+
+  colors.first(2).each do |c|
+    waists.each_with_index do |w, idx|
+      variant = product.variants.create!(price_cents: base_price * 100)
+      variant.variant_option_values.create!(attribute_value: c)
+      variant.variant_option_values.create!(attribute_value: w)
+      variant.inventory_item.update!(low_stock_threshold: 5)
+      qty = [ 0, 3, 25, 40 ][idx % 4]
+      Inventory::AdjustStock.new(inventory_item: variant.inventory_item, quantity: qty, reason: "restock", note: "seed").call if qty.positive?
+    end
+  end
+end
+seed_waist_matrix.call("JN-001", 2499)
+
+# Variant-option images: bind photos to colours so the PDP gallery swaps when a
+# colour is selected. Demo on the Red/Blue jeans (CAT-045); one shared shot + two
+# per colour. Idempotent — only (re)built if no colour-bound image exists yet.
+demo = Product.find_by(sku: "CAT-045")
+if demo && demo.product_images.where.not(attribute_value_id: nil).none?
+  red  = AttributeValue.joins(:product_attribute).find_by(product_attributes: { code: "color" }, value: "Red")
+  blue = AttributeValue.joins(:product_attribute).find_by(product_attributes: { code: "color" }, value: "Blue")
+  demo.product_images.destroy_all
+  [
+    [ "aurora-jeans-main", nil ],
+    [ "aurora-jeans-red-1", red ],  [ "aurora-jeans-red-2", red ],
+    [ "aurora-jeans-blue-1", blue ], [ "aurora-jeans-blue-2", blue ]
+  ].each_with_index do |(seed, value), index|
+    demo.product_images.create!(
+      source_url: "https://picsum.photos/seed/#{seed}/600/800",
+      alt_text: [ demo.name, value&.value ].compact.join(" — "),
+      position: index, primary: index.zero?, attribute_value: value
+    )
+  end
+end
 
 # Descriptive specifications.
 seed_specs = lambda do |sku, specs|

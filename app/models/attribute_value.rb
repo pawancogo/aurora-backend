@@ -8,6 +8,8 @@ class AttributeValue < ApplicationRecord
   belongs_to :product_attribute
   has_many :variant_option_values, dependent: :destroy
   has_many :product_variants, through: :variant_option_values
+  # Images bound to this option value survive its removal as shared images.
+  has_many :product_images, dependent: :nullify
 
   before_validation :normalize_code
 

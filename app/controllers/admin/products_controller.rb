@@ -83,14 +83,42 @@ module Admin
       (value.to_f * 100).round
     end
 
-    # Rebuild the image set from a newline-separated list of URLs (first = primary).
+    # Rebuild the image set from a newline-separated list of URLs (first =
+    # primary). A line may append " | <option>" (e.g. "…jpg | Blue") to bind the
+    # image to a variant option value, so the storefront swaps to it on select.
     def apply_images(product)
       return unless params.require(:product).key?(:image_urls)
 
-      urls = params[:product][:image_urls].to_s.split("\n").map(&:strip).reject(&:blank?)
+      option_values = bindable_option_values(product)
       product.product_images.destroy_all if product.persisted?
-      urls.each_with_index do |url, index|
-        product.product_images.build(source_url: url, position: index, primary: index.zero?)
+      parse_image_lines(params[:product][:image_urls]).each_with_index do |(url, label), index|
+        product.product_images.build(
+          source_url: url,
+          position: index,
+          primary: index.zero?,
+          attribute_value: label && option_values[label.downcase]
+        )
+      end
+    end
+
+    # "url" or "url | Blue" → [url, label-or-nil], skipping blank lines.
+    def parse_image_lines(raw)
+      raw.to_s.split("\n").filter_map do |line|
+        url, label = line.split("|", 2).map(&:strip)
+        next if url.blank?
+
+        [ url, label.presence ]
+      end
+    end
+
+    # Downcased value + code → AttributeValue, limited to this product's options.
+    def bindable_option_values(product)
+      return {} unless product.persisted?
+
+      AttributeValue.joins(:product_variants).where(product_variants: { product_id: product.id }).distinct
+                    .each_with_object({}) do |value, acc|
+        acc[value.value.downcase] = value
+        acc[value.code.downcase] = value
       end
     end
   end

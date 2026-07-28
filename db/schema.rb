@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_27_130004) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_27_140001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -203,12 +203,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_27_130004) do
 
   create_table "product_images", force: :cascade do |t|
     t.string "alt_text"
+    t.bigint "attribute_value_id"
     t.datetime "created_at", null: false
     t.integer "position", default: 0, null: false
     t.boolean "primary", default: false, null: false
     t.bigint "product_id", null: false
     t.string "source_url", null: false
     t.datetime "updated_at", null: false
+    t.index ["attribute_value_id"], name: "index_product_images_on_attribute_value_id"
     t.index ["product_id", "position"], name: "index_product_images_on_product_id_and_position"
     t.index ["product_id"], name: "index_product_images_on_product_id"
   end
@@ -402,6 +404,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_27_130004) do
   add_foreign_key "category_attributes", "categories"
   add_foreign_key "category_attributes", "product_attributes"
   add_foreign_key "inventory_items", "product_variants"
+  add_foreign_key "product_images", "attribute_values"
   add_foreign_key "product_images", "products"
   add_foreign_key "product_relations", "products"
   add_foreign_key "product_relations", "products", column: "related_product_id"
