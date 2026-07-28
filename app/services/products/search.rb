@@ -28,6 +28,19 @@ module Products
     # unbounded dropdown; the currently-selected values are always kept.
     FACET_LIMIT = 30
 
+    # Query synonyms: searching any word in a group also matches the others
+    # (e.g. "t-shirt" finds products named "tee"). Bidirectional within a group.
+    # Kept here for now; could move to config/DB as the vocabulary grows.
+    SYNONYM_GROUPS = [
+      %w[tee tees tshirt t-shirt],
+      %w[jeans denim],
+      %w[trousers pants chinos],
+      %w[dress gown frock],
+      %w[laptop notebook],
+      %w[phone mobile smartphone handset]
+    ].freeze
+    SYNONYM_TERM_LIMIT = 12
+
     def initialize(scope = Product.kept.live, params = {})
       @scope = scope
       @params = params
@@ -83,8 +96,23 @@ module Products
     def apply_search(scope)
       return scope if @params[:q].blank?
 
-      term = "%#{Product.sanitize_sql_like(@params[:q].to_s.strip)}%"
-      scope.where("products.name ILIKE :q OR products.sku ILIKE :q OR products.search_keywords ILIKE :q", q: term)
+      terms = search_terms(@params[:q].to_s.strip)
+      return scope if terms.empty?
+
+      clause = terms.each_index.map do |i|
+        "(products.name ILIKE :t#{i} OR products.sku ILIKE :t#{i} OR products.search_keywords ILIKE :t#{i})"
+      end.join(" OR ")
+      binds = terms.each_with_index.to_h { |term, i| [ :"t#{i}", "%#{term}%" ] }
+      scope.where(clause, binds)
+    end
+
+    # The original query plus any synonym-group members, sanitised for LIKE and
+    # capped. Matching is substring-based, so a multi-word query still matches.
+    def search_terms(raw)
+      normalized = raw.downcase
+      synonyms = SYNONYM_GROUPS.select { |group| group.any? { |word| normalized.include?(word) } }.flatten
+      ([ raw ] + synonyms).map { |term| Product.sanitize_sql_like(term.to_s.strip) }
+                          .reject(&:blank?).uniq.first(SYNONYM_TERM_LIMIT)
     end
 
     # { "color" => ["red","blue"], "size" => ["m"] } from attr[<code>]=v or v1,v2.

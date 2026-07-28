@@ -65,6 +65,24 @@ RSpec.describe Products::Search do
     end
   end
 
+  describe "q with synonyms" do
+    it "matches synonym-group members (t-shirt finds a tee)" do
+      tee = create(:product, name: "Classic Cotton Tee")
+      create(:product, name: "Leather Belt")
+
+      result = described_class.new(Product.kept.live, { q: "t-shirt" }).call
+
+      expect(result.records).to contain_exactly(tee)
+    end
+
+    it "still matches the literal term when no synonym applies" do
+      match = create(:product, name: "Zephyr Runner")
+      create(:product, name: "Other")
+
+      expect(described_class.new(Product.kept.live, { q: "zephyr" }).call.records).to contain_exactly(match)
+    end
+  end
+
   it "filters by category subtree, brand, price, and q (base filters)" do
     parent = create(:category)
     child = create(:category, parent: parent)
