@@ -24,6 +24,10 @@ module Products
     }.freeze
     DEFAULT_SORT = "newest"
 
+    # Cap facet options so a high-cardinality dimension can't produce an
+    # unbounded dropdown; the currently-selected values are always kept.
+    FACET_LIMIT = 30
+
     def initialize(scope = Product.kept.live, params = {})
       @scope = scope
       @params = params
@@ -50,12 +54,16 @@ module Products
     end
 
     def refine(scope)
-      scope = scope.where(brand_id: brand.id) if brand
+      scope = scope.where(brand_id: Brand.kept.where(slug: brand_slugs).select(:id)) if brand_slugs.any?
       selected_attributes.each do |code, value_codes|
         scope = scope.where(id: product_ids_with_attribute(code, value_codes))
       end
       scope = scope.where(id: in_stock_product_ids) if truthy?(:in_stock)
       scope
+    end
+
+    def brand_slugs
+      @brand_slugs ||= @params[:brand].to_s.split(",").map(&:strip).reject(&:blank?)
     end
 
     # --- filters ---------------------------------------------------------------
@@ -64,12 +72,6 @@ module Products
       return @category if defined?(@category)
 
       @category = @params[:category].present? ? Category.kept.find_by(slug: @params[:category]) : nil
-    end
-
-    def brand
-      return @brand if defined?(@brand)
-
-      @brand = @params[:brand].present? ? Brand.kept.find_by(slug: @params[:brand]) : nil
     end
 
     def apply_price(scope)
@@ -132,10 +134,11 @@ module Products
     end
 
     def brand_facets(ids)
-      Product.where(id: ids).joins(:brand)
-             .group("brands.slug", "brands.name").count
-             .map { |(slug, name), count| { slug: slug, name: name, count: count } }
-             .sort_by { |brand| -brand[:count] }
+      values = Product.where(id: ids).joins(:brand)
+                      .group("brands.slug", "brands.name").count
+                      .map { |(slug, name), count| { slug: slug, name: name, count: count } }
+                      .sort_by { |brand| -brand[:count] }
+      cap(values, brand_slugs, key: :slug)
     end
 
     def attribute_facets(ids)
@@ -151,7 +154,18 @@ module Products
         entry = (grouped[pa_code] ||= { name: pa_name, code: pa_code, values: [] })
         entry[:values] << { value: av_value, code: av_code, count: count }
       end
+      grouped.each_value { |attr| attr[:values] = cap(attr[:values], selected_attributes[attr[:code]] || [], key: :code) }
       grouped.values
+    end
+
+    # Rank by count, keep the top FACET_LIMIT, but always retain selected values.
+    def cap(values, selected_codes, key:)
+      return values if values.size <= FACET_LIMIT
+
+      ranked = values.sort_by { |value| -value[:count] }
+      kept = ranked.first(FACET_LIMIT)
+      selected = ranked.drop(FACET_LIMIT).select { |value| Array(selected_codes).map(&:to_s).include?(value[key].to_s) }
+      kept + selected
     end
 
     def price_facet(context)
