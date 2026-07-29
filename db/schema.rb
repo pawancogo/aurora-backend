@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_27_140001) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_27_150001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -81,6 +81,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_27_140001) do
     t.datetime "updated_at", null: false
     t.index ["deleted_at"], name: "index_brands_on_deleted_at"
     t.index ["slug"], name: "index_brands_on_slug", unique: true
+  end
+
+  create_table "cart_items", force: :cascade do |t|
+    t.bigint "cart_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "product_variant_id", null: false
+    t.integer "quantity", default: 1, null: false
+    t.datetime "updated_at", null: false
+    t.index ["cart_id", "product_variant_id"], name: "index_cart_items_on_cart_id_and_product_variant_id", unique: true
+    t.index ["cart_id"], name: "index_cart_items_on_cart_id"
+    t.index ["product_variant_id"], name: "index_cart_items_on_product_variant_id"
+  end
+
+  create_table "carts", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "customer_id"
+    t.string "token", null: false
+    t.datetime "updated_at", null: false
+    t.index ["customer_id"], name: "index_carts_on_customer_id_unique", unique: true
+    t.index ["token"], name: "index_carts_on_token", unique: true
   end
 
   create_table "categories", force: :cascade do |t|
@@ -400,6 +420,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_27_140001) do
   add_foreign_key "admin_user_roles", "admin_users"
   add_foreign_key "admin_user_roles", "roles"
   add_foreign_key "attribute_values", "product_attributes"
+  add_foreign_key "cart_items", "carts"
+  add_foreign_key "cart_items", "product_variants"
+  add_foreign_key "carts", "customers"
   add_foreign_key "categories", "categories", column: "parent_id"
   add_foreign_key "category_attributes", "categories"
   add_foreign_key "category_attributes", "product_attributes"

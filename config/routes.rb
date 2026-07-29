@@ -24,6 +24,12 @@ Rails.application.routes.draw do
       resources :categories, only: %i[index show]
       resources :brands, only: %i[index show]
 
+      # Cart (guest via X-Cart-Token header, or the signed-in customer's cart).
+      get    "cart",           to: "carts#show"
+      post   "cart/items",     to: "carts#add_item"
+      patch  "cart/items/:id", to: "carts#update_item"
+      delete "cart/items/:id", to: "carts#remove_item"
+
       # Customer authentication (self-service).
       namespace :customer do
         post "auth/register",            to: "registrations#create"
