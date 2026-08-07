@@ -26,7 +26,7 @@
 - ⬜ Digital/downloadable products, gift cards as products ⭐
 
 ## 2. Product Detail Page (PDP)
-- 🟡 Gallery, variant selector, price/MRP/discount %, stock/low-stock, add to cart/wishlist *(Sprint 5/8)*
+- ✅ Gallery, variant selector, price/MRP/discount %, stock/low-stock, add to cart/wishlist *(Sprint 5/8)*
 - ⬜ Delivery estimate + pincode/ZIP serviceability check ⭐
 - ⬜ Size recommendation ("true to size"), size chart modal ⭐
 - ⬜ Back-in-stock / restock notify-me ⭐
@@ -46,9 +46,9 @@
 - ⬜ (Later) dedicated engine — OpenSearch/Elastic/Meilisearch ⭐
 
 ## 4. Cart & Checkout
-- 🟡 Persistent cart, variant-level, merge on login, price/stock revalidation *(Sprint 8)*
+- ✅ Persistent cart, variant-level, merge on login, price/stock revalidation *(Sprint 8)*
 - 🟡 Guest + login checkout, address selection, shipping, summary, payment, confirmation *(Sprint 9)*
-- ⬜ Mini-cart / slide-over, save-for-later, move to wishlist ⭐
+- 🟡 Mini-cart *(Sprint 8, done)* / slide-over, save-for-later, move to wishlist ⭐ *(slide-over polish + save-for-later still deferred)*
 - ⬜ Coupon / promo code entry, auto-applied offers, price breakup (item, tax, shipping, discount) ⭐
 - ⬜ Gift options (wrap/message), gift cards / store credit / wallet redemption at checkout ⭐
 - ⬜ Address autocomplete (Google/postal), pincode serviceability, multiple shipping addresses ⭐
@@ -86,7 +86,7 @@
 - ✅ Auth: register/login/logout, email verify, forgot/reset, JWT + refresh rotation
 - 🟡 Profile, address book (default, types) *(Sprint 7)*
 - ⬜ Order history + reorder, track order, download invoice ⭐
-- ⬜ Wishlist(s) / multiple lists / share wishlist *(Sprint 8)* 🟡
+- ✅ Wishlist (single list, add/remove) *(Sprint 8)* — 🟡 multiple lists / share wishlist ⭐ still deferred
 - ⬜ Saved cards, wallet/store credit balance + ledger, gift cards ⭐
 - ⬜ Notification & communication preferences (email/SMS/push, marketing opt-in) 🟡
 - ⬜ Social/OTP login (Google/Apple, phone OTP) ⭐

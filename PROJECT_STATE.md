@@ -5,8 +5,8 @@
 
 ## Current Position
 
-- **Active sprint:** Sprint 7 — Search & Discovery ✅ complete
-- **Status:** Sprints 1–7 done. Next: Sprint 8 — Cart & Checkout.
+- **Active sprint:** Sprint 8 — Cart & Wishlist ✅ complete
+- **Status:** Sprints 1–8 done. Next: Sprint 9 — Checkout & Order Placement.
 - **Canonical roadmap:** [ROADMAP.md](ROADMAP.md) (17 sprints). `SPRINT_PLAN.md` is **superseded**.
 - **⚠ Sprint-numbering note:** "Sprint 7" as tracked here = **Search & Discovery** (SPRINT_PLAN's numbering + this project's UI tags such as the buy-box "Add to cart — Sprint 8"). The *canonical* ROADMAP.md instead labels Sprint 7 = "Customer Profile & Address Book" and files search/discovery under feature #7 / its Sprint 14. The content is done regardless of the label; the canonical Profile & Address Book work (full profile edit + address book; a read-only `/account` stub exists) is still pending. Reconcile the labels in a future pass if desired.
 
@@ -354,3 +354,18 @@ Deferred (perf/infra, by design — no user-facing gap at current scale):
 - **Redis facet caching** — facet counts are computed per request (instant at current catalog size); caching would add invalidation complexity for no visible benefit yet.
 
 Verification: backend RSpec (search specs incl. synonyms) / RuboCop clean; frontend **58 Vitest / tsc / ESLint / next build** clean; live — faceted filtering, waist-vs-size per category, variant image swap + hover-zoom, infinite scroll (45 products, 0 dupes), recently-viewed rail, no-result recs, header typeahead, synonym search all verified.
+
+### Sprint 8 — Cart & Wishlist ✅ (completed 2026-08-07)
+
+Backend cart CRUD (add/update/remove/show, guest via `X-Cart-Token` or the signed-in customer) already existed from a prior session (`d7d2073`); this sprint closed the remaining gaps end-to-end:
+
+- **Cart merge on login:** new `CartMerging` concern, included in `Customer::SessionsController#create` and `Customer::EmailVerificationsController#create` (email-verify auto-login) — folds the guest cart named by `X-Cart-Token` into the customer's cart via `Carts::Manager#merge`, summing quantities for shared variants.
+- **Security fix:** the guest-cart lookup (`CartsController#current_cart`) resolved `Cart.find_by(token:)` with no `customer_id: nil` guard, so a stale token retained client-side after logout could resolve to a since-claimed customer's cart. Scoped the guest branch to `customer_id: nil`; frontend now also clears the cart token from `localStorage` on logout (defense in depth).
+- **Wishlist (new, backend):** `wishlist_items` (customer + product, unique pair), `Api::V1::WishlistsController` (`GET /wishlist`, `POST /wishlist/items`, `DELETE /wishlist/items/:product_id`), `WishlistItemSerializer` (wraps `ProductListSerializer`). Signed-in customers only (no guest wishlist, matching the ROADMAP scope).
+- **Frontend cart:** `CartProvider` (context, mirrors `AuthProvider`) + `lib/api/cart.ts` (zod schemas), guest token persisted via `lib/cart/storage.ts` and attached as `X-Cart-Token` on every request (`lib/api/client.ts` interceptor). `/cart` page (line items, qty stepper, remove, subtotal, disabled "Checkout — Sprint 9" placeholder). Mini-cart header popover (`CartTrigger`, mirrors `UserMenu`'s pattern) with live item count badge. `ProductBuyBox` wired: quantity stepper + working "Add to cart" (was a disabled Sprint-8 placeholder), disabled until a variant fully resolves and is in stock.
+- **Frontend wishlist:** `WishlistProvider` (context) + `lib/api/wishlist.ts`. Reusable `WishlistButton` (heart toggle, overlay variant on `ProductCard`, inline variant on the PDP) — redirects a guest to `/login` instead of toggling. `/account/wishlist` page (reuses `ProductGrid`/`ProductCard`, so the heart toggle doubles as remove). `UserMenu`'s Wishlist link de-flagged (was `soon: "S8"`).
+- Fixed a **pre-existing** `react-hooks/set-state-in-effect` lint violation in `product-gallery.tsx` (unrelated to this sprint, same rule/fix pattern as the two new providers) while in the area.
+
+Verification: backend **251 RSpec** (21 new: cart-merge + guest-token-scoping + wishlist model/request specs) / RuboCop clean (265 files) / Brakeman 0; frontend **68 Vitest** (10 new) / tsc / ESLint / `next build` clean (adds `/cart`, `/account/wishlist` routes). Live real-click end-to-end: guest add-to-cart → mini-cart badge/popover → login → cart merged onto the customer's cart (item count preserved) → wishlist heart toggle (redirects guest to `/login`; adds/shows/removes for a signed-in customer via `/account/wishlist`) → cart page qty +/− and remove, subtotal recalculates → logout clears both the access and cart tokens from `localStorage`.
+
+Deferred (⭐ in FEATURE_BLUEPRINT, by design): save-for-later / move-to-wishlist, back-in-stock alerts, abandoned-cart capture, multiple/shareable wishlists.
