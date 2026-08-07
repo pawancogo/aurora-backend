@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_27_150001) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_06_090001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -417,6 +417,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_27_150001) do
     t.index ["item_type", "item_id"], name: "index_versions_on_item_type_and_item_id"
   end
 
+  create_table "wishlist_items", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "customer_id", null: false
+    t.bigint "product_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["customer_id", "product_id"], name: "index_wishlist_items_on_customer_id_and_product_id", unique: true
+    t.index ["customer_id"], name: "index_wishlist_items_on_customer_id"
+    t.index ["product_id"], name: "index_wishlist_items_on_product_id"
+  end
+
   add_foreign_key "admin_user_roles", "admin_users"
   add_foreign_key "admin_user_roles", "roles"
   add_foreign_key "attribute_values", "product_attributes"
@@ -442,4 +452,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_27_150001) do
   add_foreign_key "stock_movements", "inventory_items"
   add_foreign_key "variant_option_values", "attribute_values"
   add_foreign_key "variant_option_values", "product_variants"
+  add_foreign_key "wishlist_items", "customers"
+  add_foreign_key "wishlist_items", "products"
 end

@@ -10,6 +10,8 @@ class Customer < ApplicationRecord
   has_secure_password
 
   has_many :refresh_tokens, as: :owner, dependent: :destroy
+  has_many :wishlist_items, dependent: :destroy
+  has_many :wishlisted_products, through: :wishlist_items, source: :product
 
   before_validation :normalize_email
 

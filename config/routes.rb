@@ -30,6 +30,11 @@ Rails.application.routes.draw do
       patch  "cart/items/:id", to: "carts#update_item"
       delete "cart/items/:id", to: "carts#remove_item"
 
+      # Wishlist (signed-in customers only).
+      get    "wishlist",                    to: "wishlists#show"
+      post   "wishlist/items",              to: "wishlists#add_item"
+      delete "wishlist/items/:product_id",  to: "wishlists#remove_item"
+
       # Customer authentication (self-service).
       namespace :customer do
         post "auth/register",            to: "registrations#create"
