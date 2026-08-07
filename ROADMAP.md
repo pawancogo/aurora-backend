@@ -16,12 +16,12 @@ Single-company e-commerce platform. Incremental, production-quality delivery. On
 | 1  | ✅ Foundation & Infrastructure | — |
 | 2  | ✅ Authentication & RBAC | (2FA/social login later) |
 | 3  | ✅ Navigation & Site Configuration | — |
-| 4  | Catalog Core | product lifecycle, media ordering, tax/HSN, bulk import/export |
-| 5  | Variants, Attributes & Inventory | facet-attribute registry, reservations, stock history + low-stock alerts |
-| 6  | CMS & Homepage | block/section builder, media library, per-entity SEO |
-| 7  | Search & Discovery | faceted filters, autocomplete, synonyms, recently viewed, no-result recs |
-| 8  | Customer Profile & Address Book | pincode serviceability, account security (sessions) |
-| 9  | Cart & Wishlist | mini-cart, save-for-later, back-in-stock, abandoned-cart capture |
+| 4  | ✅ Catalog Core | product lifecycle, media ordering, tax/HSN, bulk import/export |
+| 5  | ✅ Variants, Attributes & Inventory | facet-attribute registry, reservations, stock history + low-stock alerts |
+| 6  | ✅ CMS & Homepage | block/section builder, media library, per-entity SEO |
+| 7  | ✅ Search & Discovery | faceted filters, autocomplete, synonyms, recently viewed, no-result recs |
+| 8  | Customer Profile & Address Book *(pending — see note below)* | pincode serviceability, account security (sessions) |
+| 9  | ✅ Cart & Wishlist | mini-cart done; save-for-later, back-in-stock, abandoned-cart capture later ⭐ |
 | 10 | Checkout & Orders | address snapshots, shipping methods, gift options, price breakup |
 | 11 | Payments | saved cards/UPI/EMI/COD adapters (mock), GST invoice PDF |
 | 12 | ⭐ Promotions & Coupons | codes, cart/product rules, flash sales, free-shipping |
@@ -36,6 +36,11 @@ Single-company e-commerce platform. Incremental, production-quality delivery. On
 | 21 | ⭐ SEO & Accessibility | structured data, dynamic sitemaps, redirects, WCAG AA (i18n/PWA optional) |
 | 22 | Performance & Security Hardening | caching, N+1, CSP, observability (Sentry/APM), GDPR/consent |
 | 23 | Production Readiness & K8s | CI/CD, K8s, secrets, backups/DR, smoke tests |
+
+> **Delivery order note:** #9 (Cart & Wishlist) shipped before #8 (Profile & Address Book) — see
+> [PROJECT_STATE.md](PROJECT_STATE.md)'s "Sprint-numbering note" for how the team's internal sprint
+> labels map onto this canonical table. #8's full scope (profile edit + address book) is still
+> pending; only a read-only `/account` stub exists today.
 
 ### Original 17-sprint outline (kept for reference; the v2 table above is authoritative)
 
