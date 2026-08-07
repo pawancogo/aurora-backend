@@ -5,12 +5,14 @@ module Api
     module Customer
       class SessionsController < Api::V1::BaseController
         include AuthResponses
+        include CartMerging
 
         # POST /api/v1/customer/auth/login
         def create
           customer = Auth::AuthenticateCustomer.new(
             email: params[:email], password: params[:password]
           ).call
+          merge_guest_cart!(customer)
           tokens = Auth::IssueTokenPair.new(customer, **request_meta).call
           render_token_pair(:customer, CustomerSerializer.new(customer).as_json, tokens)
         rescue Auth::AuthenticateCustomer::UnconfirmedError => e

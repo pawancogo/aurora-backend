@@ -56,7 +56,9 @@ module Api
           create ? Cart.find_or_create_by!(customer: current_customer) : Cart.find_by(customer: current_customer)
         else
           token = request.headers["X-Cart-Token"].presence
-          (token && Cart.find_by(token: token)) || (create ? Cart.create! : nil)
+          # customer_id: nil guards against a stale token (e.g. kept client-side
+          # after logout) resolving to a since-claimed customer cart.
+          (token && Cart.find_by(token: token, customer_id: nil)) || (create ? Cart.create! : nil)
         end
       end
     end

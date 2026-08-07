@@ -50,6 +50,16 @@ RSpec.describe "Api::V1::Carts" do
       post "/api/v1/cart/items", params: { variant_id: variant.id, quantity: 1 }, as: :json
       expect(response).to have_http_status(:unprocessable_content)
     end
+
+    it "never resolves a customer-owned cart's token via the guest lookup" do
+      customer = create(:customer)
+      customer_cart = Cart.create!(customer: customer)
+
+      get "/api/v1/cart", headers: { "X-Cart-Token" => customer_cart.token }
+
+      expect(data["id"]).to be_nil
+      expect(data["token"]).not_to eq(customer_cart.token)
+    end
   end
 
   describe "signed-in cart" do
@@ -66,6 +76,46 @@ RSpec.describe "Api::V1::Carts" do
       get "/api/v1/cart", headers: auth
       expect(data["item_count"]).to eq(1)
       expect(Cart.find_by(customer: customer)).to be_present
+    end
+  end
+
+  describe "guest cart merge on login" do
+    it "folds the guest cart into the customer's cart" do
+      customer = create(:customer)
+      variant = stocked_variant
+
+      post "/api/v1/cart/items", params: { variant_id: variant.id, quantity: 2 }, as: :json
+      guest_token = data["token"]
+
+      post "/api/v1/customer/auth/login",
+           params: { email: customer.email, password: "password123" },
+           headers: { "X-Cart-Token" => guest_token }, as: :json
+      access = response.parsed_body.dig("data", "tokens", "access_token")
+
+      get "/api/v1/cart", headers: { "Authorization" => "Bearer #{access}" }
+      expect(data["item_count"]).to eq(2)
+      expect(Cart.exists?(token: guest_token)).to be false
+    end
+
+    it "sums quantities when the customer already has the same variant in their cart" do
+      customer = create(:customer)
+      variant = stocked_variant
+      auth = ->(token) { { "Authorization" => "Bearer #{token}" } }
+
+      post "/api/v1/customer/auth/login", params: { email: customer.email, password: "password123" }, as: :json
+      access = response.parsed_body.dig("data", "tokens", "access_token")
+      post "/api/v1/cart/items", params: { variant_id: variant.id, quantity: 1 }, headers: auth.call(access), as: :json
+
+      post "/api/v1/cart/items", params: { variant_id: variant.id, quantity: 3 }, as: :json
+      guest_token = data["token"]
+
+      post "/api/v1/customer/auth/login",
+           params: { email: customer.email, password: "password123" },
+           headers: { "X-Cart-Token" => guest_token }, as: :json
+      access2 = response.parsed_body.dig("data", "tokens", "access_token")
+
+      get "/api/v1/cart", headers: auth.call(access2)
+      expect(data["item_count"]).to eq(4)
     end
   end
 end

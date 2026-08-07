@@ -5,11 +5,13 @@ module Api
     module Customer
       class EmailVerificationsController < Api::V1::BaseController
         include AuthResponses
+        include CartMerging
 
         # POST /api/v1/customer/auth/verify-email
         # On success the customer is auto-logged-in (tokens returned).
         def create
           customer = Auth::VerifyEmail.new(params[:token]).call
+          merge_guest_cart!(customer)
           tokens = Auth::IssueTokenPair.new(customer, **request_meta).call
           render_token_pair(:customer, CustomerSerializer.new(customer).as_json, tokens)
         rescue Auth::VerifyEmail::InvalidToken => e
