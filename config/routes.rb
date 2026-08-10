@@ -32,6 +32,7 @@ Rails.application.routes.draw do
 
       # Wishlist (signed-in customers only).
       get    "wishlist",                    to: "wishlists#show"
+      get    "wishlist/product_ids",        to: "wishlists#product_ids"
       post   "wishlist/items",              to: "wishlists#add_item"
       delete "wishlist/items/:product_id",  to: "wishlists#remove_item"
 

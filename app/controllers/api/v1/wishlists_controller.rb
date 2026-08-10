@@ -9,9 +9,19 @@ module Api
 
       before_action :authenticate_customer!
 
-      # GET /api/v1/wishlist
+      # GET /api/v1/wishlist — paginated (page/per_page) for the wishlist page's
+      # infinite scroll; a wishlist can grow large over time.
       def show
-        render_success(WishlistItemSerializer.collection(wishlist_items))
+        items, meta = paginate(wishlist_items)
+        render_success(WishlistItemSerializer.collection(items), meta: meta)
+      end
+
+      # GET /api/v1/wishlist/product_ids — every wishlisted product id,
+      # unpaginated. Cheap even for a large wishlist (just integers) and lets
+      # the heart-toggle state on product cards/PDP know full membership
+      # without loading every wishlist item's full product payload.
+      def product_ids
+        render_success(current_customer.wishlist_items.pluck(:product_id))
       end
 
       # POST /api/v1/wishlist/items  { product_id }
@@ -25,7 +35,7 @@ module Api
       def remove_item
         item = current_customer.wishlist_items.find_by!(product_id: params[:product_id])
         item.destroy!
-        render_success(WishlistItemSerializer.collection(wishlist_items))
+        render_success({ product_id: item.product_id })
       end
 
       private

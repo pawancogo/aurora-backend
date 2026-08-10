@@ -45,8 +45,17 @@ module Api
 
       EMPTY_CART = { id: nil, token: nil, item_count: 0, subtotal: 0.0, currency: "INR", items: [] }.freeze
 
+      # Items paginate (page/per_page) so a cart with many lines doesn't ship
+      # everything in one response; item_count/subtotal always reflect the
+      # whole cart regardless of which page of items is returned.
       def render_cart(cart, status: :ok)
-        render_success(cart ? CartSerializer.new(cart).as_json : EMPTY_CART, status: status)
+        unless cart
+          render_success(EMPTY_CART, status: status)
+          return
+        end
+
+        items, meta = paginate(cart.items)
+        render_success(CartSerializer.new(cart, items: items).as_json, meta: meta, status: status)
       end
 
       # The current cart: the customer's when signed in, else the guest cart

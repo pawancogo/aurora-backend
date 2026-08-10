@@ -13,6 +13,10 @@ RSpec.describe "Api::V1::Carts" do
     response.parsed_body["data"]
   end
 
+  def meta
+    response.parsed_body["meta"]
+  end
+
   describe "guest cart" do
     it "creates a cart on first add and returns a token" do
       variant = stocked_variant
@@ -59,6 +63,24 @@ RSpec.describe "Api::V1::Carts" do
 
       expect(data["id"]).to be_nil
       expect(data["token"]).not_to eq(customer_cart.token)
+    end
+
+    it "paginates a cart with many lines while item_count/subtotal reflect the whole cart" do
+      token_header = {}
+      variants = Array.new(12) { stocked_variant }
+      variants.each do |variant|
+        post "/api/v1/cart/items", params: { variant_id: variant.id, quantity: 1 }, headers: token_header, as: :json
+        token_header = { "X-Cart-Token" => data["token"] }
+      end
+
+      get "/api/v1/cart", params: { per_page: 10 }, headers: token_header
+      expect(data["items"].length).to eq(10)
+      expect(data["item_count"]).to eq(12)
+      expect(meta).to include("current_page" => 1, "per_page" => 10, "total_pages" => 2, "total_count" => 12)
+
+      get "/api/v1/cart", params: { page: 2, per_page: 10 }, headers: token_header
+      expect(data["items"].length).to eq(2)
+      expect(data["item_count"]).to eq(12)
     end
   end
 
