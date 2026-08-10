@@ -12,6 +12,7 @@ class Customer < ApplicationRecord
   has_many :refresh_tokens, as: :owner, dependent: :destroy
   has_many :wishlist_items, dependent: :destroy
   has_many :wishlisted_products, through: :wishlist_items, source: :product
+  has_many :orders, dependent: :restrict_with_error
 
   before_validation :normalize_email
 

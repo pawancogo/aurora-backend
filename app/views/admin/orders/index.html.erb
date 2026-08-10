@@ -1,0 +1,29 @@
+<h1 class="page-title">Orders</h1>
+<p class="page-sub">Placed orders across all customers.</p>
+
+<%= render "admin/ui/search", url: admin_orders_path, query: params[:q],
+      placeholder: "Search by order number",
+      filters: [
+        { name: "status", prompt: "Any status", selected: params[:status],
+          options: Array(@facets["status"]).map { |facet| ["#{facet[:label]} (#{facet[:count]})", facet[:value]] } }
+      ] %>
+
+<%
+  columns = [
+    { label: "ID", class: "id-cell", cell: ->(order) { order.id } },
+    { label: "Order #", cell: ->(order) { link_to(order.order_number, admin_order_path(order)) } },
+    { label: "Customer", cell: ->(order) {
+        order.customer.full_name.presence || order.customer.email
+      } },
+    { label: "Status", cell: ->(order) {
+        ok = %w[confirmed packed shipped delivered].include?(order.status)
+        content_tag(:span, order.status.humanize, class: "chip #{ok ? 'ok' : 'off'}")
+      } },
+    { label: "Items", class: "muted-sm", cell: ->(order) { order.order_items.sum(&:quantity) } },
+    { label: "Total", cell: ->(order) { "₹#{number_with_delimiter(order.total.round)}" } },
+    { label: "Placed", class: "muted-sm", cell: ->(order) { order.placed_at.strftime("%d %b %Y, %H:%M") } }
+  ]
+%>
+<%= render "admin/ui/table", rows: @orders, columns: columns, empty: "No orders found." %>
+
+<%= render "admin/ui/pagination", collection: @orders, path: admin_orders_path %>

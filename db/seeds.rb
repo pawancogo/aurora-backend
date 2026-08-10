@@ -446,7 +446,19 @@ end
   end
 end
 
+# --- Checkout: shipping methods (idempotent) ----------------------------------
+[
+  { name: "Standard", description: "Delivered in 5-7 business days", price_cents: 0, position: 1 },
+  { name: "Express", description: "Delivered in 1-2 business days", price_cents: 9900, position: 2 }
+].each do |attrs|
+  ShippingMethod.find_or_create_by!(name: attrs[:name]) do |method|
+    method.description = attrs[:description]
+    method.price_cents = attrs[:price_cents]
+    method.position = attrs[:position]
+  end
+end
+
 Rails.logger.info("Seeded #{Permission.count} permissions, #{Role.count} roles, " \
                   "#{Category.count} categories, #{Brand.count} brands, #{Product.count} products, " \
-                  "#{ProductAttribute.count} attributes, #{ProductVariant.count} variants; " \
-                  "super admin: #{admin_email}")
+                  "#{ProductAttribute.count} attributes, #{ProductVariant.count} variants, " \
+                  "#{ShippingMethod.count} shipping methods; super admin: #{admin_email}")

@@ -1,0 +1,41 @@
+<p><%= link_to "← Orders", admin_orders_path, class: "link" %></p>
+<h1 class="page-title"><%= @order.order_number %></h1>
+
+<div class="panel">
+  <div class="panel-head"><h2>Order</h2></div>
+  <p>ID: #<%= @order.id %></p>
+  <p>Customer: <%= link_to(@order.customer.full_name.presence || @order.customer.email, admin_customer_path(@order.customer)) %></p>
+  <p>Status: <span class="chip <%= @order.status.in?(%w[confirmed packed shipped delivered]) ? "ok" : "off" %>"><%= @order.status.humanize %></span></p>
+  <p>Placed: <%= @order.placed_at.strftime("%d %b %Y, %H:%M") %></p>
+  <p>Shipping method: <%= @order.shipping_method_name %></p>
+  <p>Subtotal: ₹<%= number_with_delimiter(@order.subtotal.round) %></p>
+  <p>Shipping: ₹<%= number_with_delimiter(@order.shipping.round) %></p>
+  <p><strong>Total: ₹<%= number_with_delimiter(@order.total.round) %></strong></p>
+</div>
+
+<% if (address = @order.shipping_address) %>
+  <div class="panel">
+    <div class="panel-head"><h2>Shipping address</h2></div>
+    <p><%= address.full_name %> · <%= address.phone %></p>
+    <p><%= address.line1 %><% if address.line2.present? %>, <%= address.line2 %><% end %></p>
+    <p><%= [address.city, address.state, address.postal_code].join(", ") %></p>
+    <p><%= address.country %></p>
+  </div>
+<% end %>
+
+<div class="panel">
+  <div class="panel-head"><h2>Order items</h2></div>
+  <%
+    columns = [
+      { label: "Product", cell: ->(item) { item.product_name } },
+      { label: "SKU", class: "muted-sm", cell: ->(item) { item.variant_sku } },
+      { label: "Options", class: "muted-sm", cell: ->(item) {
+          Array(item.options_snapshot).map { |o| o["value"] }.join(" / ").presence || "—"
+        } },
+      { label: "Qty", class: "muted-sm", cell: ->(item) { item.quantity } },
+      { label: "Unit price", class: "muted-sm", cell: ->(item) { "₹#{number_with_delimiter(item.unit_price.round)}" } },
+      { label: "Line total", cell: ->(item) { "₹#{number_with_delimiter(item.line_total.round)}" } }
+    ]
+  %>
+  <%= render "admin/ui/table", rows: @order.order_items, columns: columns, empty: "No items." %>
+</div>

@@ -36,6 +36,11 @@ Rails.application.routes.draw do
       post   "wishlist/items",              to: "wishlists#add_item"
       delete "wishlist/items/:product_id",  to: "wishlists#remove_item"
 
+      # Checkout (signed-in customers only) + order history/detail.
+      get  "shipping_methods", to: "shipping_methods#index"
+      post "checkout",         to: "checkout#create"
+      resources :orders, only: %i[index show]
+
       # Customer authentication (self-service).
       namespace :customer do
         post "auth/register",            to: "registrations#create"
@@ -107,6 +112,10 @@ Rails.application.routes.draw do
     patch  "customers/:id/status",             to: "customers#update_status",   as: :customer_status
     delete "customers/:id/sessions",           to: "customers#revoke_sessions", as: :customer_sessions
     delete "customers/:id/sessions/:token_id", to: "customers#revoke_session",  as: :customer_session
+
+    # Order management (read-only — placement/fulfillment tooling is a later sprint)
+    get "orders",     to: "orders#index", as: :orders
+    get "orders/:id", to: "orders#show",  as: :order
 
     # Typeahead options for async custom-select dropdowns.
     get "options/:resource", to: "options#index", as: :options

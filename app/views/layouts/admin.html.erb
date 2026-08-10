@@ -23,7 +23,7 @@
         <div class="nav-section">Operations</div>
         <a class="nav-link <%= "active" if controller_name == "inventory" %>" href="<%= admin_inventory_path %>">Inventory</a>
         <a class="nav-link <%= "active" if controller_name == "customers" %>" href="<%= admin_customers_path %>">Customers</a>
-        <span class="nav-link disabled">Orders <em>S9</em></span>
+        <a class="nav-link <%= "active" if controller_name == "orders" %>" href="<%= admin_orders_path %>">Orders</a>
 
         <% if allowed_to?("cms.read") %>
           <div class="nav-section">Content</div>
