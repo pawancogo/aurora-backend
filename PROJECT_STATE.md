@@ -5,10 +5,10 @@
 
 ## Current Position
 
-- **Active sprint:** Sprint 8 — Cart & Wishlist ✅ complete
-- **Status:** Sprints 1–8 done. Next: Sprint 9 — Checkout & Order Placement.
+- **Active sprint:** Sprint 9 — Checkout & Order Placement ✅ complete
+- **Status:** Sprints 1–9 done (see the numbering note below — canonical Sprint 8, Customer Profile & Address Book, is the one genuinely still pending). Next: Sprint 10 — Payments.
 - **Canonical roadmap:** [ROADMAP.md](ROADMAP.md) (17 sprints). `SPRINT_PLAN.md` is **superseded**.
-- **⚠ Sprint-numbering note:** "Sprint 7" as tracked here = **Search & Discovery** (SPRINT_PLAN's numbering + this project's UI tags such as the buy-box "Add to cart — Sprint 8"). The *canonical* ROADMAP.md instead labels Sprint 7 = "Customer Profile & Address Book" and files search/discovery under feature #7 / its Sprint 14. The content is done regardless of the label; the canonical Profile & Address Book work (full profile edit + address book; a read-only `/account` stub exists) is still pending. Reconcile the labels in a future pass if desired.
+- **⚠ Sprint-numbering note:** "Sprint 7"/"Sprint 8"/"Sprint 9" as tracked here = **Search & Discovery** / **Cart & Wishlist** / **Checkout & Order Placement** (SPRINT_PLAN's numbering + this project's UI tags such as the buy-box's old "Add to cart — Sprint 8" placeholder). The *canonical* ROADMAP.md instead labels Sprint 7 = "Customer Profile & Address Book" (still pending — a read-only `/account` stub exists) and files Search/Discovery and Cart/Wishlist one slot later (its Sprint 9 = Cart & Wishlist, matching; but its Sprint 8 = the still-pending Profile & Address Book). Checkout shipped ahead of the address book because Sprint 9's own spec designs `OrderAddress` as a form-captured snapshot, not a foreign key to a persisted address book — so it never depended on Sprint 7/8 existing. Reconcile the labels in a future pass if desired.
 
 ## Locked Architectural Decisions (ADRs)
 
@@ -369,3 +369,29 @@ Backend cart CRUD (add/update/remove/show, guest via `X-Cart-Token` or the signe
 Verification: backend **251 RSpec** (21 new: cart-merge + guest-token-scoping + wishlist model/request specs) / RuboCop clean (265 files) / Brakeman 0; frontend **68 Vitest** (10 new) / tsc / ESLint / `next build` clean (adds `/cart`, `/account/wishlist` routes). Live real-click end-to-end: guest add-to-cart → mini-cart badge/popover → login → cart merged onto the customer's cart (item count preserved) → wishlist heart toggle (redirects guest to `/login`; adds/shows/removes for a signed-in customer via `/account/wishlist`) → cart page qty +/− and remove, subtotal recalculates → logout clears both the access and cart tokens from `localStorage`.
 
 Deferred (⭐ in FEATURE_BLUEPRINT, by design): save-for-later / move-to-wishlist, back-in-stock alerts, abandoned-cart capture, multiple/shareable wishlists.
+
+### Post-Sprint-8: cart/wishlist pagination + infinite-scroll DOM cap (2026-08-10)
+
+Neither list was bounded — a large cart or wishlist would ship (and render) every line in one response. Closed end-to-end:
+
+- **Backend:** `GET /cart`'s `items` now paginate (`page`/`per_page`); `item_count`/`subtotal` come from `Cart`'s own full-table SQL aggregates instead of the serializer summing whatever page of items it was handed, so totals stay correct regardless of pagination. `GET /wishlist` paginates the same way and gains `GET /wishlist/product_ids` (unpaginated, ids only) so heart-toggle state on cards/PDP doesn't need every wishlist item's full payload. `DELETE /wishlist/items/:product_id` now returns just the removed id instead of the whole (now-unbounded) collection.
+- **Frontend:** `CartProvider` gained `loadMoreItems`/`hasMoreItems`/`loadingMore`, wired into the `/cart` page (sentinel + "Load more") and the mini-cart panel's own scrollable list (`IntersectionObserver` rooted on the list itself, not the viewport). `WishlistProvider` now only tracks product-id membership (via `/wishlist/product_ids`) for heart-toggle state — the `/account/wishlist` page does its own paginated fetch + infinite scroll independently.
+- **DOM cap:** server-side pagination alone doesn't bound the DOM — infinite scroll that never stops appending eventually renders enough nodes to hurt performance regardless of how the data is fetched. Wishlist and cart pages stop auto-loading at 200 rendered rows ("Showing the first 200" instead of a dead-end "Load more"). The mini-cart popover caps far lower (20, since it's a preview not a full list) — past that it shows "View cart for all N items" linking to the full page.
+- Cart line-item quantity was already capped server-side by inventory availability (`Carts::Manager#clamp`, unless backorderable) — confirmed, no gap there.
+
+Verification: backend **254 RSpec** (3 new pagination specs) / RuboCop clean / Brakeman 0; frontend **71 Vitest** / tsc / ESLint / `next build` clean. Live — added 16 items to a cart and 15 to a wishlist via the API, confirmed both pages/mini-cart paginate correctly with accurate totals throughout.
+
+### Sprint 9 — Checkout & Order Placement ✅ (completed 2026-08-10)
+
+Delivered:
+- **DB (4 tables):** `orders`, `order_items`, `order_addresses`, `shipping_methods`. `OrderAddress` is a snapshot captured directly from the checkout form — **not** a foreign key to a persisted address book (canonical Sprint 7/8, Customer Profile & Address Book, is still pending; the ROADMAP's own Sprint 9 spec designs it as a snapshot for exactly this reason, so checkout never depended on the address book existing). `OrderItem` snapshots product name/sku/options/price at placement so later catalog changes never alter a past order.
+- **Checkout service** (`Checkout::PlaceOrder`): re-validates every cart line (price/stock may have moved since it was added), snapshots items + shipping address, decrements on-hand inventory (capped at what's truly on-hand — never pushed negative, so a backorderable item oversold beyond stock simply isn't ledgered past what existed), and clears the cart, all in one transaction. No payment step exists yet (Sprint 10) — placing an order confirms it outright.
+- **Customer-authenticated checkout only** — no guest order flow. A guest's cart already merges into their account on login, so they sign in before checking out rather than ordering anonymously.
+- **Public API:** `GET /shipping_methods`; **customer API:** `POST /checkout`, `GET /orders`, `GET /orders/:id` (paginated history).
+- **Admin (read-only this sprint):** `Admin::OrdersController` list/detail using the existing `_search`/`_table`/`_pagination` UI kit — status facet, search by order number, nested order-items table on the show page. `orders.read`/`orders.manage` permissions already existed in the seed file (granted to admin/super_admin/order_manager/support/inventory_manager) — no seed changes needed. Replaced the sidebar's disabled "Orders S9" placeholder with a real link.
+- **Storefront:** `/checkout` (single-page: address form + shipping method radio + item review + summary — RHF+Zod, matching the register-page pattern), `/account/orders` (paginated history, same infinite-scroll + DOM-cap pattern as cart/wishlist), `/account/orders/[id]` (detail, doubling as the post-checkout confirmation page). Cart page's "Checkout — Sprint 9" placeholder is now a real link. `UserMenu`'s Orders link de-flagged (was `soon: "S9"`).
+- **Seeds:** two shipping methods (Standard/free, Express/₹99).
+
+Verification: backend **272 RSpec** (18 new: order model + checkout/orders/shipping_methods request specs + admin orders specs) / RuboCop clean (290 files) / Brakeman 0; frontend **73 Vitest** (2 new) / tsc / ESLint / `next build` clean (adds `/checkout`, `/account/orders`, `/account/orders/[id]`). Live real-click end-to-end: logged-in customer with a 58-item cart (accumulated across earlier pagination testing) → filled the checkout form → placed the order → redirected to the confirmation/detail page showing all 16 distinct line items, correct address, and correct totals → cart badge dropped to 0 → order appeared in `/account/orders` → same order visible in `/admin/orders` (list facet + search + detail with nested items table) as `superadmin@aurora.test`.
+
+Deferred (later sprints, by design): payment integration (Sprint 10 — order placement currently confirms outright with no payment gate), guest checkout, order cancellation, `OrderAddressVersion`/`OrderAddressChangeLog` (address editing/audit after placement — Sprint 11, Delivery & Address Change Workflow), admin order status updates/fulfillment tooling (this sprint's admin view is read-only).

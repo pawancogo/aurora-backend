@@ -22,7 +22,7 @@ Single-company e-commerce platform. Incremental, production-quality delivery. On
 | 7  | ✅ Search & Discovery | faceted filters, autocomplete, synonyms, recently viewed, no-result recs |
 | 8  | Customer Profile & Address Book *(pending — see note below)* | pincode serviceability, account security (sessions) |
 | 9  | ✅ Cart & Wishlist | mini-cart done; save-for-later, back-in-stock, abandoned-cart capture later ⭐ |
-| 10 | Checkout & Orders | address snapshots, shipping methods, gift options, price breakup |
+| 10 | ✅ Checkout & Orders | address snapshots + shipping methods done; gift options, price breakup ⭐ still deferred |
 | 11 | Payments | saved cards/UPI/EMI/COD adapters (mock), GST invoice PDF |
 | 12 | ⭐ Promotions & Coupons | codes, cart/product rules, flash sales, free-shipping |
 | 13 | ⭐ Loyalty, Wallet & Gift Cards | points/tiers, store-credit ledger, gift cards |
@@ -37,9 +37,11 @@ Single-company e-commerce platform. Incremental, production-quality delivery. On
 | 22 | Performance & Security Hardening | caching, N+1, CSP, observability (Sentry/APM), GDPR/consent |
 | 23 | Production Readiness & K8s | CI/CD, K8s, secrets, backups/DR, smoke tests |
 
-> **Delivery order note:** #9 (Cart & Wishlist) shipped before #8 (Profile & Address Book) — see
-> [PROJECT_STATE.md](PROJECT_STATE.md)'s "Sprint-numbering note" for how the team's internal sprint
-> labels map onto this canonical table. #8's full scope (profile edit + address book) is still
+> **Delivery order note:** #9 (Cart & Wishlist) and #10 (Checkout & Orders) shipped before #8
+> (Profile & Address Book) — see [PROJECT_STATE.md](PROJECT_STATE.md)'s "Sprint-numbering note" for
+> how the team's internal sprint labels map onto this canonical table. Checkout's own spec designs
+> `OrderAddress` as a form-captured snapshot rather than a foreign key to a persisted address book,
+> so it never depended on #8 existing. #8's full scope (profile edit + address book) is still
 > pending; only a read-only `/account` stub exists today.
 
 ### Original 17-sprint outline (kept for reference; the v2 table above is authoritative)

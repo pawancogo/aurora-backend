@@ -47,7 +47,7 @@
 
 ## 4. Cart & Checkout
 - ✅ Persistent cart, variant-level, merge on login, price/stock revalidation *(Sprint 8)*
-- 🟡 Guest + login checkout, address selection, shipping, summary, payment, confirmation *(Sprint 9)*
+- 🟡 Checkout (login only — guest checkout deferred), address entry, shipping, summary, confirmation *(Sprint 9, done)* — payment ⬜ *(Sprint 10)*
 - 🟡 Mini-cart *(Sprint 8, done)* / slide-over, save-for-later, move to wishlist ⭐ *(slide-over polish + save-for-later still deferred)*
 - ⬜ Coupon / promo code entry, auto-applied offers, price breakup (item, tax, shipping, discount) ⭐
 - ⬜ Gift options (wrap/message), gift cards / store credit / wallet redemption at checkout ⭐
@@ -66,8 +66,8 @@
 - ⬜ Refund to source / to store credit; partial refunds ⭐
 
 ## 6. Orders & Fulfillment
-- 🟡 Lifecycle: pending→confirmed→packed→shipped→delivered→cancelled→refunded→returned, timeline events *(Sprint 9/11)*
-- 🟡 Immutable address snapshots + version history + change audit *(Sprint 9/11)*
+- 🟡 Lifecycle: pending→confirmed→packed→shipped→delivered→cancelled→refunded→returned *(enum done, Sprint 9)* — timeline events / status transitions by staff ⬜ *(Sprint 11)*
+- 🟡 Immutable address snapshot *(done, Sprint 9)* — version history + change audit ⬜ *(Sprint 11)*
 - ⬜ Order cancellation (customer, within window) + partial cancellation ⭐
 - ⬜ Order modification (address/slot) within allowed states 🟡
 - ⬜ Split shipments / partial fulfillment, multi-warehouse routing ⭐
