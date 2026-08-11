@@ -22,6 +22,7 @@ module Admin
       @product = Product.new(product_params)
       apply_images(@product)
       if @product.save
+        apply_master_variant_price(@product)
         redirect_to edit_admin_product_path(@product),
                     notice: "Product “#{@product.name}” created. Add variants, inventory and related products below."
       else
@@ -35,6 +36,7 @@ module Admin
       @product.assign_attributes(product_params)
       apply_images(@product)
       if @product.save
+        apply_master_variant_price(@product)
         redirect_to admin_products_path, notice: "Product “#{@product.name}” updated."
       else
         render :edit, status: :unprocessable_content
@@ -66,8 +68,6 @@ module Admin
         :meta_title, :meta_description, :search_keywords, :published_at,
         specifications_attributes: %i[id name value spec_group position _destroy]
       )
-      permitted[:price_cents] = to_cents(raw[:price]) if raw.key?(:price)
-      permitted[:mrp_cents]   = to_cents(raw[:mrp])   if raw.key?(:mrp)
       if raw.key?(:highlights_text)
         permitted[:highlights] = raw[:highlights_text].to_s.split("\n").map(&:strip).reject(&:blank?)
       end
@@ -81,6 +81,18 @@ module Admin
 
     def to_cents(value)
       (value.to_f * 100).round
+    end
+
+    # The top-level price/MRP fields set the master variant's price, since a
+    # product is never itself sellable — only its variants are.
+    def apply_master_variant_price(product)
+      raw = params.require(:product)
+      return unless raw.key?(:price) || raw.key?(:mrp)
+
+      attrs = {}
+      attrs[:price_cents] = to_cents(raw[:price]) if raw.key?(:price)
+      attrs[:mrp_cents] = to_cents(raw[:mrp]) if raw.key?(:mrp)
+      product.master_variant.update!(attrs)
     end
 
     # Rebuild the image set from a newline-separated list of URLs (first =

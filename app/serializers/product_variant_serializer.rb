@@ -30,8 +30,8 @@ class ProductVariantSerializer
   private
 
   def discount_percent
-    mrp = @variant.mrp_cents_effective
-    price = @variant.price_cents_effective
+    mrp = @variant.mrp_cents.to_i
+    price = @variant.price_cents.to_i
     return 0 if mrp.zero? || mrp <= price
 
     (((mrp - price).to_f / mrp) * 100).round

@@ -34,19 +34,25 @@ RSpec.describe ProductVariant do
     end
   end
 
-  describe "price fallback" do
-    let(:product) { create(:product, price_cents: 1000, mrp_cents: 2000) }
-
-    it "inherits the product price when unset" do
-      variant = product.variants.create!
-      expect(variant.price_cents_effective).to eq(1000)
-      expect(variant.mrp_cents_effective).to eq(2000)
+  describe "price" do
+    it "has no price of its own until one is explicitly set" do
+      variant = create(:product).variants.create!
+      expect(variant.price).to eq(0.0)
     end
 
-    it "uses its own price when set" do
-      variant = product.variants.create!(price_cents: 1500)
-      expect(variant.price_cents_effective).to eq(1500)
-      expect(variant.mrp_cents_effective).to eq(2000)
+    it "reads back exactly the price it was given" do
+      variant = create(:product_variant, price_cents: 1500, mrp_cents: 2000)
+      expect(variant.price).to eq(15.0)
+      expect(variant.mrp).to eq(20.0)
+    end
+
+    it "syncs the parent product's cached price to match its cheapest sellable variant" do
+      product = create(:product)
+      create(:product_variant, product: product, price_cents: 600, mrp_cents: 1200)
+      create(:product_variant, product: product, price_cents: 900)
+
+      expect(product.reload.price_cents).to eq(600)
+      expect(product.reload.mrp_cents).to eq(1200)
     end
   end
 

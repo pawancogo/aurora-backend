@@ -185,8 +185,6 @@ def upsert_product(sku:, name:, category:, brand:, tax:, price:, mrp:, seed:, st
     p.category = category
     p.brand = brand
     p.tax_class = tax
-    p.price_cents = (price * 100).to_i
-    p.mrp_cents = (mrp * 100).to_i
     p.currency = "INR"
     p.status = status
     p.published_at = (status.to_sym == :active ? Time.current : nil)
@@ -195,6 +193,13 @@ def upsert_product(sku:, name:, category:, brand:, tax:, price:, mrp:, seed:, st
     p.featured = flags.fetch(:featured, false)
     p.new_arrival = flags.fetch(:new, false)
     p.best_seller = flags.fetch(:best, false)
+  end
+
+  # A product is never itself sellable — price lives on its master variant.
+  # Only seed it once (guarded, like the rest of this helper, so re-seeding
+  # never clobbers a price an admin has since edited).
+  if product.master_variant.price_cents.to_i.zero?
+    product.master_variant.update!(price_cents: (price * 100).to_i, mrp_cents: (mrp * 100).to_i)
   end
 
   if product.product_images.empty?

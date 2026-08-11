@@ -1,8 +1,11 @@
 # frozen_string_literal: true
 
 # A purchasable variation of a product (a specific combination of attribute
-# values). Price/MRP fall back to the parent product when nil. Every product
-# owns one hidden `master` variant; real variants are created per option combo.
+# values) — the ONLY place a price is ever set. Every product owns one hidden
+# `master` variant (the sellable unit for products with no real options);
+# real variants are created per option combo. Product#price_cents/#mrp_cents
+# are a read-only cache of the cheapest sellable variant's price, kept in
+# sync by `sync_product_pricing` below — a product never has its own price.
 class ProductVariant < ApplicationRecord
   include HasSku
 
@@ -15,8 +18,10 @@ class ProductVariant < ApplicationRecord
   has_one :inventory_item, dependent: :destroy
 
   after_create :ensure_inventory_item
+  after_commit :sync_product_pricing
   validate :master_has_no_options
   validate :option_combination_is_unique
+  validates :price_cents, :mrp_cents, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
 
   scope :master, -> { where(is_master: true) }
   scope :non_master, -> { where(is_master: false) }
@@ -31,21 +36,12 @@ class ProductVariant < ApplicationRecord
           "AND m.is_master = FALSE)")
   }
 
-  # Price falls back to the parent product's price when the variant doesn't set one.
-  def price_cents_effective
-    price_cents || product&.price_cents || 0
-  end
-
-  def mrp_cents_effective
-    mrp_cents || product&.mrp_cents || 0
-  end
-
   def price
-    price_cents_effective / 100.0
+    price_cents.to_i / 100.0
   end
 
   def mrp
-    mrp_cents_effective / 100.0
+    mrp_cents.to_i / 100.0
   end
 
   # Inventory helpers (delegate to the inventory item, tolerant of nil).
@@ -72,6 +68,15 @@ class ProductVariant < ApplicationRecord
 
   def ensure_inventory_item
     create_inventory_item! unless inventory_item
+  end
+
+  # Keeps Product's cached price_cents/mrp_cents matching whichever sellable
+  # variant is currently cheapest — fires on create/update/destroy so any
+  # change here (price, active flag, or removal) propagates automatically.
+  # Search/sort (SearchManager's range_on, Products::Search) need a real
+  # queryable column on products, so this can't just be computed on read.
+  def sync_product_pricing
+    product&.sync_pricing!
   end
 
   def sku_prefix

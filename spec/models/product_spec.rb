@@ -18,30 +18,37 @@ RSpec.describe Product do
     expect(product.discount_percent).to eq(0)
   end
 
-  describe "display_price / display_mrp / display_discount_percent" do
-    it "falls back to the product's own price when no real variant exists (master only)" do
-      product = create(:product, price_cents: 1000, mrp_cents: 2000)
-
-      expect(product.display_price_cents).to eq(1000)
-      expect(product.display_mrp_cents).to eq(2000)
-      expect(product.display_discount_percent).to eq(50)
+  describe "price_cents/mrp_cents (cached from variants)" do
+    it "has no price until a variant sets one" do
+      product = create(:product, price_cents: 0, mrp_cents: 0)
+      expect(product.price_cents).to eq(0)
     end
 
-    it "reflects the cheapest sellable variant's price, not the product's own price" do
-      product = create(:product, price_cents: 1000, mrp_cents: 2000)
+    it "picks up the master variant's price once one is set" do
+      product = create(:product)
+      product.master_variant.update!(price_cents: 1000, mrp_cents: 2000)
+
+      expect(product.reload.price_cents).to eq(1000)
+      expect(product.discount_percent).to eq(50)
+    end
+
+    it "tracks the cheapest sellable variant, not just whichever was created first" do
+      product = create(:product)
+      create(:product_variant, product: product, price_cents: 900)
       create(:product_variant, product: product, price_cents: 600, mrp_cents: 1200)
+
+      expect(product.reload.price_cents).to eq(600)
+      expect(product.reload.mrp_cents).to eq(1200)
+    end
+
+    it "re-syncs when the cheapest variant is deactivated" do
+      product = create(:product)
+      cheap = create(:product_variant, product: product, price_cents: 600)
       create(:product_variant, product: product, price_cents: 900)
 
-      expect(product.display_price_cents).to eq(600)
-      expect(product.display_mrp_cents).to eq(1200)
-      expect(product.display_discount_percent).to eq(50)
-    end
+      cheap.update!(active: false)
 
-    it "lets a variant with no price of its own fall back to the product's price" do
-      product = create(:product, price_cents: 1000, mrp_cents: 2000)
-      create(:product_variant, product: product) # no price_cents set
-
-      expect(product.display_price_cents).to eq(1000)
+      expect(product.reload.price_cents).to eq(900)
     end
   end
 

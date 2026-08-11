@@ -10,7 +10,7 @@ class CartItem < ApplicationRecord
   validates :product_variant_id, uniqueness: { scope: :cart_id }
 
   def unit_price_cents
-    product_variant.price_cents_effective
+    product_variant.price_cents
   end
 
   def line_total_cents
