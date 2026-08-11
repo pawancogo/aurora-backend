@@ -14,10 +14,10 @@ class ProductDetailSerializer
       sku: @product.sku,
       description: @product.description,
       highlights: @product.highlights,
-      price: @product.price,
-      mrp: @product.mrp,
+      price: @product.display_price,
+      mrp: @product.display_mrp,
       currency: @product.currency,
-      discount_percent: @product.discount_percent,
+      discount_percent: @product.display_discount_percent,
       status: @product.status,
       featured: @product.featured,
       new_arrival: @product.new_arrival,
@@ -53,7 +53,7 @@ class ProductDetailSerializer
   # Min/max effective price across sellable variants — drives "from ₹X" display.
   def price_range_json
     prices = sellable_variants.map(&:price_cents_effective)
-    return { min: @product.price, max: @product.price } if prices.empty?
+    return { min: @product.display_price, max: @product.display_price } if prices.empty?
 
     { min: prices.min / 100.0, max: prices.max / 100.0 }
   end
@@ -81,7 +81,7 @@ class ProductDetailSerializer
       {
         kind: relation.relation_kind,
         id: related.id, name: related.name, slug: related.slug,
-        price: related.price, mrp: related.mrp, discount_percent: related.discount_percent,
+        price: related.display_price, mrp: related.display_mrp, discount_percent: related.display_discount_percent,
         image: related.primary_image&.source_url
       }
     end

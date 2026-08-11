@@ -57,6 +57,38 @@ class Product < ApplicationRecord
     (((mrp_cents - price_cents).to_f / mrp_cents) * 100).round
   end
 
+  # A bare product is never itself the sellable unit (see the master-variant
+  # pattern below) — every storefront-facing price must be read through a
+  # variant, so the cheapest sellable one wins here. `price_cents`/`mrp_cents`
+  # on this record stay as the admin-editable "base" default that a variant
+  # falls back to when it doesn't set its own (see ProductVariant#*_effective);
+  # they're deliberately NOT what the storefront displays directly.
+  def cheapest_sellable_variant
+    sellable_variants.min_by(&:price_cents_effective)
+  end
+
+  def display_price_cents
+    cheapest_sellable_variant&.price_cents_effective || price_cents
+  end
+
+  def display_mrp_cents
+    cheapest_sellable_variant&.mrp_cents_effective || mrp_cents
+  end
+
+  def display_price
+    display_price_cents / 100.0
+  end
+
+  def display_mrp
+    display_mrp_cents / 100.0
+  end
+
+  def display_discount_percent
+    return 0 if display_mrp_cents.zero? || display_mrp_cents <= display_price_cents
+
+    (((display_mrp_cents - display_price_cents).to_f / display_mrp_cents) * 100).round
+  end
+
   def primary_image
     product_images.detect(&:primary) || product_images.first
   end

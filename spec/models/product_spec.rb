@@ -18,6 +18,33 @@ RSpec.describe Product do
     expect(product.discount_percent).to eq(0)
   end
 
+  describe "display_price / display_mrp / display_discount_percent" do
+    it "falls back to the product's own price when no real variant exists (master only)" do
+      product = create(:product, price_cents: 1000, mrp_cents: 2000)
+
+      expect(product.display_price_cents).to eq(1000)
+      expect(product.display_mrp_cents).to eq(2000)
+      expect(product.display_discount_percent).to eq(50)
+    end
+
+    it "reflects the cheapest sellable variant's price, not the product's own price" do
+      product = create(:product, price_cents: 1000, mrp_cents: 2000)
+      create(:product_variant, product: product, price_cents: 600, mrp_cents: 1200)
+      create(:product_variant, product: product, price_cents: 900)
+
+      expect(product.display_price_cents).to eq(600)
+      expect(product.display_mrp_cents).to eq(1200)
+      expect(product.display_discount_percent).to eq(50)
+    end
+
+    it "lets a variant with no price of its own fall back to the product's price" do
+      product = create(:product, price_cents: 1000, mrp_cents: 2000)
+      create(:product_variant, product: product) # no price_cents set
+
+      expect(product.display_price_cents).to eq(1000)
+    end
+  end
+
   describe ".live" do
     it "excludes draft and not-yet-published products" do
       live = create(:product)
