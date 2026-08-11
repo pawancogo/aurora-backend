@@ -13,7 +13,7 @@ module Admin
     end
 
     def show
-      @order = Order.includes(:customer, :order_items, :order_addresses).find(params[:id])
+      @order = Order.includes(:customer, :order_items, :order_addresses, :payments).find(params[:id])
     end
   end
 end

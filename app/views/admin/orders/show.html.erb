@@ -23,6 +23,24 @@
   </div>
 <% end %>
 
+<% if @order.payments.any? %>
+  <div class="panel">
+    <div class="panel-head"><h2>Payment attempts</h2></div>
+    <%
+      payment_columns = [
+        { label: "Razorpay order", class: "muted-sm", cell: ->(p) { p.razorpay_order_id } },
+        { label: "Razorpay payment", class: "muted-sm", cell: ->(p) { p.razorpay_payment_id.presence || "—" } },
+        { label: "Amount", cell: ->(p) { "₹#{number_with_delimiter(p.amount.round)}" } },
+        { label: "Status", cell: ->(p) {
+            content_tag(:span, p.status.humanize, class: "chip #{p.captured? ? 'ok' : (p.failed? ? 'off' : 'sys')}")
+          } },
+        { label: "Attempted", class: "muted-sm", cell: ->(p) { p.created_at.strftime("%d %b %Y, %H:%M") } }
+      ]
+    %>
+    <%= render "admin/ui/table", rows: @order.payments.order(:id), columns: payment_columns %>
+  </div>
+<% end %>
+
 <div class="panel">
   <div class="panel-head"><h2>Order items</h2></div>
   <%
