@@ -101,6 +101,21 @@ class Product < ApplicationRecord
       .ordered
   end
 
+  # The attribute that splits this product into distinct storefront listing
+  # cards (e.g. Color) — the category's lowest-position linked attribute that
+  # this product actually varies on. nil when the product has no real
+  # variants, or no linked attribute matches what it varies on; the listing
+  # then shows one ungrouped card, same as an option-less product.
+  def primary_variant_attribute
+    return nil unless has_variants?
+
+    option_ids = option_attributes.pluck(:id)
+    return nil if option_ids.empty? || applicable_category_ids.empty?
+
+    CategoryAttribute.where(category_id: applicable_category_ids, product_attribute_id: option_ids)
+                     .order(:position, :id).first&.product_attribute
+  end
+
   # Total sellable stock across sellable variants.
   def total_available
     sellable_variants.sum { |variant| variant.available }
@@ -118,13 +133,20 @@ class Product < ApplicationRecord
 
   private
 
+  # This category's id plus all of its ancestors' — the pool a product's
+  # variant attributes are drawn from.
+  def applicable_category_ids
+    return [] unless category
+
+    [ category.id ] + category.ancestors.map(&:id)
+  end
+
   # Attributes linked to this product's category or any of its ancestors.
   def category_linked_attributes
-    return ProductAttribute.none unless category
+    return ProductAttribute.none if applicable_category_ids.empty?
 
-    category_ids = [ category.id ] + category.ancestors.map(&:id)
     ProductAttribute.joins(:category_attributes)
-                    .where(category_attributes: { category_id: category_ids }).distinct
+                    .where(category_attributes: { category_id: applicable_category_ids }).distinct
   end
 
   def variant_option_value_ids

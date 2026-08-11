@@ -158,4 +158,39 @@ RSpec.describe Product do
       expect(product.applicable_attributes.map(&:name)).to eq([ "Color" ])
     end
   end
+
+  describe "#primary_variant_attribute" do
+    it "is nil for a product with no real variants" do
+      product = create(:product)
+      expect(product.primary_variant_attribute).to be_nil
+    end
+
+    it "is the category's lowest-position linked attribute the product actually varies on" do
+      color = create(:product_attribute, :color)
+      size = create(:product_attribute, :size)
+      category = create(:category)
+      CategoryAttribute.create!(category: category, product_attribute: size, position: 1)
+      CategoryAttribute.create!(category: category, product_attribute: color, position: 2)
+
+      product = create(:product, category: category)
+      variant = product.variants.create!(price_cents: 500)
+      variant.variant_option_values.create!(attribute_value: color.attribute_values.create!(value: "Red"))
+      variant.variant_option_values.create!(attribute_value: size.attribute_values.create!(value: "M"))
+
+      expect(product.primary_variant_attribute).to eq(size)
+    end
+
+    it "is nil when none of the category's linked attributes match what the product varies on" do
+      unrelated = create(:product_attribute)
+      category = create(:category)
+      CategoryAttribute.create!(category: category, product_attribute: unrelated, position: 1)
+
+      product = create(:product, category: category)
+      color = create(:product_attribute, :color)
+      variant = product.variants.create!(price_cents: 500)
+      variant.variant_option_values.create!(attribute_value: color.attribute_values.create!(value: "Red"))
+
+      expect(product.primary_variant_attribute).to be_nil
+    end
+  end
 end

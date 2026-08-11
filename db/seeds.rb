@@ -306,10 +306,16 @@ waists = %w[30 32 34 36].each_with_index.map { |v, i| seed_value.call(waist_attr
 # variant form (and, downstream, in the storefront facets): tops/dresses use
 # alpha Size, jeans use numeric Waist. Electronics fall back to all attributes.
 [ cat[:tshirts], cat[:shirts], cat[:dresses] ].compact.each do |c|
-  [ color_attr, size_attr ].each { |a| CategoryAttribute.find_or_create_by!(category: c, product_attribute: a) }
+  # Color first (position 1) — it's the attribute the storefront listing
+  # groups cards by; Size stays a PDP-only selector.
+  [ color_attr, size_attr ].each_with_index do |a, i|
+    CategoryAttribute.find_or_create_by!(category: c, product_attribute: a).update!(position: i + 1)
+  end
 end
 [ cat[:jeans] ].compact.each do |c|
-  [ color_attr, waist_attr ].each { |a| CategoryAttribute.find_or_create_by!(category: c, product_attribute: a) }
+  [ color_attr, waist_attr ].each_with_index do |a, i|
+    CategoryAttribute.find_or_create_by!(category: c, product_attribute: a).update!(position: i + 1)
+  end
   # Drop any stale Size scoping so jeans only ever offer Waist.
   CategoryAttribute.where(category: c, product_attribute: size_attr).delete_all
 end
@@ -323,7 +329,7 @@ seed_matrix = lambda do |sku, base_price|
 
   colors.first(2).each do |c|
     sizes.each_with_index do |s, idx|
-      variant = product.variants.create!(price_cents: base_price * 100)
+      variant = product.variants.create!(price_cents: base_price * 100, mrp_cents: (base_price * 130).round)
       variant.variant_option_values.create!(attribute_value: c)
       variant.variant_option_values.create!(attribute_value: s)
       variant.inventory_item.update!(low_stock_threshold: 5)
@@ -343,7 +349,7 @@ seed_waist_matrix = lambda do |sku, base_price|
 
   colors.first(2).each do |c|
     waists.each_with_index do |w, idx|
-      variant = product.variants.create!(price_cents: base_price * 100)
+      variant = product.variants.create!(price_cents: base_price * 100, mrp_cents: (base_price * 130).round)
       variant.variant_option_values.create!(attribute_value: c)
       variant.variant_option_values.create!(attribute_value: w)
       variant.inventory_item.update!(low_stock_threshold: 5)

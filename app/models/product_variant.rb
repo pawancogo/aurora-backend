@@ -44,6 +44,12 @@ class ProductVariant < ApplicationRecord
     mrp_cents.to_i / 100.0
   end
 
+  def discount_percent
+    return 0 if mrp_cents.to_i.zero? || mrp_cents.to_i <= price_cents.to_i
+
+    (((mrp_cents - price_cents).to_f / mrp_cents) * 100).round
+  end
+
   # Inventory helpers (delegate to the inventory item, tolerant of nil).
   def available
     inventory_item&.available.to_i

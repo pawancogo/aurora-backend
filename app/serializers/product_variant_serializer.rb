@@ -13,7 +13,7 @@ class ProductVariantSerializer
       sku: @variant.sku,
       price: @variant.price,
       mrp: @variant.mrp,
-      discount_percent: discount_percent,
+      discount_percent: @variant.discount_percent,
       available: @variant.available,
       in_stock: @variant.in_stock?,
       options: @variant.attribute_values.map do |value|
@@ -25,15 +25,5 @@ class ProductVariantSerializer
         }
       end
     }
-  end
-
-  private
-
-  def discount_percent
-    mrp = @variant.mrp_cents.to_i
-    price = @variant.price_cents.to_i
-    return 0 if mrp.zero? || mrp <= price
-
-    (((mrp - price).to_f / mrp) * 100).round
   end
 end
