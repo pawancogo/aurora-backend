@@ -240,6 +240,20 @@ adjectives = %w[Classic Premium Urban Vintage Modern Signature Everyday Luxe Ess
   )
 end
 
+# Demo customer — a guaranteed-usable login (active + confirmed) for
+# real-world click-through testing, since the bulk customers below are
+# deliberately randomized into a mix of inactive/unconfirmed accounts and
+# aren't reliable for "just log in and try it" purposes.
+demo_customer_email = ENV.fetch("SEED_CUSTOMER_EMAIL", "demo@aurora.test")
+demo_customer_password = ENV.fetch("SEED_CUSTOMER_PASSWORD", "Password123!")
+demo_customer = Customer.find_or_initialize_by(email: demo_customer_email)
+if demo_customer.new_record?
+  demo_customer.assign_attributes(password: demo_customer_password, first_name: "Demo", last_name: "Shopper")
+end
+demo_customer.status = "active"
+demo_customer.confirmed_at ||= Time.current
+demo_customer.save!
+
 # Bulk customers — exercise the customer list search + status filter + pagination.
 customer_first_names = %w[Aarav Isha Kabir Meera Rohan Sara Vivaan Anaya Dev Priya Arjun Zara Neel Tara Om Diya Yash Kiara Aditya Nisha Reyansh Myra Ved Aisha Ishaan]
 25.times do |i|
@@ -472,4 +486,5 @@ load Rails.root.join("db/seeds/roadmap.rb")
 Rails.logger.info("Seeded #{Permission.count} permissions, #{Role.count} roles, " \
                   "#{Category.count} categories, #{Brand.count} brands, #{Product.count} products, " \
                   "#{ProductAttribute.count} attributes, #{ProductVariant.count} variants, " \
-                  "#{ShippingMethod.count} shipping methods, #{Sprint.count} sprints; super admin: #{admin_email}")
+                  "#{ShippingMethod.count} shipping methods, #{Sprint.count} sprints; " \
+                  "super admin: #{admin_email}; demo customer: #{demo_customer_email}")

@@ -59,6 +59,9 @@ gem "carrierwave", "~> 3.0"
 gem "fog-aws", require: false    # AWS S3 (production)
 gem "cloudinary", require: false # Cloudinary (media-heavy: images/video)
 
+# Payments — Razorpay checkout, order creation, and signature verification.
+gem "razorpay", "~> 3.2"
+
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
