@@ -33,4 +33,11 @@ FactoryBot.define do
     postal_code { "400001" }
     country { "IN" }
   end
+
+  factory :payment do
+    order
+    sequence(:razorpay_order_id) { |n| "order_TEST#{n}" }
+    amount_cents { 1000 }
+    status { :created }
+  end
 end

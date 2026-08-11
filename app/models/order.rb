@@ -14,7 +14,11 @@ class Order < ApplicationRecord
   belongs_to :shipping_method, optional: true
   has_many :order_items, dependent: :destroy
   has_many :order_addresses, dependent: :destroy
+  has_many :payments, dependent: :destroy
 
+  # `pending` = placed, awaiting payment confirmation (inventory reserved,
+  # not yet decremented). `payment_failed` = the payment attempt failed or
+  # was abandoned; the shopper can retry from the checkout page.
   enum :status, {
     pending: 0,
     confirmed: 1,
@@ -23,7 +27,8 @@ class Order < ApplicationRecord
     delivered: 4,
     cancelled: 5,
     refunded: 6,
-    returned: 7
+    returned: 7,
+    payment_failed: 8
   }
 
   before_validation :generate_order_number, on: :create

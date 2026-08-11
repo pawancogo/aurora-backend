@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_11_100001) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_12_090001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -249,6 +249,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_100001) do
     t.index ["customer_id"], name: "index_orders_on_customer_id"
     t.index ["order_number"], name: "index_orders_on_order_number", unique: true
     t.index ["shipping_method_id"], name: "index_orders_on_shipping_method_id"
+  end
+
+  create_table "payments", force: :cascade do |t|
+    t.integer "amount_cents", null: false
+    t.datetime "created_at", null: false
+    t.string "currency", default: "INR", null: false
+    t.bigint "order_id", null: false
+    t.jsonb "raw_payload"
+    t.string "razorpay_order_id", null: false
+    t.string "razorpay_payment_id"
+    t.string "razorpay_signature"
+    t.integer "status", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["order_id"], name: "index_payments_on_order_id"
+    t.index ["razorpay_order_id"], name: "index_payments_on_razorpay_order_id", unique: true
+    t.index ["razorpay_payment_id"], name: "index_payments_on_razorpay_payment_id", unique: true
   end
 
   create_table "permissions", force: :cascade do |t|
@@ -528,6 +544,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_100001) do
   add_foreign_key "order_items", "product_variants"
   add_foreign_key "orders", "customers"
   add_foreign_key "orders", "shipping_methods"
+  add_foreign_key "payments", "orders"
   add_foreign_key "product_images", "attribute_values"
   add_foreign_key "product_images", "products"
   add_foreign_key "product_relations", "products"
