@@ -144,6 +144,11 @@ Rails.application.routes.draw do
     resources :homepage_sections, only: %i[index new create edit update destroy], path: "homepage-sections"
     resources :static_pages,      only: %i[index new create edit update destroy], path: "pages"
     resources :footer_sections,   only: %i[index new create edit update destroy], path: "footer"
+
+    # Roadmap: sprint-wise feature tracker (viewable/editable by every admin role).
+    resources :sprints, only: %i[index new create edit update destroy] do
+      resources :features, only: %i[new create edit update destroy], controller: "sprint_features"
+    end
   end
 
   # Backend root goes to the admin portal (which redirects to login or dashboard).

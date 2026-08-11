@@ -1,0 +1,24 @@
+<%#
+  Reusable rich-text editor — a contenteditable div + toolbar (bold/italic/
+  headings/lists/link), no external JS dependency (see layouts/admin.html.erb
+  for the wiring: data-richtext-cmd buttons + sync-to-hidden-field on submit).
+  Locals:
+    form  : the form builder.
+    field : the attribute name (symbol) the hidden field binds to.
+    value : current HTML value (already sanitized by the model on save).
+%>
+<div class="richtext">
+  <div class="richtext-toolbar" role="toolbar" aria-label="Formatting">
+    <button type="button" data-richtext-cmd="bold"><strong>B</strong></button>
+    <button type="button" data-richtext-cmd="italic"><em>I</em></button>
+    <button type="button" data-richtext-cmd="formatBlock" data-richtext-value="H2">H2</button>
+    <button type="button" data-richtext-cmd="formatBlock" data-richtext-value="H3">H3</button>
+    <button type="button" data-richtext-cmd="formatBlock" data-richtext-value="P">¶</button>
+    <button type="button" data-richtext-cmd="insertUnorderedList">• List</button>
+    <button type="button" data-richtext-cmd="insertOrderedList">1. List</button>
+    <button type="button" data-richtext-cmd="createLink">Link</button>
+    <button type="button" data-richtext-cmd="removeFormat">Clear</button>
+  </div>
+  <div class="richtext-editor" contenteditable="true" data-richtext-input><%= sanitized_rich_text(value) %></div>
+  <%= form.hidden_field field, value: sanitized_rich_text(value), data: { richtext_hidden: true } %>
+</div>

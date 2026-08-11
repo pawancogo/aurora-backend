@@ -1,0 +1,36 @@
+<%= form_with model: feature, url: form_url, method: form_method do |form| %>
+  <% if feature.errors.any? %>
+    <div class="flash flash-alert"><%= feature.errors.full_messages.to_sentence %></div>
+  <% end %>
+
+  <div class="admin-form-grid" style="max-width:680px;">
+    <div class="form-row">
+      <label>Area</label>
+      <%= form.select :area, SprintFeature.areas.keys.map { |a| [ a.humanize, a ] }, {} %>
+    </div>
+    <div class="form-row">
+      <label>Position</label>
+      <%= form.number_field :position %>
+    </div>
+  </div>
+
+  <div class="form-row" style="max-width:680px;">
+    <label>Title</label>
+    <%= form.text_field :title %>
+  </div>
+
+  <div class="form-row" style="max-width:720px;">
+    <label>Description <span class="muted-sm">(plain language — what it does, for PMs/stakeholders)</span></label>
+    <%= render "admin/ui/richtext", form: form, field: :description, value: feature.description %>
+  </div>
+
+  <div class="form-row" style="max-width:720px;">
+    <label>Technical description <span class="muted-sm">(implementation detail — how it works, for engineers)</span></label>
+    <%= render "admin/ui/richtext", form: form, field: :technical_description, value: feature.technical_description %>
+  </div>
+
+  <div class="form-actions">
+    <%= form.submit submit_label, class: "btn-sm" %>
+    <%= link_to "Cancel", admin_sprints_path(anchor: "sprint-#{sprint.id}"), class: "link" %>
+  </div>
+<% end %>

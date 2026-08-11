@@ -1,0 +1,52 @@
+<%= form_with model: sprint, url: form_url, method: form_method do |form| %>
+  <% if sprint.errors.any? %>
+    <div class="flash flash-alert"><%= sprint.errors.full_messages.to_sentence %></div>
+  <% end %>
+
+  <div class="admin-form-grid" style="max-width:680px;">
+    <div class="form-row">
+      <label>Number</label>
+      <%= form.number_field :number %>
+    </div>
+    <div class="form-row">
+      <label>Status</label>
+      <%= form.select :status, Sprint.statuses.keys.map { |s| [ s.humanize, s ] }, {} %>
+    </div>
+  </div>
+
+  <div class="form-row" style="max-width:680px;">
+    <label>Title</label>
+    <%= form.text_field :title %>
+  </div>
+  <div class="form-row" style="max-width:680px;">
+    <label>Goal</label>
+    <%= form.text_area :goal %>
+  </div>
+
+  <div class="admin-form-grid" style="max-width:680px;">
+    <div class="form-row">
+      <label>Dependencies <span class="muted-sm">(optional)</span></label>
+      <%= form.text_field :dependencies, placeholder: "Sprint 6, Sprint 2" %>
+    </div>
+    <div class="form-row">
+      <label>Estimate <span class="muted-sm">(optional)</span></label>
+      <%= form.text_field :estimate, placeholder: "4 days" %>
+    </div>
+  </div>
+
+  <div class="admin-form-grid" style="max-width:680px;">
+    <div class="form-row">
+      <label>Started on <span class="muted-sm">(optional)</span></label>
+      <%= form.date_field :started_on %>
+    </div>
+    <div class="form-row">
+      <label>Completed on <span class="muted-sm">(optional)</span></label>
+      <%= form.date_field :completed_on %>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <%= form.submit submit_label, class: "btn-sm" %>
+    <%= link_to "Cancel", admin_sprints_path, class: "link" %>
+  </div>
+<% end %>

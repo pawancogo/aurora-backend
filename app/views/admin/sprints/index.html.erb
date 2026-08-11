@@ -1,0 +1,95 @@
+<% can_manage = allowed_to?("roadmap.manage") %>
+
+<h1 class="page-title">Roadmap</h1>
+<p class="page-sub">
+  Sprint-wise feature tracker — the live, editable source of truth for what shipped and what's
+  planned. Click a sprint to expand it and see exactly what's inside.
+</p>
+
+<% if can_manage %>
+  <div class="toolbar"><%= link_to "+ New sprint", new_admin_sprint_path, class: "btn-sm" %></div>
+<% end %>
+
+<form method="get" action="<%= admin_sprints_path %>" class="search-bar has-filters">
+  <input type="text" name="q" value="<%= params[:q] %>" placeholder="Search sprints…">
+  <select name="status" class="search-filter" data-autosubmit>
+    <option value="">All statuses</option>
+    <% Sprint.statuses.each_key do |key| %>
+      <option value="<%= key %>" <%= "selected" if params[:status] == key %>><%= key.humanize %></option>
+    <% end %>
+  </select>
+  <button type="submit" class="btn-sm">Search</button>
+</form>
+
+<% if @sprints.blank? %>
+  <p class="muted-sm">No sprints match.</p>
+<% else %>
+  <% @sprints.each do |sprint| %>
+    <div class="sprint-card">
+      <% if can_manage %>
+        <div class="sprint-card-actions">
+          <%= link_to "Edit", edit_admin_sprint_path(sprint), class: "link" %>
+          <%= button_to "Delete", admin_sprint_path(sprint), method: :delete, class: "link danger",
+                form: { onsubmit: "return confirm('Delete this sprint and all its features?');" } %>
+        </div>
+      <% end %>
+
+      <details id="sprint-<%= sprint.id %>">
+      <summary>
+        <span class="sprint-num">#<%= sprint.number %></span>
+        <span class="sprint-title"><%= sprint.title %></span>
+        <%= sprint_status_chip(sprint) %>
+        <span class="sprint-meta"><%= pluralize(sprint.sprint_features.size, "feature") %></span>
+      </summary>
+
+      <div class="sprint-body">
+        <p class="sprint-goal">
+          <%= sprint.goal.presence || content_tag(:span, "No goal set.", class: "muted-sm") %>
+        </p>
+        <div class="sprint-facts">
+          <span>Dependencies: <%= sprint.dependencies.presence || "—" %></span>
+          <span>Estimate: <%= sprint.estimate.presence || "—" %></span>
+          <% if sprint.started_on %><span>Started <%= sprint.started_on.strftime("%d %b %Y") %></span><% end %>
+          <% if sprint.completed_on %><span>Completed <%= sprint.completed_on.strftime("%d %b %Y") %></span><% end %>
+        </div>
+
+        <% sprint.sprint_features.each do |feature| %>
+          <div class="feature-row">
+            <div class="feature-head">
+              <span>
+                <span class="opt-chip"><%= feature.area.humanize %></span>
+                <span class="feature-title"><%= feature.title %></span>
+              </span>
+              <% if can_manage %>
+                <span class="row-actions">
+                  <%= link_to "Edit", edit_admin_sprint_feature_path(sprint, feature), class: "link" %>
+                  <%= button_to "Delete", admin_sprint_feature_path(sprint, feature), method: :delete, class: "link danger",
+                        form: { onsubmit: "return confirm('Delete this feature?');" } %>
+                </span>
+              <% end %>
+            </div>
+            <div class="feature-body">
+              <p class="feature-body-label">What it does</p>
+              <%= sanitized_rich_text(feature.description) %>
+            </div>
+            <% if feature.technical_description.present? %>
+              <div class="feature-body feature-body-tech">
+                <p class="feature-body-label">Technical details</p>
+                <%= sanitized_rich_text(feature.technical_description) %>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+
+        <% if sprint.sprint_features.empty? %>
+          <p class="muted-sm">No features logged yet.</p>
+        <% end %>
+
+        <% if can_manage %>
+          <%= link_to "+ Add feature", new_admin_sprint_feature_path(sprint), class: "link" %>
+        <% end %>
+      </div>
+      </details>
+    </div>
+  <% end %>
+<% end %>

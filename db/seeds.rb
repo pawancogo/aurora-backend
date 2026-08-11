@@ -38,7 +38,9 @@ PERMISSIONS = {
   "reports.read" => "View reports",
   "settings.read" => "View settings",
   "settings.manage" => "Manage settings",
-  "audit_logs.read" => "View audit logs"
+  "audit_logs.read" => "View audit logs",
+  "roadmap.read" => "View the sprint roadmap",
+  "roadmap.manage" => "Edit sprints and their features on the roadmap"
 }.freeze
 
 PERMISSIONS.each do |key, name|
@@ -60,23 +62,27 @@ ROLES = {
   "inventory_manager" => {
     name: "Inventory Manager",
     description: "Manages product stock levels.",
-    permissions: %w[dashboard.read products.read inventory.read inventory.manage orders.read]
+    permissions: %w[dashboard.read products.read inventory.read inventory.manage orders.read
+                    roadmap.read roadmap.manage]
   },
   "order_manager" => {
     name: "Order Manager",
     description: "Processes and fulfils orders.",
-    permissions: %w[dashboard.read orders.read orders.manage customers.read payments.read]
+    permissions: %w[dashboard.read orders.read orders.manage customers.read payments.read
+                    roadmap.read roadmap.manage]
   },
   "content_manager" => {
     name: "Content Manager",
     description: "Manages CMS content and catalog copy.",
     permissions: %w[dashboard.read cms.read cms.manage
-                    products.read categories.read brands.read reviews.read]
+                    products.read categories.read brands.read reviews.read
+                    roadmap.read roadmap.manage]
   },
   "support" => {
     name: "Support",
     description: "Assists customers with orders and reviews.",
-    permissions: %w[dashboard.read orders.read customers.read reviews.read reviews.manage]
+    permissions: %w[dashboard.read orders.read customers.read reviews.read reviews.manage
+                    roadmap.read roadmap.manage]
   }
 }.freeze
 
@@ -458,7 +464,187 @@ end
   end
 end
 
+# --- Roadmap: sprint history (backfills the admin Roadmap tracker with the
+# delivery record that used to live only in PROJECT_STATE.md) ----------------
+SPRINTS = [
+  { number: 1, title: "Foundation & Infrastructure", status: "completed",
+    goal: "Docker Compose stack, health checks, CI, and the base Rails + Next.js skeleton.",
+    estimate: "3 days",
+    features: [
+      { area: :backend, title: "Health/readiness endpoints",
+        description: "<p>The app can report whether it's up and whether its dependencies (like the cache) are reachable.</p>",
+        technical_description: "<p><code>/api/v1/health</code> (200) and <code>/api/v1/ready</code> (200/503 when Redis is down), standard envelope.</p>" },
+      { area: :backend, title: "Sample Sidekiq job",
+        description: "<p>Background tasks can run immediately or be scheduled for later, without slowing down the page a shopper is on.</p>",
+        technical_description: "<p>Enqueues and processes both immediate and scheduled/delayed jobs.</p>" },
+      { area: :frontend, title: "Homepage SSR + live health pill",
+        description: "<p>The homepage loads fast and shows a live status indicator confirming the backend is reachable.</p>",
+        technical_description: "<p>Server-rendered homepage displays live API health via TanStack Query + CORS.</p>" },
+      { area: :other, title: "Docker Compose + CI",
+        description: "<p>The whole stack can be spun up with one command, and every change is automatically checked before it ships.</p>",
+        technical_description: "<p>db/redis/api/sidekiq/web services; <code>.github/workflows/ci.yml</code>.</p>" }
+    ] },
+  { number: 2, title: "Authentication & RBAC", status: "completed",
+    goal: "Customer + admin authentication with rotating JWT refresh tokens, and role-based access control.",
+    dependencies: "Sprint 1", estimate: "4 days",
+    features: [
+      { area: :database, title: "Auth + RBAC tables",
+        description: "<p>The system can tell shoppers, staff, and their permissions apart, and remembers who's allowed to do what.</p>",
+        technical_description: "<p><code>customers</code>, <code>admin_users</code>, <code>roles</code>, <code>permissions</code>, <code>role_permissions</code>, <code>admin_user_roles</code>, <code>refresh_tokens</code>.</p>" },
+      { area: :backend, title: "Customer auth flow",
+        description: "<p>Shoppers can create an account, verify their email, sign in, stay signed in, and reset a forgotten password.</p>",
+        technical_description: "<p>Register → email verify (auto-login) → login (verified-only) → refresh (rotation) → logout → <code>/me</code>; enumeration-safe forgot/reset password.</p>" },
+      { area: :backend, title: "Admin auth + RBAC",
+        description: "<p>Staff sign in separately from shoppers, and each staff role only sees the tools it's allowed to use.</p>",
+        technical_description: "<p>Login/refresh/logout/<code>/me</code>; 30 permissions across 6 seeded roles; super-admin implicit-all; <code>authorize_permission!</code> gating.</p>" },
+      { area: :frontend, title: "Auth pages + protected routes",
+        description: "<p>Sign-in/sign-up/password-reset pages, and account pages that only a signed-in shopper can reach.</p>",
+        technical_description: "<p>Login/register/forgot/reset/verify-email/admin-login, auth context with refresh-on-401 interceptor, edge middleware, protected <code>/account</code>.</p>" }
+    ] },
+  { number: 3, title: "Navigation & Site Configuration", status: "completed",
+    goal: "API-driven navigation menu, site settings, and feature flags.",
+    dependencies: "Sprint 1, Sprint 2", estimate: "3 days",
+    features: [
+      { area: :database, title: "Navigation/settings/flags tables",
+        description: "<p>The site's menu, general settings, and on/off feature switches are all editable without touching code.</p>",
+        technical_description: "<p>Self-referential <code>navigation_items</code> (unlimited depth, visibility + scheduling), <code>site_settings</code> (jsonb), <code>feature_flags</code>.</p>" },
+      { area: :backend, title: "Redis-cached navigation tree",
+        description: "<p>The menu loads instantly for every shopper, even as it grows.</p>",
+        technical_description: "<p><code>Navigation::TreeBuilder</code> (single query, no N+1) + <code>Navigation::TreeCache</code>, busted on <code>after_commit</code>.</p>" },
+      { area: :frontend, title: "Mega menu + mobile nav",
+        description: "<p>A hover-out menu on desktop and a slide-out drawer on mobile, both driven by the same live menu data.</p>",
+        technical_description: "<p>API-driven desktop hover <code>MegaMenu</code> and a recursive <code>&lt;details&gt;</code> mobile drawer.</p>" },
+      { area: :admin, title: "Server-rendered admin portal",
+        description: "<p>Staff get their own sign-in and dashboard, separate from the shopper-facing site.</p>",
+        technical_description: "<p>Session-authenticated <code>/admin</code> login + dashboard, replacing the placeholder Next.js admin login (superseded by ADR-016 for navigation, later replaced by the Categories tree).</p>" }
+    ] },
+  { number: 4, title: "Catalog Core", status: "completed",
+    goal: "Products, categories, brands, and tax classes with a public storefront catalog and admin CRUD.",
+    dependencies: "Sprint 1", estimate: "5 days",
+    features: [
+      { area: :database, title: "Catalog tables",
+        description: "<p>The store can hold products organised into categories and brands, each with the right tax rate applied.</p>",
+        technical_description: "<p><code>brands</code>, self-referential <code>categories</code>, <code>tax_classes</code> (GST + HSN), <code>products</code> (lifecycle enum, flags, pricing, SEO), <code>product_images</code>.</p>" },
+      { area: :backend, title: "Public + admin catalog APIs",
+        description: "<p>Shoppers can browse and search products; staff can create, edit, and organise them.</p>",
+        technical_description: "<p>Paginated/filterable <code>/products</code>, <code>/products/:slug</code>, nested <code>/categories</code>; RBAC-gated admin CRUD for products/categories/brands/tax classes.</p>" },
+      { area: :frontend, title: "PLP, category pages, PDP",
+        description: "<p>Browsable product listing pages, category pages with breadcrumbs, and a full product detail page.</p>",
+        technical_description: "<p>Product listing, nested category pages with breadcrumbs, and a PDP with gallery, pricing, highlights, JSON-LD + SEO metadata.</p>" },
+      { area: :admin, title: "Admin catalog + team management UI",
+        description: "<p>Staff can manage the product catalog and the store's own team accounts from one place.</p>",
+        technical_description: "<p>Full CRUD for products/categories/brands, customer + admin-user management with login-session panels, reusable UI kit (table/search/pagination/modal/uploader).</p>" }
+    ] },
+  { number: 5, title: "Variants, Attributes & Inventory", status: "completed",
+    goal: "Product variants (option combinations), attributes, specifications, and inventory tracking.",
+    dependencies: "Sprint 4", estimate: "5 days",
+    features: [
+      { area: :database, title: "Variant + inventory tables",
+        description: "<p>Products can come in different colours/sizes, and the store always knows exactly how many of each are in stock.</p>",
+        technical_description: "<p>8 tables: attributes/values, variants/option-values, specifications, <code>inventory_items</code>, immutable <code>stock_movements</code>, product relations. Master-variant pattern for option-less products.</p>" },
+      { area: :backend, title: "Inventory services",
+        description: "<p>Stock levels update safely and consistently, even with many purchases happening at once.</p>",
+        technical_description: "<p><code>Inventory::AdjustStock</code> (ledgered) and <code>Reserve</code>/<code>Release</code> (reservation foundation, oversell guard).</p>" },
+      { area: :admin, title: "Attributes, Variants, Inventory screens",
+        description: "<p>Staff can define colour/size options, manage stock per variant, and see low-stock warnings.</p>",
+        technical_description: "<p>Nested value editor, per-product variant management, dedicated inventory screen with low-stock filter and adjustment history.</p>" },
+      { area: :frontend, title: "Variant selector on PDP",
+        description: "<p>Shoppers pick a colour/size on the product page and see the price and stock update instantly.</p>",
+        technical_description: "<p>Client-side option buttons resolve the matching variant with live price/stock; specifications table; related-products rail.</p>" }
+    ] },
+  { number: 6, title: "CMS & Homepage", status: "completed",
+    goal: "Fully CMS-driven homepage and promotional content.",
+    dependencies: "Sprint 4", estimate: "4 days",
+    features: [
+      { area: :database, title: "CMS tables",
+        description: "<p>The homepage, promotional banners, and footer are all made of editable content blocks.</p>",
+        technical_description: "<p><code>banners</code> (hero/promo/announcement), <code>homepage_sections</code> (typed block registry), <code>static_pages</code>, <code>footer_sections</code>; <code>Schedulable</code> concern.</p>" },
+      { area: :backend, title: "Homepage aggregation",
+        description: "<p>The homepage assembles itself from whatever content blocks are currently turned on.</p>",
+        technical_description: "<p><code>Cms::Homepage</code> composes blocks per type (hero, product rail, category grid, rich text) plus the announcement and footer.</p>" },
+      { area: :admin, title: "Content management screens",
+        description: "<p>Marketing staff can update the homepage, banners, pages, and footer without needing a developer.</p>",
+        technical_description: "<p>Banners, Homepage sections, Pages, and Footer — full CRUD under a new \"Content\" sidebar group.</p>" },
+      { area: :frontend, title: "Dynamic homepage",
+        description: "<p>The homepage shows a hero banner, category tiles, and product rails that staff control.</p>",
+        technical_description: "<p>Real homepage composed entirely from CMS data — hero, category tiles, product rails, value props.</p>" }
+    ] },
+  { number: 7, title: "Search & Discovery", status: "completed",
+    goal: "Faceted search, filtering, infinite scroll, and discovery features across the storefront.",
+    dependencies: "Sprint 4, Sprint 5", estimate: "5 days",
+    features: [
+      { area: :backend, title: "Faceted filters",
+        description: "<p>Shoppers can narrow down a product list by brand, size, price, and availability at the same time.</p>",
+        technical_description: "<p><code>Products::Search</code> — cross-table brand/attribute/availability/price filters with facet counts.</p>" },
+      { area: :frontend, title: "Infinite scroll listings",
+        description: "<p>Product lists load more items automatically as a shopper scrolls, instead of paging.</p>",
+        technical_description: "<p>IntersectionObserver-driven infinite scroll with id-dedupe, replacing pagination on catalog listings.</p>" },
+      { area: :frontend, title: "Variant-option gallery images",
+        description: "<p>Picking a colour on the product page swaps in photos of that exact colour.</p>",
+        technical_description: "<p>PDP gallery swaps by selected colour option; thumbnail-swap + hover-magnify interaction.</p>" },
+      { area: :frontend, title: "Recently-viewed + no-result recommendations",
+        description: "<p>Shoppers see products they recently looked at, and get suggestions instead of a dead end when a search finds nothing.</p>",
+        technical_description: "<p>localStorage-backed recently-viewed rail; \"Popular right now\" fallback on empty search/listing results.</p>" },
+      { area: :frontend, title: "Search autocomplete + synonyms",
+        description: "<p>The search box suggests matches as you type, and understands common alternate spellings (like \"tee\" for \"t-shirt\").</p>",
+        technical_description: "<p>Debounced header typeahead reusing the products endpoint; query synonym expansion (tee↔t-shirt, jeans↔denim).</p>" }
+    ] },
+  { number: 8, title: "Cart & Wishlist", status: "completed",
+    goal: "Shopping cart and wishlist functionality.",
+    dependencies: "Sprint 6, Sprint 2", estimate: "4 days",
+    features: [
+      { area: :backend, title: "Cart merge on login",
+        description: "<p>Items added to the cart before signing in are still there after signing in — nothing gets lost.</p>",
+        technical_description: "<p>Guest cart (<code>X-Cart-Token</code>) folds into the customer's cart on login/email-verify, summing quantities for shared variants.</p>" },
+      { area: :backend, title: "Wishlist",
+        description: "<p>Signed-in shoppers can save products for later.</p>",
+        technical_description: "<p><code>wishlist_items</code> + <code>Api::V1::WishlistsController</code> — signed-in customers only, no guest wishlist.</p>" },
+      { area: :frontend, title: "Cart page + mini-cart",
+        description: "<p>A full cart page plus a quick-access mini-cart from the header, both showing what's inside and the running total.</p>",
+        technical_description: "<p><code>CartProvider</code>, <code>/cart</code> page (qty stepper, remove, subtotal), header mini-cart popover with live item-count badge.</p>" },
+      { area: :frontend, title: "Wishlist heart toggle",
+        description: "<p>A heart icon on every product lets shoppers save or remove it from their wishlist with one click.</p>",
+        technical_description: "<p>Reusable <code>WishlistButton</code> on product cards + PDP; <code>/account/wishlist</code> page; redirects guests to login.</p>" },
+      { area: :backend, title: "Pagination + infinite scroll + DOM cap",
+        description: "<p>Even a very large cart or wishlist stays fast to load and scroll through.</p>",
+        technical_description: "<p>Cart/wishlist items paginate server-side; totals computed from full-table aggregates; 200-row DOM cap with infinite scroll on cart/wishlist pages, 20-item cap on the mini-cart.</p>" }
+    ] },
+  { number: 9, title: "Checkout & Order Placement", status: "completed",
+    goal: "Complete checkout flow with immutable order address snapshots.",
+    dependencies: "Sprint 8, Sprint 2", estimate: "4 days",
+    features: [
+      { area: :database, title: "Order tables",
+        description: "<p>Every placed order keeps a permanent record of exactly what was bought, at what price, and delivered where — even if the catalog changes later.</p>",
+        technical_description: "<p><code>orders</code>, <code>order_items</code>, <code>order_addresses</code> (form-captured snapshot, not FK'd to an address book), <code>shipping_methods</code>.</p>" },
+      { area: :backend, title: "Checkout service",
+        description: "<p>Placing an order double-checks prices and stock, reserves the inventory, and empties the cart — all as one safe step.</p>",
+        technical_description: "<p><code>Checkout::PlaceOrder</code> — re-validates cart lines, snapshots items + address, decrements inventory (capped, never negative), clears the cart, all transactional.</p>" },
+      { area: :backend, title: "Customer orders API",
+        description: "<p>Shoppers can check out and view their past orders. Checkout requires signing in first.</p>",
+        technical_description: "<p><code>POST /checkout</code>, <code>GET /orders</code>, <code>GET /orders/:id</code> — customer-authenticated only, no guest checkout.</p>" },
+      { area: :admin, title: "Admin orders (read-only)",
+        description: "<p>Staff can look up and review any order placed on the store.</p>",
+        technical_description: "<p><code>Admin::OrdersController</code> list/detail with status facet, search by order number, nested order-items table.</p>" },
+      { area: :frontend, title: "Checkout flow + order history",
+        description: "<p>Shoppers can enter their address, pick a shipping option, place the order, and later see it in their order history.</p>",
+        technical_description: "<p><code>/checkout</code> (address + shipping + review + place order), <code>/account/orders</code> (paginated history), <code>/account/orders/[id]</code> (detail/confirmation).</p>" }
+    ] }
+].freeze
+
+SPRINTS.each do |attrs|
+  sprint = Sprint.find_or_initialize_by(number: attrs[:number])
+  sprint.assign_attributes(attrs.slice(:title, :goal, :status, :dependencies, :estimate))
+  sprint.save!
+
+  attrs[:features].each_with_index do |feature, index|
+    record = sprint.sprint_features.find_or_initialize_by(title: feature[:title])
+    record.assign_attributes(area: feature[:area], description: feature[:description],
+                              technical_description: feature[:technical_description], position: index)
+    record.save!
+  end
+end
+
 Rails.logger.info("Seeded #{Permission.count} permissions, #{Role.count} roles, " \
                   "#{Category.count} categories, #{Brand.count} brands, #{Product.count} products, " \
                   "#{ProductAttribute.count} attributes, #{ProductVariant.count} variants, " \
-                  "#{ShippingMethod.count} shipping methods; super admin: #{admin_email}")
+                  "#{ShippingMethod.count} shipping methods, #{Sprint.count} sprints; super admin: #{admin_email}")

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_10_100004) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_11_100001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -422,6 +422,32 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_10_100004) do
     t.index ["key"], name: "index_site_settings_on_key", unique: true
   end
 
+  create_table "sprint_features", force: :cascade do |t|
+    t.integer "area", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.integer "position", default: 0, null: false
+    t.bigint "sprint_id", null: false
+    t.text "technical_description"
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["sprint_id"], name: "index_sprint_features_on_sprint_id"
+  end
+
+  create_table "sprints", force: :cascade do |t|
+    t.date "completed_on"
+    t.datetime "created_at", null: false
+    t.string "dependencies"
+    t.string "estimate"
+    t.text "goal"
+    t.integer "number", null: false
+    t.date "started_on"
+    t.integer "status", default: 0, null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["number"], name: "index_sprints_on_number", unique: true
+  end
+
   create_table "static_pages", force: :cascade do |t|
     t.text "body"
     t.datetime "created_at", null: false
@@ -513,6 +539,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_10_100004) do
   add_foreign_key "products", "tax_classes"
   add_foreign_key "role_permissions", "permissions"
   add_foreign_key "role_permissions", "roles"
+  add_foreign_key "sprint_features", "sprints"
   add_foreign_key "stock_movements", "admin_users", on_delete: :nullify
   add_foreign_key "stock_movements", "inventory_items"
   add_foreign_key "variant_option_values", "attribute_values"

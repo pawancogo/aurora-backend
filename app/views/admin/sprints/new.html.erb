@@ -1,0 +1,4 @@
+<p><%= link_to "← Roadmap", admin_sprints_path, class: "link" %></p>
+<h1 class="page-title">New sprint</h1>
+
+<%= render "form", sprint: @sprint, form_url: admin_sprints_path, form_method: :post, submit_label: "Create sprint" %>

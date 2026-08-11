@@ -1,0 +1,6 @@
+<p><%= link_to "← Roadmap", admin_sprints_path(anchor: "sprint-#{@sprint.id}"), class: "link" %></p>
+<h1 class="page-title">Edit feature</h1>
+<p class="page-sub">Sprint #<%= @sprint.number %> · <%= @sprint.title %></p>
+
+<%= render "form", feature: @feature, sprint: @sprint, form_url: admin_sprint_feature_path(@sprint, @feature),
+      form_method: :patch, submit_label: "Save changes" %>

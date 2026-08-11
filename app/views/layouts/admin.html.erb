@@ -33,6 +33,11 @@
           <a class="nav-link <%= "active" if controller_name == "footer_sections" %>" href="<%= admin_footer_sections_path %>">Footer</a>
         <% end %>
 
+        <% if allowed_to?("roadmap.read") %>
+          <div class="nav-section">Roadmap</div>
+          <a class="nav-link <%= "active" if %w[sprints sprint_features].include?(controller_name) %>" href="<%= admin_sprints_path %>">Sprints</a>
+        <% end %>
+
         <div class="nav-section">Admin</div>
         <a class="nav-link <%= "active" if %w[settings roles].include?(controller_name) %>" href="<%= admin_settings_path %>">Settings</a>
       </nav>
@@ -94,6 +99,48 @@
         }
         // Click on the backdrop (the dialog element itself) closes it.
         if (event.target.matches("dialog.ui-modal")) event.target.close();
+
+        // Reusable rich-text editor (admin/ui/_richtext): toolbar commands.
+        var cmdBtn = event.target.closest("[data-richtext-cmd]");
+        if (cmdBtn) {
+          event.preventDefault();
+          var editor = cmdBtn.closest(".richtext").querySelector("[data-richtext-input]");
+          editor.focus();
+          var cmd = cmdBtn.dataset.richtextCmd;
+          var value = cmdBtn.dataset.richtextValue || null;
+          if (cmd === "createLink") {
+            var url = window.prompt("Link URL:");
+            if (!url) return;
+            value = url;
+          }
+          document.execCommand(cmd, false, value);
+        }
+      });
+
+      // Sprint accordion (admin/sprints#index): reopen the sprint named by the
+      // URL hash after a create/update/destroy redirect, instead of losing
+      // the user's place and dropping them back at a fully collapsed list.
+      document.addEventListener("DOMContentLoaded", function () {
+        if (!location.hash) return;
+        var target = document.getElementById(location.hash.slice(1));
+        if (target && target.tagName === "DETAILS") target.setAttribute("open", "");
+      });
+
+      // Reusable rich-text editor: force plain-text paste (no pasted-in HTML/styles).
+      document.addEventListener("paste", function (event) {
+        if (!event.target.closest || !event.target.closest("[data-richtext-input]")) return;
+        event.preventDefault();
+        document.execCommand("insertText", false, event.clipboardData.getData("text/plain"));
+      });
+
+      // Reusable rich-text editor: sync contenteditable HTML into its hidden
+      // field right before the form actually submits.
+      document.addEventListener("submit", function (event) {
+        event.target.querySelectorAll(".richtext").forEach(function (rt) {
+          var editor = rt.querySelector("[data-richtext-input]");
+          var hidden = rt.querySelector("[data-richtext-hidden]");
+          if (editor && hidden) hidden.value = editor.innerHTML;
+        });
       });
     </script>
     <%= render "admin/ui/select_enhancer" %>
