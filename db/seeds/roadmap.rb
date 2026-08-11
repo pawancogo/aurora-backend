@@ -174,6 +174,26 @@ SPRINTS = [
       { area: :frontend, title: "Checkout flow + order history",
         description: "<p>The actual screens a shopper uses to buy something: enter a delivery address, pick a shipping speed, review what's in the cart and the total cost, place the order, and afterwards find it again in their order history.</p><p><strong>Where to see it:</strong> <code>/checkout</code> (single-page form: address → shipping method → item review → summary → place order), <code>/account/orders</code> (paginated history, same infinite-scroll pattern as the cart/wishlist), <code>/account/orders/[id]</code> (detail page, which doubles as the post-checkout confirmation screen).</p>",
         technical_description: "<p>RHF+Zod address form matching the register-page pattern; shipping method radios; item review + running total. The cart page's old \"Checkout — Sprint 9\" disabled placeholder link is now real, and <code>UserMenu</code>'s Orders link is de-flagged.</p>" }
+    ] },
+  { number: 10, title: "Payments (Razorpay)", status: "in_progress",
+    goal: "Real payment gateway integration — checkout only confirms an order once payment is actually verified.",
+    dependencies: "Sprint 9", estimate: "4 days",
+    features: [
+      { area: :backend, title: "Razorpay account + credentials",
+        description: "<p>The store can accept real payments through Razorpay, starting in a safe test mode that never touches real money.</p><p><strong>Where to see it:</strong> not a UI feature — it's account setup on razorpay.com plus <code>RAZORPAY_KEY_ID</code>/<code>RAZORPAY_KEY_SECRET</code> in the backend's local <code>.env</code>.</p>",
+        technical_description: "<p><code>config/initializers/razorpay.rb</code> calls <code>Razorpay.setup</code> from ENV when both are present (mirrors the SMTP-creds pattern, ADR-014) — checkout raises a clear error instead of an SDK exception if payments aren't configured yet.</p>" },
+      { area: :database, title: "Payments table",
+        description: "<p>The store keeps a record of every payment attempt on an order — whether it succeeded, failed, and how much was charged.</p><p><strong>Where to see it:</strong> Admin → Orders → open an order → \"Payment attempts\" panel.</p>",
+        technical_description: "<p><code>payments</code> table: <code>razorpay_order_id</code>/<code>razorpay_payment_id</code>/<code>razorpay_signature</code>, <code>amount_cents</code>, status enum (created/authorized/captured/failed/refunded), raw payload. One row per Order — a retry reopens the same row rather than creating a new one.</p>" },
+      { area: :backend, title: "Checkout now reserves stock and starts a real payment",
+        description: "<p>Placing an order no longer confirms it instantly — the order is saved and inventory is held for it, but it only becomes a confirmed sale once payment actually goes through.</p><p><strong>Where to see it:</strong> place an order at <code>/checkout</code> — it shows as \"Awaiting payment\" in your order history until you pay.</p>",
+        technical_description: "<p><code>Checkout::PlaceOrder</code> creates the order as <code>pending</code>, reserves inventory via <code>Inventory::Reserve</code> (built in Sprint 5, unused until now) instead of decrementing on-hand directly, and opens a <code>Razorpay::Order</code> for the total.</p>" },
+      { area: :backend, title: "Payment verification + webhook safety net",
+        description: "<p>The store double-checks with Razorpay that a payment is genuine before treating an order as paid, so a tampered or fake \"success\" can't slip through.</p><p><strong>Where to see it:</strong> after paying, the order flips to \"Confirmed\"; if payment fails, it shows \"Payment failed\" with a button to try again.</p>",
+        technical_description: "<p><code>Checkout::VerifyPayment</code> (primary path, called by the frontend post-checkout) verifies the HMAC signature server-side; <code>Api::V1::WebhooksController</code> (signature-verified via the raw request body) is a safety net for when the browser closes before that call fires. Both funnel into <code>Checkout::ApplyPaymentOutcome</code> — idempotent, so whichever path arrives first wins.</p>" },
+      { area: :frontend, title: "Razorpay Checkout widget + retry payment",
+        description: "<p>Shoppers pay through Razorpay's own secure payment screen (cards, UPI, etc.) right after placing an order, and can pick up where they left off if a payment doesn't go through the first time.</p><p><strong>Where to see it:</strong> <code>/checkout</code> → \"Place order\" opens the payment widget; a stuck order's detail page (<code>/account/orders/[id]</code>) shows a \"Complete payment\" button.</p>",
+        technical_description: "<p><code>src/lib/razorpay.ts</code> lazy-loads Checkout.js only when needed. The Key Secret never reaches the browser — only the public Key ID + a Razorpay order id, returned in <code>OrderSerializer</code>'s <code>payment</code> block while an order is <code>pending</code>.</p>" }
     ] }
 ].freeze
 
