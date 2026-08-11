@@ -35,6 +35,31 @@ RSpec.describe "Admin sprints", type: :request do
     expect(response).to redirect_to("/admin")
   end
 
+  it "shows a single sprint's detail page with prev/next navigation" do
+    sign_in_admin(admin_with("roadmap.read"))
+    create(:sprint, number: 7, title: "Search & Discovery")
+    sprint = create(:sprint, number: 8, title: "Cart & Wishlist")
+    create(:sprint, number: 9, title: "Checkout & Order Placement")
+    feature = create(:sprint_feature, sprint: sprint, title: "Wishlist toggle")
+
+    get "/admin/sprints/#{sprint.id}"
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Cart &amp; Wishlist")
+    expect(response.body).to include(feature.title)
+    expect(response.body).to include("Search &amp; Discovery")
+    expect(response.body).to include("Checkout &amp; Order Placement")
+  end
+
+  it "forbids the sprint detail page without roadmap.read" do
+    sign_in_admin(admin_with)
+    sprint = create(:sprint)
+
+    get "/admin/sprints/#{sprint.id}"
+
+    expect(response).to redirect_to("/admin")
+  end
+
   it "creates a sprint for an admin with roadmap.manage" do
     sign_in_admin(admin_with("roadmap.read", "roadmap.manage"))
 

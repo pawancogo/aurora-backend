@@ -1,0 +1,34 @@
+<%
+  can_manage = allowed_to?("roadmap.manage")
+  prev_sprint = Sprint.where("number < ?", @sprint.number).order(number: :desc).first
+  next_sprint = Sprint.where("number > ?", @sprint.number).order(:number).first
+%>
+
+<p>
+  <%= link_to "← Roadmap", admin_sprints_path, class: "link" %>
+  <% if prev_sprint %> · <%= link_to "← ##{prev_sprint.number} #{prev_sprint.title}", admin_sprint_path(prev_sprint), class: "link" %><% end %>
+  <% if next_sprint %> · <%= link_to "##{next_sprint.number} #{next_sprint.title} →", admin_sprint_path(next_sprint), class: "link" %><% end %>
+</p>
+
+<div class="sprint-show-head">
+  <div>
+    <h1 class="page-title">
+      <span class="sprint-num">#<%= @sprint.number %></span> <%= @sprint.title %>
+    </h1>
+    <p class="page-sub" style="margin-bottom:8px;">
+      <%= sprint_status_chip(@sprint) %>
+      <span class="sprint-meta"><%= pluralize(@sprint.sprint_features.size, "feature") %></span>
+    </p>
+  </div>
+  <% if can_manage %>
+    <div class="sprint-card-actions" style="position:static;">
+      <%= link_to "Edit", edit_admin_sprint_path(@sprint), class: "link" %>
+      <%= button_to "Delete", admin_sprint_path(@sprint), method: :delete, class: "link danger",
+            form: { onsubmit: "return confirm('Delete this sprint and all its features?');" } %>
+    </div>
+  <% end %>
+</div>
+
+<div class="sprint-show-body">
+  <%= render "body", sprint: @sprint, can_manage: can_manage %>
+</div>

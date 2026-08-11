@@ -3,15 +3,17 @@
 module Admin
   # Roadmap: sprint-wise feature tracker, viewable/editable by every admin role.
   class SprintsController < BaseController
-    before_action -> { require_permission!("roadmap.read") }, only: :index
+    before_action -> { require_permission!("roadmap.read") }, only: %i[index show]
     before_action -> { require_permission!("roadmap.manage") }, only: %i[new create edit update destroy]
-    before_action :set_sprint, only: %i[edit update destroy]
+    before_action :set_sprint, only: %i[show edit update destroy]
 
     def index
       @sprints = Sprint.ordered
       @sprints = @sprints.where(status: Sprint.statuses[params[:status]]) if Sprint.statuses.key?(params[:status])
       @sprints = @sprints.where("title ILIKE :q OR goal ILIKE :q", q: "%#{params[:q]}%") if params[:q].present?
     end
+
+    def show; end
 
     def new
       @sprint = Sprint.new(number: (Sprint.maximum(:number) || 0) + 1)

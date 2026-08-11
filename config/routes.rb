@@ -146,7 +146,7 @@ Rails.application.routes.draw do
     resources :footer_sections,   only: %i[index new create edit update destroy], path: "footer"
 
     # Roadmap: sprint-wise feature tracker (viewable/editable by every admin role).
-    resources :sprints, only: %i[index new create edit update destroy] do
+    resources :sprints, only: %i[index show new create edit update destroy] do
       resources :features, only: %i[new create edit update destroy], controller: "sprint_features"
     end
   end
