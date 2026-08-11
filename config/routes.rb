@@ -37,9 +37,13 @@ Rails.application.routes.draw do
       delete "wishlist/items/:product_id",  to: "wishlists#remove_item"
 
       # Checkout (signed-in customers only) + order history/detail.
-      get  "shipping_methods", to: "shipping_methods#index"
-      post "checkout",         to: "checkout#create"
+      get  "shipping_methods",                   to: "shipping_methods#index"
+      post "checkout",                           to: "checkout#create"
+      post "checkout/:order_id/verify_payment",  to: "checkout#verify_payment"
       resources :orders, only: %i[index show]
+
+      # Razorpay webhook (signature-verified, no customer/admin auth).
+      post "webhooks/razorpay", to: "webhooks#razorpay"
 
       # Customer authentication (self-service).
       namespace :customer do

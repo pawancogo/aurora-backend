@@ -19,7 +19,21 @@ class OrderSerializer
       shipping_method_name: @order.shipping_method_name,
       placed_at: @order.placed_at,
       shipping_address: @order.shipping_address && OrderAddressSerializer.new(@order.shipping_address).as_json,
-      items: @order.order_items.map { |item| OrderItemSerializer.new(item).as_json }
+      items: @order.order_items.map { |item| OrderItemSerializer.new(item).as_json },
+      payment: @order.pending? && (payment = @order.payments.order(:id).last) ? payment_json(payment) : nil
+    }
+  end
+
+  private
+
+  # Only exposes what the Razorpay Checkout widget needs to open — the Key
+  # ID is a public identifier (safe client-side), never the Key Secret.
+  def payment_json(payment)
+    {
+      razorpay_order_id: payment.razorpay_order_id,
+      razorpay_key_id: ENV["RAZORPAY_KEY_ID"],
+      amount_cents: payment.amount_cents,
+      currency: payment.currency
     }
   end
 end
