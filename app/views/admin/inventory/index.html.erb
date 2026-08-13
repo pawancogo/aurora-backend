@@ -24,7 +24,8 @@
     { label: "ID", class: "id-cell", cell: ->(v) { v.id } },
     { label: "Product", cell: ->(v) {
         name = link_to(v.product.name, admin_inventory_item_path(v))
-        content_tag(:span, safe_join([name, tag.br, variant_option_chips(v)]))
+        edit = link_to("Edit product", edit_admin_product_path(v.product), class: "muted-sm")
+        content_tag(:span, safe_join([name, tag.br, variant_option_chips(v), tag.br, edit]))
       } },
     { label: "SKU",       cell: ->(v) { content_tag(:code, v.sku) } },
     { label: "On hand",   cell: ->(v) { v.inventory_item&.on_hand.to_i } },

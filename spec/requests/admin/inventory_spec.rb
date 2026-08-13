@@ -57,6 +57,34 @@ RSpec.describe "Admin inventory", type: :request do
     expect(response.body).to include(low.sku)
   end
 
+  it "links the inventory item page back to its product and variant" do
+    sign_in_admin(super_admin)
+
+    get "/admin/inventory/#{variant.id}"
+
+    expect(response.body).to include(%(href="#{edit_admin_product_path(variant.product)}"))
+    expect(response.body).to include(%(href="#{edit_admin_product_variant_path(variant.product, variant)}"))
+  end
+
+  it "omits the edit-variant link for a master variant (no edit route exists for it)" do
+    sign_in_admin(super_admin)
+    master = create(:product).master_variant
+
+    get "/admin/inventory/#{master.id}"
+
+    expect(response.body).to include(%(href="#{edit_admin_product_path(master.product)}"))
+    expect(response.body).not_to include(%(href="#{edit_admin_product_variant_path(master.product, master)}"))
+  end
+
+  it "links each inventory list row back to its product" do
+    sign_in_admin(super_admin)
+    variant
+
+    get "/admin/inventory"
+
+    expect(response.body).to include(%(href="#{edit_admin_product_path(variant.product)}"))
+  end
+
   it "requires inventory.manage to adjust" do
     plain = create(:admin_user, password: "password1234")
     sign_in_admin(plain)

@@ -2,9 +2,14 @@
 <% item = @item %>
 
 <p><%= link_to "← Inventory", admin_inventory_path, class: "link" %></p>
-<h1 class="page-title"><%= @variant.product.name %></h1>
+<h1 class="page-title">
+  <%= link_to @variant.product.name, edit_admin_product_path(@variant.product), class: "link" %>
+</h1>
 <p class="page-sub">
   Variant #<%= @variant.id %> · SKU <code><%= @variant.sku %></code> · <%= variant_option_chips(@variant) %>
+  <% unless @variant.is_master? %>
+    · <%= link_to "Edit variant", edit_admin_product_variant_path(@variant.product, @variant), class: "link" %>
+  <% end %>
 </p>
 
 <div class="stat-grid" style="max-width:640px;margin-bottom:24px;">
