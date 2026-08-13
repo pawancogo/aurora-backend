@@ -35,7 +35,7 @@ gem "sidekiq", "~> 7.3"
 
 # Pin connection_pool to 2.x: 3.0 changed TimedStack#pop and breaks Sidekiq 7.3's
 # scheduler/retry poller. Also backs our REDIS_POOL (readiness checks, caching).
-gem "connection_pool", "~> 2.5"
+gem "connection_pool", "~> 3.0"
 
 # Request throttling / rate limiting
 gem "rack-attack"
