@@ -28,7 +28,7 @@ gem "thruster", require: false
 gem "rack-cors"
 
 # Redis client (readiness checks, caching, Sidekiq backend)
-gem "redis", "~> 5.3"
+gem "redis", "~> 6.0"
 
 # Background job processing
 gem "sidekiq", "~> 7.3"
