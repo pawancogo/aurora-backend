@@ -17,7 +17,8 @@ module Admin
 
     def new
       @variant = @product.variants.build(active: true)
-      copy_price_and_status_from(@variant, params[:copy_from])
+      @copy_source = copy_price_and_status_from(@variant, copy_from_param)
+      @copy_requested = copy_from_param.present?
     end
 
     def create
@@ -73,7 +74,7 @@ module Admin
 
     def variant_params
       raw = params.require(:product_variant)
-      permitted = raw.permit(:sku, :barcode, :active)
+      permitted = raw.permit(:name, :image_url, :sku, :barcode, :active)
       permitted[:price_cents] = to_cents(raw[:price]) if raw[:price].present?
       permitted[:mrp_cents]   = to_cents(raw[:mrp])   if raw[:mrp].present?
       permitted
@@ -102,19 +103,28 @@ module Admin
       selected_value_ids.any?
     end
 
+    # The typed-in id wins over the dropdown when both are filled in — typing
+    # an id is a deliberate choice, the dropdown's value is often just left
+    # over from a previous load.
+    def copy_from_param
+      params[:copy_from_id].presence || params[:copy_from_select].presence
+    end
+
     # Prefills price/MRP/active from an existing variant of this product, so
     # building out a full option matrix (e.g. one size per color) doesn't mean
     # retyping the same price on every row. Options and SKU are never copied —
     # picking a new combination and getting a fresh SKU is the whole point.
+    # Returns the source variant (for the "prefilled from #X" banner) or nil.
     def copy_price_and_status_from(variant, source_id)
-      return if source_id.blank?
+      return nil if source_id.blank?
 
       source = @product.variants.non_master.find_by(id: source_id)
-      return unless source
+      return nil unless source
 
       variant.price_cents = source.price_cents
       variant.mrp_cents = source.mrp_cents
       variant.active = source.active
+      source
     end
 
     def apply_initial_stock(variant)

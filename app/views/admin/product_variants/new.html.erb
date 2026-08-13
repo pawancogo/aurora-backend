@@ -2,20 +2,33 @@
 <p class="page-sub"><%= @product.name %></p>
 
 <% if @copy_sources.any? %>
-  <%= form_tag new_admin_product_variant_path(@product), method: :get, class: "form-row", style: "max-width:480px;" do %>
+  <%= form_tag new_admin_product_variant_path(@product), method: :get, class: "form-row", style: "max-width:520px;" do %>
     <label>Copy price &amp; status from</label>
-    <div style="display:flex; gap:8px;">
-      <select name="copy_from">
-        <option value="">— start blank —</option>
+    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+      <%= number_field_tag :copy_from_id, params[:copy_from_id], placeholder: "Variant ID", style: "width:110px;" %>
+      <span class="muted-sm">or</span>
+      <select name="copy_from_select" onchange="this.form.requestSubmit()">
+        <option value="">— choose a variant —</option>
         <% @copy_sources.each do |source| %>
-          <option value="<%= source.id %>" <%= "selected" if params[:copy_from].to_i == source.id %>>
-            <%= source.option_label %> — ₹<%= number_with_delimiter(source.price.round) %>
+          <option value="<%= source.id %>" <%= "selected" if params[:copy_from_select].to_i == source.id %>>
+            #<%= source.id %> — <%= source.option_label %> — ₹<%= number_with_delimiter(source.price.round) %>
           </option>
         <% end %>
       </select>
-      <%= submit_tag "Load", class: "btn-sm" %>
+      <%= submit_tag "Load", class: "btn-sm",
+            style: "width:auto; height:auto; background:var(--accent); color:#fff; border:0; padding:7px 14px;" %>
     </div>
-    <p class="page-sub">Only price, MRP and active status are copied — pick a different option combination below.</p>
+    <p class="page-sub">The ID field takes priority if both are filled in. Only price, MRP and active status are copied — pick a different option combination below.</p>
+  <% end %>
+<% end %>
+
+<% if @copy_requested %>
+  <% if @copy_source %>
+    <div class="flash flash-notice">
+      Prefilled price, MRP and active status from <strong>#<%= @copy_source.id %> — <%= @copy_source.option_label %></strong>.
+    </div>
+  <% else %>
+    <div class="flash flash-alert">No variant with that ID exists on this product — nothing was prefilled.</div>
   <% end %>
 <% end %>
 

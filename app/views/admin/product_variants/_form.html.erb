@@ -28,6 +28,19 @@
   <h2 class="panel-title" style="margin-top:24px;">Pricing & identity</h2>
   <div class="admin-form-grid" style="max-width:640px;">
     <div class="form-row">
+      <label>Name (optional)</label>
+      <%= form.text_field :name, placeholder: "Defaults to the product name if blank" %>
+      <p class="page-sub">Product name — copy and extend it, or leave blank: <strong><%= @product.name %></strong></p>
+    </div>
+    <div class="form-row">
+      <label>Image (optional)</label>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <%= form.text_field :image_url, id: "variant_image_url",
+              placeholder: "Falls back to the product's main image if blank" %>
+        <%= render "admin/ui/uploader", target: "#variant_image_url", mode: "set", kind: "image", label: "Upload" %>
+      </div>
+    </div>
+    <div class="form-row">
       <label>Price (₹)</label>
       <%= number_field_tag "product_variant[price]", (variant.price_cents ? variant.price_cents / 100.0 : nil),
             step: "0.01", placeholder: "0 if blank" %>

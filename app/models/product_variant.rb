@@ -70,6 +70,19 @@ class ProductVariant < ApplicationRecord
     attribute_values.includes(:product_attribute).map(&:value).join(" / ").presence || "Default"
   end
 
+  # Most variants share the product's name — a custom name is the exception
+  # (e.g. a limited edition), not the rule, so it's opt-in per variant.
+  def display_name
+    name.presence || product.name
+  end
+
+  # Same fallback shape as #display_name: a variant only needs its own image
+  # when it visibly differs from the product's default (e.g. a distinct
+  # colorway not already covered by an attribute-bound ProductImage).
+  def display_image_url
+    image_url.presence || product&.primary_image&.source_url
+  end
+
   private
 
   def ensure_inventory_item

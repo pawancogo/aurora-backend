@@ -56,6 +56,38 @@ RSpec.describe ProductVariant do
     end
   end
 
+  describe "#display_name" do
+    it "falls back to the product's name when the variant has none of its own" do
+      product = create(:product, name: "Classic Cotton Tee")
+      variant = create(:product_variant, product: product)
+
+      expect(variant.display_name).to eq("Classic Cotton Tee")
+    end
+
+    it "prefers its own name when set" do
+      product = create(:product, name: "Classic Cotton Tee")
+      variant = create(:product_variant, product: product, name: "Limited Gold Edition")
+
+      expect(variant.display_name).to eq("Limited Gold Edition")
+    end
+  end
+
+  describe "#display_image_url" do
+    it "falls back to the product's primary image when the variant has none of its own" do
+      product = create(:product, :with_image)
+      variant = create(:product_variant, product: product)
+
+      expect(variant.display_image_url).to eq(product.primary_image.source_url)
+    end
+
+    it "prefers its own image when set" do
+      product = create(:product, :with_image)
+      variant = create(:product_variant, product: product, image_url: "https://example.com/gold.jpg")
+
+      expect(variant.display_image_url).to eq("https://example.com/gold.jpg")
+    end
+  end
+
   describe "option combination uniqueness" do
     it "rejects a second variant with the identical option set" do
       product = create(:product)

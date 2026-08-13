@@ -16,9 +16,9 @@ class CartItemSerializer
       sku: @variant.sku,
       product: {
         id: @product.id,
-        name: @product.name,
+        name: @variant.display_name,
         slug: @product.slug,
-        image: @product.primary_image&.source_url
+        image: @variant.display_image_url
       },
       options: @variant.attribute_values.map do |value|
         { attribute: value.product_attribute&.name, value: value.value }

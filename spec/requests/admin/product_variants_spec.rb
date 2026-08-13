@@ -63,26 +63,53 @@ RSpec.describe "Admin product variants", type: :request do
     end.to change { product.variants.non_master.count }.by(-1)
   end
 
-  it "prefills price, MRP, and active status from a copy_from variant on the new-variant form" do
+  it "prefills price, MRP, and active status from a copy_from_id variant on the new-variant form" do
     sign_in_admin(super_admin)
     source = product.variants.create!(price_cents: 1_250, mrp_cents: 1_800, active: false)
     source.variant_option_values.create!(attribute_value: red)
 
-    get "/admin/products/#{product.id}/variants/new", params: { copy_from: source.id }
+    get "/admin/products/#{product.id}/variants/new", params: { copy_from_id: source.id }
 
     expect(response.body).to include('value="12.5"')
     expect(response.body).to include('value="18.0"')
+    expect(response.body).to include("Prefilled price, MRP and active status from")
   end
 
-  it "ignores a copy_from id that doesn't belong to the product" do
+  it "prefills from copy_from_select when no id is typed in" do
+    sign_in_admin(super_admin)
+    source = product.variants.create!(price_cents: 1_250, mrp_cents: 1_800)
+    source.variant_option_values.create!(attribute_value: red)
+
+    get "/admin/products/#{product.id}/variants/new", params: { copy_from_select: source.id }
+
+    expect(response.body).to include('value="12.5"')
+  end
+
+  it "prioritizes the typed id over the dropdown when both are present" do
+    sign_in_admin(super_admin)
+    blue = color.attribute_values.create!(value: "Blue")
+    by_id = product.variants.create!(price_cents: 1_250)
+    by_id.variant_option_values.create!(attribute_value: red)
+    from_dropdown = product.variants.create!(price_cents: 900)
+    from_dropdown.variant_option_values.create!(attribute_value: blue)
+
+    get "/admin/products/#{product.id}/variants/new",
+        params: { copy_from_id: by_id.id, copy_from_select: from_dropdown.id }
+
+    expect(response.body).to include('value="12.5"')
+    expect(response.body).not_to include('value="9.0"')
+  end
+
+  it "flags a copy_from_id that doesn't belong to the product, without prefilling" do
     sign_in_admin(super_admin)
     other_product = create(:product)
     other_variant = other_product.variants.create!(price_cents: 999)
 
-    get "/admin/products/#{product.id}/variants/new", params: { copy_from: other_variant.id }
+    get "/admin/products/#{product.id}/variants/new", params: { copy_from_id: other_variant.id }
 
     expect(response).to have_http_status(:ok)
     expect(response.body).not_to include('value="9.99"')
+    expect(response.body).to include("No variant with that ID exists on this product")
   end
 
   it "offers only the attributes scoped to the product's category on the new-variant form" do

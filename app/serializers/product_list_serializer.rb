@@ -16,7 +16,7 @@ class ProductListSerializer
   def as_json(*)
     {
       id: @product.id,
-      name: @product.name,
+      name: variant.display_name,
       slug: @product.slug,
       sku: @product.sku,
       variant_id: variant.id,
@@ -29,7 +29,7 @@ class ProductListSerializer
       featured: @product.featured,
       new_arrival: @product.new_arrival,
       best_seller: @product.best_seller,
-      image: @product.primary_image&.source_url,
+      image: variant.display_image_url,
       group: group_json
     }
   end
