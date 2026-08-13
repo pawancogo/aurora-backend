@@ -89,7 +89,7 @@ RSpec.describe ProductVariant do
   end
 
   describe "option combination uniqueness" do
-    it "rejects a second variant with the identical option set" do
+    it "rejects a second variant with the identical option set, naming the clashing variant" do
       product = create(:product)
       color = create(:product_attribute, :color)
       red = color.attribute_values.create!(value: "Red")
@@ -101,7 +101,9 @@ RSpec.describe ProductVariant do
       dup.variant_option_values.build(attribute_value: red)
 
       expect(dup).not_to be_valid
-      expect(dup.errors[:base]).to include("A variant with the same options already exists")
+      expect(dup.errors[:base].first).to include("A variant with the same options already exists")
+      expect(dup.errors[:base].first).to include("##{first.id}")
+      expect(dup.errors[:base].first).to include(first.sku)
     end
 
     it "allows different option sets on the same product" do

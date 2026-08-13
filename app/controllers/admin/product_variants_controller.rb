@@ -72,8 +72,10 @@ module Admin
       @copy_sources = @product.variants.non_master.ordered
     end
 
+    # fetch (not require) — an admin adding bare options with no pricing yet
+    # legitimately submits an empty product_variant hash.
     def variant_params
-      raw = params.require(:product_variant)
+      raw = params.fetch(:product_variant, {})
       permitted = raw.permit(:name, :image_url, :sku, :barcode, :active)
       permitted[:price_cents] = to_cents(raw[:price]) if raw[:price].present?
       permitted[:mrp_cents]   = to_cents(raw[:mrp])   if raw[:mrp].present?

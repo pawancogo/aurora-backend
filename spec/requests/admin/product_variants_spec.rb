@@ -51,6 +51,8 @@ RSpec.describe "Admin product variants", type: :request do
       }
     end.not_to change { product.variants.non_master.count }
     expect(response.body).to include("same options")
+    expect(response.body).to include("##{first.id}")
+    expect(response.body).to include(first.sku)
   end
 
   it "deletes a variant" do

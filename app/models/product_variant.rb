@@ -109,7 +109,8 @@ class ProductVariant < ApplicationRecord
   end
 
   # Two non-master variants of the same product may not share the identical set
-  # of attribute values.
+  # of attribute values. Names the clashing variant so an admin doesn't have to
+  # go hunting for which existing row already has these options.
   def option_combination_is_unique
     return if is_master?
 
@@ -117,7 +118,10 @@ class ProductVariant < ApplicationRecord
     return if my_ids.empty?
 
     siblings = product&.variants&.non_master&.where.not(id: id) || []
-    clash = siblings.any? { |v| v.attribute_values.pluck(:id).sort == my_ids }
-    errors.add(:base, "A variant with the same options already exists") if clash
+    clash = siblings.find { |v| v.attribute_values.pluck(:id).sort == my_ids }
+    return unless clash
+
+    errors.add(:base, "A variant with the same options already exists: " \
+                       "##{clash.id} — #{clash.option_label} (SKU #{clash.sku})")
   end
 end

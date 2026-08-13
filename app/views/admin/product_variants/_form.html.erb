@@ -39,6 +39,7 @@
               placeholder: "Falls back to the product's main image if blank" %>
         <%= render "admin/ui/uploader", target: "#variant_image_url", mode: "set", kind: "image", label: "Upload" %>
       </div>
+      <%= render "admin/ui/image_preview", source: "#variant_image_url" %>
     </div>
     <div class="form-row">
       <label>Price (₹)</label>
