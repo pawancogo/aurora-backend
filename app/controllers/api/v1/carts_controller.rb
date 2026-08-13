@@ -7,6 +7,7 @@ module Api
     # and stock are validated live by Carts::Manager.
     class CartsController < BaseController
       include CustomerAuthentication
+      include CartMerging
 
       rescue_from Carts::Manager::Error do |error|
         render_error(code: "cart_error", message: error.message, status: :unprocessable_content)
@@ -60,8 +61,16 @@ module Api
 
       # The current cart: the customer's when signed in, else the guest cart
       # named by X-Cart-Token. `create:` makes one when none exists yet.
+      #
+      # Self-healing: a signed-in request can still carry an X-Cart-Token from
+      # before login (e.g. the access token expired mid-session and a request
+      # silently fell back to the guest path, or the login-time merge was
+      # missed for any other reason) — so any items stuck under that token are
+      # folded in here too, not just at login. merge_guest_cart! is a no-op
+      # once the guest cart is already merged/claimed or the token is blank.
       def current_cart(create: false)
         if current_customer
+          merge_guest_cart!(current_customer)
           create ? Cart.find_or_create_by!(customer: current_customer) : Cart.find_by(customer: current_customer)
         else
           token = request.headers["X-Cart-Token"].presence

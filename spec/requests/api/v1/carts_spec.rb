@@ -140,4 +140,28 @@ RSpec.describe "Api::V1::Carts" do
       expect(data["item_count"]).to eq(4)
     end
   end
+
+  describe "guest cart merge outside login (self-healing)" do
+    # Reproduces a real gap: items land in a guest cart (e.g. the access token
+    # had expired at add-to-cart time, so that request silently fell back to
+    # the guest path), the customer is genuinely signed in by the time of a
+    # later request, but the login-time merge never had a chance to run for
+    # this token. Any authenticated cart-touching request should still fold
+    # it in, not just login itself.
+    it "folds a stray guest cart into the customer's cart on a later authenticated cart request" do
+      customer = create(:customer)
+      variant = stocked_variant
+
+      post "/api/v1/cart/items", params: { variant_id: variant.id, quantity: 2 }, as: :json
+      guest_token = data["token"]
+
+      post "/api/v1/customer/auth/login", params: { email: customer.email, password: "password123" }, as: :json
+      access = response.parsed_body.dig("data", "tokens", "access_token")
+
+      get "/api/v1/cart", headers: { "Authorization" => "Bearer #{access}", "X-Cart-Token" => guest_token }
+
+      expect(data["item_count"]).to eq(2)
+      expect(Cart.exists?(token: guest_token)).to be false
+    end
+  end
 end

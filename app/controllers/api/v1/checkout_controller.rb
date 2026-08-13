@@ -7,6 +7,7 @@ module Api
     # sign in to place an order; their guest cart already merges on login).
     class CheckoutController < BaseController
       include CustomerAuthentication
+      include CartMerging
 
       before_action :authenticate_customer!
 
@@ -22,6 +23,13 @@ module Api
       # for its total — the response's `payment` block is what the frontend
       # needs to open the Razorpay Checkout widget.
       def create
+        # Self-healing, same as CartsController#current_cart: folds in any
+        # items still sitting under a guest token that never got merged
+        # (e.g. the access token expired mid-session and add-to-cart silently
+        # fell back to the guest path) — otherwise checkout looks at an empty
+        # customer cart while the items are stranded in an orphaned one.
+        merge_guest_cart!(current_customer)
+
         order = Checkout::PlaceOrder.new(
           customer: current_customer,
           cart: Cart.find_by(customer: current_customer),

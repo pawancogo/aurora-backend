@@ -66,6 +66,28 @@ RSpec.describe "Api::V1::Checkout" do
     expect(response.parsed_body.dig("data", "item_count")).to eq(0)
   end
 
+  it "folds in a stray guest cart at checkout time instead of reporting the cart as empty" do
+    # The item landed in a guest cart (e.g. the access token had expired at
+    # add-to-cart time, silently falling back to the guest path) and the
+    # login-time merge never ran for this token — checkout should still find
+    # the items instead of failing with "Your cart is empty".
+    stub_razorpay_order(id: "order_XYZ789")
+    customer = create(:customer)
+    variant = stocked_variant(on_hand: 10)
+
+    post "/api/v1/cart/items", params: { variant_id: variant.id, quantity: 1 }, as: :json
+    guest_token = response.parsed_body.dig("data", "token")
+
+    auth = auth_headers_for(customer)
+
+    post "/api/v1/checkout", params: { address: address },
+                              headers: auth.merge("X-Cart-Token" => guest_token), as: :json
+
+    expect(response).to have_http_status(:created)
+    expect(data["items"].length).to eq(1)
+    expect(Cart.exists?(token: guest_token)).to be false
+  end
+
   it "rejects checkout without payments configured" do
     Razorpay.auth = nil
     customer = create(:customer)
