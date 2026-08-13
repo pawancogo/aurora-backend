@@ -8,6 +8,7 @@ module Admin
     before_action :set_product
     before_action :set_variant, only: %i[edit update destroy]
     before_action :load_attributes, only: %i[new create edit update]
+    before_action :load_copy_sources, only: %i[new create]
 
     def index
       @variants = @product.variants.non_master
@@ -16,6 +17,7 @@ module Admin
 
     def new
       @variant = @product.variants.build(active: true)
+      copy_price_and_status_from(@variant, params[:copy_from])
     end
 
     def create
@@ -65,6 +67,10 @@ module Admin
       @attributes = @product.applicable_attributes
     end
 
+    def load_copy_sources
+      @copy_sources = @product.variants.non_master.ordered
+    end
+
     def variant_params
       raw = params.require(:product_variant)
       permitted = raw.permit(:sku, :barcode, :active)
@@ -94,6 +100,21 @@ module Admin
 
     def option_values_present?
       selected_value_ids.any?
+    end
+
+    # Prefills price/MRP/active from an existing variant of this product, so
+    # building out a full option matrix (e.g. one size per color) doesn't mean
+    # retyping the same price on every row. Options and SKU are never copied —
+    # picking a new combination and getting a fresh SKU is the whole point.
+    def copy_price_and_status_from(variant, source_id)
+      return if source_id.blank?
+
+      source = @product.variants.non_master.find_by(id: source_id)
+      return unless source
+
+      variant.price_cents = source.price_cents
+      variant.mrp_cents = source.mrp_cents
+      variant.active = source.active
     end
 
     def apply_initial_stock(variant)

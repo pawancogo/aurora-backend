@@ -1,5 +1,23 @@
 <h1 class="page-title">New variant</h1>
 <p class="page-sub"><%= @product.name %></p>
 
+<% if @copy_sources.any? %>
+  <%= form_tag new_admin_product_variant_path(@product), method: :get, class: "form-row", style: "max-width:480px;" do %>
+    <label>Copy price &amp; status from</label>
+    <div style="display:flex; gap:8px;">
+      <select name="copy_from">
+        <option value="">— start blank —</option>
+        <% @copy_sources.each do |source| %>
+          <option value="<%= source.id %>" <%= "selected" if params[:copy_from].to_i == source.id %>>
+            <%= source.option_label %> — ₹<%= number_with_delimiter(source.price.round) %>
+          </option>
+        <% end %>
+      </select>
+      <%= submit_tag "Load", class: "btn-sm" %>
+    </div>
+    <p class="page-sub">Only price, MRP and active status are copied — pick a different option combination below.</p>
+  <% end %>
+<% end %>
+
 <%= render "form", variant: @variant, form_url: admin_product_variants_path(@product),
       form_method: :post, submit_label: "Create variant" %>

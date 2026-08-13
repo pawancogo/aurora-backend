@@ -30,12 +30,12 @@
     <div class="form-row">
       <label>Price (₹)</label>
       <%= number_field_tag "product_variant[price]", (variant.price_cents ? variant.price_cents / 100.0 : nil),
-            step: "0.01", placeholder: "Inherits ₹#{@product.price.round} if blank" %>
+            step: "0.01", placeholder: "0 if blank" %>
     </div>
     <div class="form-row">
       <label>MRP (₹)</label>
       <%= number_field_tag "product_variant[mrp]", (variant.mrp_cents ? variant.mrp_cents / 100.0 : nil),
-            step: "0.01", placeholder: "Inherits ₹#{@product.mrp.round} if blank" %>
+            step: "0.01", placeholder: "0 if blank" %>
     </div>
     <div class="form-row">
       <label>SKU</label>

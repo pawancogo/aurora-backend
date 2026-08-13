@@ -63,6 +63,28 @@ RSpec.describe "Admin product variants", type: :request do
     end.to change { product.variants.non_master.count }.by(-1)
   end
 
+  it "prefills price, MRP, and active status from a copy_from variant on the new-variant form" do
+    sign_in_admin(super_admin)
+    source = product.variants.create!(price_cents: 1_250, mrp_cents: 1_800, active: false)
+    source.variant_option_values.create!(attribute_value: red)
+
+    get "/admin/products/#{product.id}/variants/new", params: { copy_from: source.id }
+
+    expect(response.body).to include('value="12.5"')
+    expect(response.body).to include('value="18.0"')
+  end
+
+  it "ignores a copy_from id that doesn't belong to the product" do
+    sign_in_admin(super_admin)
+    other_product = create(:product)
+    other_variant = other_product.variants.create!(price_cents: 999)
+
+    get "/admin/products/#{product.id}/variants/new", params: { copy_from: other_variant.id }
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).not_to include('value="9.99"')
+  end
+
   it "offers only the attributes scoped to the product's category on the new-variant form" do
     sign_in_admin(super_admin)
     size = create(:product_attribute, :size)
