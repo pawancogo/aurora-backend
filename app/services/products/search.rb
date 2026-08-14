@@ -14,7 +14,7 @@ module Products
   # Facets are counted against the *browse context* (category + q + price + flags)
   # so choosing a brand / attribute / availability option never hides the others.
   class Search
-    Result = Struct.new(:records, :facets, keyword_init: true)
+    Result = Struct.new(:records, :facets, :selected_attributes, keyword_init: true)
 
     SORTS = {
       "newest" => { created_at: :desc },
@@ -49,7 +49,7 @@ module Products
     def call
       context = context_scope
       records = refine(context).includes(:brand, :category, :product_images).order(sort_order)
-      Result.new(records: records, facets: build_facets(context))
+      Result.new(records: records, facets: build_facets(context), selected_attributes: selected_attributes)
     end
 
     private

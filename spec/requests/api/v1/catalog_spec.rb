@@ -59,6 +59,26 @@ RSpec.describe "Api::V1 catalog", type: :request do
       expect(by_color["Blue"]["group"]).to include("attribute" => "Color", "attribute_code" => "color")
     end
 
+    it "narrows a grouped product's cards to the selected color instead of showing every color" do
+      color = create(:product_attribute, :color)
+      category = create(:category)
+      CategoryAttribute.create!(category: category, product_attribute: color, position: 1)
+      product = create(:product, name: "Filtered Tee", category: category)
+      red = color.attribute_values.create!(value: "Red", code: "red")
+      blue = color.attribute_values.create!(value: "Blue", code: "blue")
+      red_variant = product.variants.create!(price_cents: 500)
+      red_variant.variant_option_values.create!(attribute_value: red)
+      blue_variant = product.variants.create!(price_cents: 800)
+      blue_variant.variant_option_values.create!(attribute_value: blue)
+
+      get "/api/v1/products", params: { q: "Filtered Tee", attr: { color: "red" } }
+
+      items = response.parsed_body["data"]
+      expect(items.size).to eq(1)
+      expect(items.first.dig("group", "value")).to eq("Red")
+      expect(items.first["variant_id"]).to eq(red_variant.id)
+    end
+
     it "shows an option-less product as a single ungrouped card" do
       product = create(:product, name: "Solo Product")
 
