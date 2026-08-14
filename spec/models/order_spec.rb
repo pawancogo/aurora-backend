@@ -88,6 +88,30 @@ RSpec.describe Order do
     end
   end
 
+  describe "refund flagging on cancellation" do
+    it "flags a captured payment as refund_pending, but never refunds automatically" do
+      order = create(:order, status: :accepted)
+      payment = create(:payment, order: order, status: :captured)
+
+      order.admin_cancel!
+
+      expect(payment.reload).to be_refund_pending
+      expect(order.refund_payment).to eq(payment)
+      expect(order).to be_refund_pending
+    end
+
+    it "leaves a payment that was never captured alone" do
+      order = create(:order, status: :confirmed)
+      payment = create(:payment, order: order, status: :created)
+
+      order.cancel!
+
+      expect(payment.reload).to be_created
+      expect(order.refund_payment).to be_nil
+      expect(order).not_to be_refund_pending
+    end
+  end
+
   it "exposes money fields in rupees" do
     order = build(:order, subtotal_cents: 1999, shipping_cents: 100, total_cents: 2099)
     expect(order.subtotal).to eq(19.99)

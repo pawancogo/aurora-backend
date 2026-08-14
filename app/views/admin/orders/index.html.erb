@@ -23,6 +23,13 @@
     { label: "Total", cell: ->(order) { "₹#{number_with_delimiter(order.total.round)}" } },
     { label: "Placed", class: "muted-sm", cell: ->(order) { order.placed_at.strftime("%d %b %Y, %H:%M") } }
   ]
+  if allowed_to?("orders.manage")
+    columns << { label: "", cell: ->(order) {
+        next "".html_safe unless order.next_status
+
+        button_to "Mark as #{order.next_status.humanize}", admin_advance_order_path(order), method: :patch, class: "btn-sm"
+      } }
+  end
 %>
 <%= render "admin/ui/table", rows: @orders, columns: columns, empty: "No orders found." %>
 

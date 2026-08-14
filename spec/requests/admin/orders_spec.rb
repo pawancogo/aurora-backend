@@ -101,4 +101,76 @@ RSpec.describe "Admin orders", type: :request do
       expect(order.reload).to be_confirmed
     end
   end
+
+  describe "PATCH /admin/orders/:id/refund" do
+    it "manually refunds a payment left refund_pending by a cancellation" do
+      stub_razorpay_refund(id: "rfnd_ABC123")
+      sign_in_admin(create(:admin_user, :super_admin, password: "password1234"))
+      order = create(:order, status: :cancelled)
+      payment = create(:payment, order: order, status: :refund_pending, razorpay_payment_id: "pay_ABC123")
+
+      patch "/admin/orders/#{order.id}/refund"
+
+      expect(response).to redirect_to(admin_order_path(order))
+      expect(payment.reload).to be_refunded
+      expect(payment.razorpay_refund_id).to eq("rfnd_ABC123")
+    end
+
+    it "alerts instead of erroring when nothing is awaiting a refund" do
+      sign_in_admin(create(:admin_user, :super_admin, password: "password1234"))
+      order = create(:order, status: :confirmed)
+
+      patch "/admin/orders/#{order.id}/refund"
+
+      expect(response).to redirect_to(admin_order_path(order))
+      expect(flash[:alert]).to match(/no refund is pending/i)
+    end
+
+    it "surfaces a Razorpay failure as a flash alert without changing the payment" do
+      allow(Razorpay::Refund).to receive(:create).and_raise(Razorpay::Error)
+      sign_in_admin(create(:admin_user, :super_admin, password: "password1234"))
+      order = create(:order, status: :cancelled)
+      payment = create(:payment, order: order, status: :refund_pending)
+
+      patch "/admin/orders/#{order.id}/refund"
+
+      expect(flash[:alert]).to match(/Razorpay refund failed/)
+      expect(payment.reload).to be_refund_pending
+    end
+
+    it "requires payments.manage even for an admin with orders.manage" do
+      admin = create(:admin_user, password: "password1234")
+      role = create(:role)
+      role.permissions << create(:permission, key: "orders.manage")
+      admin.roles << role
+      sign_in_admin(admin)
+      order = create(:order, status: :cancelled)
+      create(:payment, order: order, status: :refund_pending)
+
+      patch "/admin/orders/#{order.id}/refund"
+
+      expect(response).to redirect_to("/admin")
+    end
+  end
+
+  describe "GET /admin/orders (inline advance button)" do
+    it "shows a Mark as button for an order with a next status, for an admin with orders.manage" do
+      sign_in_admin(create(:admin_user, :super_admin, password: "password1234"))
+      order = create(:order, status: :confirmed)
+
+      get "/admin/orders"
+
+      expect(response.body).to include("Mark as Accepted")
+      expect(response.body).to include(admin_advance_order_path(order))
+    end
+
+    it "omits the button once there's no next status" do
+      sign_in_admin(create(:admin_user, :super_admin, password: "password1234"))
+      create(:order, status: :delivered)
+
+      get "/admin/orders"
+
+      expect(response.body).not_to include("Mark as")
+    end
+  end
 end

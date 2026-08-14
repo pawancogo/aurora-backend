@@ -20,3 +20,12 @@ def stub_razorpay_order(id: "order_TESTSTUB1")
     )
   end
 end
+
+# Stubs Razorpay::Refund.create the same way, for specs exercising Payments::Refund.
+def stub_razorpay_refund(id: "rfnd_TESTSTUB1")
+  allow(Razorpay::Refund).to receive(:create) do |options|
+    Razorpay::Entity.new(
+      "id" => id, "payment_id" => options[:payment_id], "amount" => options[:amount], "status" => "processed"
+    )
+  end
+end

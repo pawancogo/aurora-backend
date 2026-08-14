@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_13_183920) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_14_112819) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -259,7 +259,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_13_183920) do
     t.jsonb "raw_payload"
     t.string "razorpay_order_id", null: false
     t.string "razorpay_payment_id"
+    t.string "razorpay_refund_id"
     t.string "razorpay_signature"
+    t.datetime "refunded_at"
     t.integer "status", default: 0, null: false
     t.datetime "updated_at", null: false
     t.index ["order_id"], name: "index_payments_on_order_id"

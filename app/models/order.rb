@@ -51,7 +51,7 @@ class Order < ApplicationRecord
   # Staff get more leeway than shoppers: they can still reject/cancel an
   # order they've already accepted for fulfillment, right up until it
   # physically ships. Past that point it's shipped/delivered and needs a
-  # return/refund flow (not built yet), not a cancellation.
+  # proper return, not a cancellation.
   ADMIN_CANCELLABLE_STATES = (CANCELLABLE_STATES + %w[accepted ready_to_ship]).freeze
 
   def cancellable?
@@ -68,6 +68,17 @@ class Order < ApplicationRecord
 
   def admin_cancel!
     admin_cancellable? ? perform_cancel! : false
+  end
+
+  # The payment (if any) sitting in refund_pending on this order — surfaces
+  # a manual "Refund payment" action in the admin. Refunds are never
+  # automatic: cancelling only flags the payment as needing one.
+  def refund_payment
+    payments.find(&:refund_pending?)
+  end
+
+  def refund_pending?
+    refund_payment.present?
   end
 
   def shipping_address
@@ -94,6 +105,10 @@ class Order < ApplicationRecord
         inventory_item = item.product_variant&.inventory_item
         Inventory::Release.new(inventory_item: inventory_item, quantity: item.quantity).call if inventory_item
       end
+      # Money already taken needs a refund, but never automatically — this
+      # only flags it; an admin has to click "Refund payment" to actually
+      # move money back (Payments::Refund).
+      payments.captured.each { |payment| payment.update!(status: :refund_pending) }
       update!(status: :cancelled, cancelled_at: Time.current)
     end
     true

@@ -5,7 +5,12 @@
   <div class="panel-head"><h2>Order</h2></div>
   <p>ID: #<%= @order.id %></p>
   <p>Customer: <%= link_to(@order.customer.full_name.presence || @order.customer.email, admin_customer_path(@order.customer)) %></p>
-  <p>Status: <span class="chip <%= @order.status.in?(%w[confirmed accepted ready_to_ship shipped delivered]) ? "ok" : "off" %>"><%= @order.status.humanize %></span></p>
+  <p>
+    Status: <span class="chip <%= @order.status.in?(%w[confirmed accepted ready_to_ship shipped delivered]) ? "ok" : "off" %>"><%= @order.status.humanize %></span>
+    <% if @order.refund_pending? %>
+      <span class="chip off">Refund pending</span>
+    <% end %>
+  </p>
   <p>Placed: <%= @order.placed_at.strftime("%d %b %Y, %H:%M") %></p>
   <p>Shipping method: <%= @order.shipping_method_name %></p>
   <p>Subtotal: ₹<%= number_with_delimiter(@order.subtotal.round) %></p>
@@ -17,9 +22,15 @@
         <%= button_to "Mark as #{@order.next_status.humanize}", admin_advance_order_path(@order), method: :patch, class: "btn-sm" %>
       <% end %>
       <% if @order.admin_cancellable? %>
-        <%= button_to "Cancel / reject order", admin_cancel_order_path(@order), method: :patch, class: "link danger",
+        <%= button_to "Cancel order", admin_cancel_order_path(@order), method: :patch, class: "link danger",
               form: { onsubmit: "return confirm('Cancel order #{@order.order_number}? This releases its reserved stock and can\\'t be undone.');" } %>
       <% end %>
+    </div>
+  <% end %>
+  <% if allowed_to?("payments.manage") && (payment = @order.refund_payment) %>
+    <div class="form-actions" style="margin-top:12px;">
+      <%= button_to "Refund payment (₹#{number_with_delimiter(payment.amount.round)})", admin_refund_order_path(@order), method: :patch, class: "btn-sm",
+            form: { onsubmit: "return confirm('Refund ₹#{payment.amount.round} to the customer via Razorpay? This can\\'t be undone.');" } %>
     </div>
   <% end %>
 </div>
@@ -43,7 +54,11 @@
         { label: "Razorpay payment", class: "muted-sm", cell: ->(p) { p.razorpay_payment_id.presence || "—" } },
         { label: "Amount", cell: ->(p) { "₹#{number_with_delimiter(p.amount.round)}" } },
         { label: "Status", cell: ->(p) {
-            content_tag(:span, p.status.humanize, class: "chip #{p.captured? ? 'ok' : (p.failed? ? 'off' : 'sys')}")
+            css = p.captured? ? "ok" : (p.failed? || p.refund_pending? ? "off" : "sys")
+            content_tag(:span, p.status.humanize, class: "chip #{css}")
+          } },
+        { label: "Refund", class: "muted-sm", cell: ->(p) {
+            p.refunded? ? "#{p.razorpay_refund_id} · #{p.refunded_at.strftime('%d %b %Y')}" : "—"
           } },
         { label: "Attempted", class: "muted-sm", cell: ->(p) { p.created_at.strftime("%d %b %Y, %H:%M") } }
       ]
