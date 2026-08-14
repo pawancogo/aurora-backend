@@ -123,10 +123,11 @@ Rails.application.routes.draw do
     get   "payment_settings", to: "payment_settings#show",   as: :payment_settings
     patch "payment_settings", to: "payment_settings#update"
 
-    # Order management + a single fulfillment action (advance one step).
+    # Order management + fulfillment actions (advance one step, or cancel/reject).
     get   "orders",             to: "orders#index",   as: :orders
     get   "orders/:id",         to: "orders#show",    as: :order
     patch "orders/:id/advance", to: "orders#advance", as: :advance_order
+    patch "orders/:id/cancel",  to: "orders#cancel",  as: :cancel_order
 
     # Typeahead options for async custom-select dropdowns.
     get "options/:resource", to: "options#index", as: :options

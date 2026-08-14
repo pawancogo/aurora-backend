@@ -11,9 +11,15 @@
   <p>Subtotal: ₹<%= number_with_delimiter(@order.subtotal.round) %></p>
   <p>Shipping: ₹<%= number_with_delimiter(@order.shipping.round) %></p>
   <p><strong>Total: ₹<%= number_with_delimiter(@order.total.round) %></strong></p>
-  <% if allowed_to?("orders.manage") && @order.next_status %>
+  <% if allowed_to?("orders.manage") && (@order.next_status || @order.admin_cancellable?) %>
     <div class="form-actions" style="margin-top:12px;">
-      <%= button_to "Mark as #{@order.next_status.humanize}", admin_advance_order_path(@order), method: :patch, class: "btn-sm" %>
+      <% if @order.next_status %>
+        <%= button_to "Mark as #{@order.next_status.humanize}", admin_advance_order_path(@order), method: :patch, class: "btn-sm" %>
+      <% end %>
+      <% if @order.admin_cancellable? %>
+        <%= button_to "Cancel / reject order", admin_cancel_order_path(@order), method: :patch, class: "link danger",
+              form: { onsubmit: "return confirm('Cancel order #{@order.order_number}? This releases its reserved stock and can\\'t be undone.');" } %>
+      <% end %>
     </div>
   <% end %>
 </div>

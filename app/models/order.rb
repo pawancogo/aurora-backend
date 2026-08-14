@@ -48,21 +48,26 @@ class Order < ApplicationRecord
 
   CANCELLABLE_STATES = %w[pending confirmed].freeze
 
+  # Staff get more leeway than shoppers: they can still reject/cancel an
+  # order they've already accepted for fulfillment, right up until it
+  # physically ships. Past that point it's shipped/delivered and needs a
+  # return/refund flow (not built yet), not a cancellation.
+  ADMIN_CANCELLABLE_STATES = (CANCELLABLE_STATES + %w[accepted ready_to_ship]).freeze
+
   def cancellable?
     status.in?(CANCELLABLE_STATES)
   end
 
-  def cancel!
-    return false unless cancellable?
+  def admin_cancellable?
+    status.in?(ADMIN_CANCELLABLE_STATES)
+  end
 
-    transaction do
-      order_items.includes(product_variant: :inventory_item).each do |item|
-        inventory_item = item.product_variant&.inventory_item
-        Inventory::Release.new(inventory_item: inventory_item, quantity: item.quantity).call if inventory_item
-      end
-      update!(status: :cancelled, cancelled_at: Time.current)
-    end
-    true
+  def cancel!
+    cancellable? ? perform_cancel! : false
+  end
+
+  def admin_cancel!
+    admin_cancellable? ? perform_cancel! : false
   end
 
   def shipping_address
@@ -82,6 +87,17 @@ class Order < ApplicationRecord
   end
 
   private
+
+  def perform_cancel!
+    transaction do
+      order_items.includes(product_variant: :inventory_item).each do |item|
+        inventory_item = item.product_variant&.inventory_item
+        Inventory::Release.new(inventory_item: inventory_item, quantity: item.quantity).call if inventory_item
+      end
+      update!(status: :cancelled, cancelled_at: Time.current)
+    end
+    true
+  end
 
   def generate_order_number
     loop do

@@ -69,4 +69,36 @@ RSpec.describe "Admin orders", type: :request do
       expect(order.reload).to be_confirmed
     end
   end
+
+  describe "PATCH /admin/orders/:id/cancel" do
+    it "cancels/rejects an order staff have already accepted" do
+      sign_in_admin(create(:admin_user, :super_admin, password: "password1234"))
+      order = create(:order, status: :accepted)
+
+      patch "/admin/orders/#{order.id}/cancel"
+
+      expect(response).to redirect_to(admin_order_path(order))
+      expect(order.reload).to be_cancelled
+    end
+
+    it "refuses to cancel an order that's already shipped" do
+      sign_in_admin(create(:admin_user, :super_admin, password: "password1234"))
+      order = create(:order, status: :shipped)
+
+      patch "/admin/orders/#{order.id}/cancel"
+
+      expect(order.reload).to be_shipped
+      expect(flash[:alert]).to be_present
+    end
+
+    it "forbids cancelling without orders.manage" do
+      sign_in_admin(create(:admin_user, password: "password1234"))
+      order = create(:order, status: :confirmed)
+
+      patch "/admin/orders/#{order.id}/cancel"
+
+      expect(response).to redirect_to("/admin")
+      expect(order.reload).to be_confirmed
+    end
+  end
 end

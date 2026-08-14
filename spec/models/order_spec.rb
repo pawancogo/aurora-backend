@@ -55,6 +55,39 @@ RSpec.describe Order do
     end
   end
 
+  it "is admin-cancellable through ready_to_ship, but not once shipped" do
+    expect(build(:order, status: :pending)).to be_admin_cancellable
+    expect(build(:order, status: :confirmed)).to be_admin_cancellable
+    expect(build(:order, status: :accepted)).to be_admin_cancellable
+    expect(build(:order, status: :ready_to_ship)).to be_admin_cancellable
+    expect(build(:order, status: :shipped)).not_to be_admin_cancellable
+    expect(build(:order, status: :delivered)).not_to be_admin_cancellable
+    expect(build(:order, status: :cancelled)).not_to be_admin_cancellable
+  end
+
+  describe "#admin_cancel!" do
+    it "cancels an order staff have already accepted, releasing reserved stock" do
+      order = create(:order, status: :accepted)
+      variant = create(:product_variant)
+      variant.inventory_item.update!(on_hand: 10, reserved: 2)
+      create(:order_item, order: order, product_variant: variant, quantity: 2)
+
+      expect(order.admin_cancel!).to be true
+
+      expect(order.reload).to be_cancelled
+      expect(order.cancelled_at).to be_present
+      expect(variant.inventory_item.reload.reserved).to eq(0)
+    end
+
+    it "returns false and does nothing once shipped" do
+      order = create(:order, status: :shipped)
+
+      expect(order.admin_cancel!).to be false
+      expect(order.reload).to be_shipped
+      expect(order.cancelled_at).to be_nil
+    end
+  end
+
   it "exposes money fields in rupees" do
     order = build(:order, subtotal_cents: 1999, shipping_cents: 100, total_cents: 2099)
     expect(order.subtotal).to eq(19.99)
