@@ -37,4 +37,36 @@ RSpec.describe "Admin orders", type: :request do
 
     expect(response).to redirect_to("/admin")
   end
+
+  describe "PATCH /admin/orders/:id/advance" do
+    it "advances an order one step through the fulfillment sequence" do
+      sign_in_admin(create(:admin_user, :super_admin, password: "password1234"))
+      order = create(:order, status: :confirmed)
+
+      patch "/admin/orders/#{order.id}/advance"
+
+      expect(response).to redirect_to(admin_order_path(order))
+      expect(order.reload).to be_accepted
+    end
+
+    it "no-ops with an alert once there's no next status" do
+      sign_in_admin(create(:admin_user, :super_admin, password: "password1234"))
+      order = create(:order, status: :delivered)
+
+      patch "/admin/orders/#{order.id}/advance"
+
+      expect(order.reload).to be_delivered
+      expect(flash[:alert]).to be_present
+    end
+
+    it "forbids advancing without orders.manage" do
+      sign_in_admin(create(:admin_user, password: "password1234"))
+      order = create(:order, status: :confirmed)
+
+      patch "/admin/orders/#{order.id}/advance"
+
+      expect(response).to redirect_to("/admin")
+      expect(order.reload).to be_confirmed
+    end
+  end
 end

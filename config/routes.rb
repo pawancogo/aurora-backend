@@ -40,7 +40,9 @@ Rails.application.routes.draw do
       get  "shipping_methods",                   to: "shipping_methods#index"
       post "checkout",                           to: "checkout#create"
       post "checkout/:order_id/verify_payment",  to: "checkout#verify_payment"
-      resources :orders, only: %i[index show]
+      resources :orders, only: %i[index show] do
+        post :cancel, on: :member
+      end
 
       # Razorpay webhook (signature-verified, no customer/admin auth).
       post "webhooks/razorpay", to: "webhooks#razorpay"
@@ -117,9 +119,14 @@ Rails.application.routes.draw do
     delete "customers/:id/sessions",           to: "customers#revoke_sessions", as: :customer_sessions
     delete "customers/:id/sessions/:token_id", to: "customers#revoke_session",  as: :customer_session
 
-    # Order management (read-only — placement/fulfillment tooling is a later sprint)
-    get "orders",     to: "orders#index", as: :orders
-    get "orders/:id", to: "orders#show",  as: :order
+    # Payment settings (Razorpay payment-methods config).
+    get   "payment_settings", to: "payment_settings#show",   as: :payment_settings
+    patch "payment_settings", to: "payment_settings#update"
+
+    # Order management + a single fulfillment action (advance one step).
+    get   "orders",             to: "orders#index",   as: :orders
+    get   "orders/:id",         to: "orders#show",    as: :order
+    patch "orders/:id/advance", to: "orders#advance", as: :advance_order
 
     # Typeahead options for async custom-select dropdowns.
     get "options/:resource", to: "options#index", as: :options

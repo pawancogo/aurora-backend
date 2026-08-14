@@ -1,10 +1,12 @@
 # frozen_string_literal: true
 
 module Admin
-  # Order list/detail — read-only for this sprint; placement/fulfillment
-  # tooling (status updates, address-change workflow) lands in a later sprint.
+  # Order list/detail + a single fulfillment action: advance an order one
+  # step through Order::FULFILLMENT_SEQUENCE. No free-form status picker —
+  # address-change workflow, etc. still lands in a later sprint.
   class OrdersController < BaseController
     before_action -> { require_permission!("orders.read") }, only: %i[index show]
+    before_action -> { require_permission!("orders.manage") }, only: %i[advance]
 
     def index
       result = Order.search(params, scope: Order.includes(:customer, :order_items).order(placed_at: :desc))
@@ -14,6 +16,18 @@ module Admin
 
     def show
       @order = Order.includes(:customer, :order_items, :order_addresses, :payments).find(params[:id])
+    end
+
+    def advance
+      order = Order.find(params[:id])
+      next_status = order.next_status
+
+      if next_status
+        order.update!(status: next_status)
+        redirect_to admin_order_path(order), notice: "Order marked as #{next_status.humanize}."
+      else
+        redirect_to admin_order_path(order), alert: "This order can't be advanced any further."
+      end
     end
   end
 end

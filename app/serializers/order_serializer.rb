@@ -32,6 +32,7 @@ class OrderSerializer
     {
       razorpay_order_id: payment.razorpay_order_id,
       razorpay_key_id: ENV["RAZORPAY_KEY_ID"],
+      razorpay_config_id: SiteSetting.get("razorpay.config_id").presence,
       amount_cents: payment.amount_cents,
       currency: payment.currency
     }

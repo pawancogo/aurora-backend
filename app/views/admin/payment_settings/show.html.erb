@@ -1,0 +1,17 @@
+<h1 class="page-title">Payment settings</h1>
+<p class="page-sub">Configure the Razorpay payment methods shown at checkout.</p>
+
+<%= form_with url: admin_payment_settings_path, method: :patch, scope: nil do |form| %>
+  <div class="form-row" style="max-width:480px;">
+    <label>Razorpay payment methods config ID</label>
+    <%= form.text_field :razorpay_config_id, value: @config_id, placeholder: "e.g. G4vKJXjXmB1yZa" %>
+    <p class="muted-sm">
+      From your Razorpay Dashboard → Payment methods → Configs. Passed to every order's
+      Checkout.js widget. Leave blank to use the default card + UPI-only restriction.
+    </p>
+  </div>
+
+  <div class="form-actions">
+    <%= form.submit "Save", class: "btn-sm" %>
+  </div>
+<% end %>

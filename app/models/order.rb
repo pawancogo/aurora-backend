@@ -22,14 +22,24 @@ class Order < ApplicationRecord
   enum :status, {
     pending: 0,
     confirmed: 1,
-    packed: 2,
+    ready_to_ship: 2,
     shipped: 3,
     delivered: 4,
     cancelled: 5,
     refunded: 6,
     returned: 7,
-    payment_failed: 8
+    payment_failed: 8,
+    accepted: 9
   }
+
+  # The order in which a fulfilled order moves forward; drives the admin
+  # "advance" action (always one step, never a free-form status picker).
+  FULFILLMENT_SEQUENCE = %w[confirmed accepted ready_to_ship shipped delivered].freeze
+
+  def next_status
+    idx = FULFILLMENT_SEQUENCE.index(status)
+    idx && FULFILLMENT_SEQUENCE[idx + 1]
+  end
 
   before_validation :generate_order_number, on: :create
 
@@ -40,6 +50,19 @@ class Order < ApplicationRecord
 
   def cancellable?
     status.in?(CANCELLABLE_STATES)
+  end
+
+  def cancel!
+    return false unless cancellable?
+
+    transaction do
+      order_items.includes(product_variant: :inventory_item).each do |item|
+        inventory_item = item.product_variant&.inventory_item
+        Inventory::Release.new(inventory_item: inventory_item, quantity: item.quantity).call if inventory_item
+      end
+      update!(status: :cancelled, cancelled_at: Time.current)
+    end
+    true
   end
 
   def shipping_address

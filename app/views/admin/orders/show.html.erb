@@ -5,12 +5,17 @@
   <div class="panel-head"><h2>Order</h2></div>
   <p>ID: #<%= @order.id %></p>
   <p>Customer: <%= link_to(@order.customer.full_name.presence || @order.customer.email, admin_customer_path(@order.customer)) %></p>
-  <p>Status: <span class="chip <%= @order.status.in?(%w[confirmed packed shipped delivered]) ? "ok" : "off" %>"><%= @order.status.humanize %></span></p>
+  <p>Status: <span class="chip <%= @order.status.in?(%w[confirmed accepted ready_to_ship shipped delivered]) ? "ok" : "off" %>"><%= @order.status.humanize %></span></p>
   <p>Placed: <%= @order.placed_at.strftime("%d %b %Y, %H:%M") %></p>
   <p>Shipping method: <%= @order.shipping_method_name %></p>
   <p>Subtotal: ₹<%= number_with_delimiter(@order.subtotal.round) %></p>
   <p>Shipping: ₹<%= number_with_delimiter(@order.shipping.round) %></p>
   <p><strong>Total: ₹<%= number_with_delimiter(@order.total.round) %></strong></p>
+  <% if allowed_to?("orders.manage") && @order.next_status %>
+    <div class="form-actions" style="margin-top:12px;">
+      <%= button_to "Mark as #{@order.next_status.humanize}", admin_advance_order_path(@order), method: :patch, class: "btn-sm" %>
+    </div>
+  <% end %>
 </div>
 
 <% if (address = @order.shipping_address) %>

@@ -19,6 +19,20 @@ module Api
         order = current_customer.orders.find(params[:id])
         render_success(OrderSerializer.new(order).as_json)
       end
+
+      # POST /api/v1/orders/:id/cancel
+      def cancel
+        order = current_customer.orders.find(params[:id])
+        unless order.cancel!
+          return render_error(
+            code: "order_not_cancellable",
+            message: "This order can no longer be cancelled.",
+            status: :unprocessable_content
+          )
+        end
+
+        render_success(OrderSerializer.new(order).as_json)
+      end
     end
   end
 end
