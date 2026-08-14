@@ -19,6 +19,24 @@
   <% end %>
 </div>
 
+<div class="panel">
+  <div class="panel-head"><h2>Addresses</h2></div>
+  <%
+    address_columns = [
+      { label: "Type", cell: ->(a) {
+          chip = content_tag(:span, a.address_type.humanize, class: "chip sys")
+          a.is_default? ? safe_join([ chip, content_tag(:span, "Default", class: "chip ok") ]) : chip
+        } },
+      { label: "Name", cell: ->(a) { a.full_name } },
+      { label: "Phone", class: "muted-sm", cell: ->(a) { a.phone } },
+      { label: "Address", class: "muted-sm", cell: ->(a) {
+          [ a.line1, a.line2, a.city, a.state, a.postal_code, a.country ].compact_blank.join(", ")
+        } }
+    ]
+  %>
+  <%= render "admin/ui/table", rows: @addresses, columns: address_columns, empty: "No saved addresses." %>
+</div>
+
 <%= render "admin/ui/sessions", sessions: @sessions, can_manage: can_manage,
       revoke_all_path: admin_customer_sessions_path(@customer),
       revoke_path: ->(session) { admin_customer_session_path(@customer, session) } %>

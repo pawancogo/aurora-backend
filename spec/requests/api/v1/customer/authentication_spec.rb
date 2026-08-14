@@ -68,6 +68,35 @@ RSpec.describe "Customer authentication", type: :request do
     end
   end
 
+  describe "PATCH /api/v1/customer/auth/me" do
+    let(:customer) { create(:customer, password: "password123", first_name: "Jane", phone: "1111111111") }
+
+    def access_token_for(customer)
+      post "/api/v1/customer/auth/login", params: { email: customer.email, password: "password123" }, as: :json
+      response.parsed_body.dig("data", "tokens", "access_token")
+    end
+
+    it "updates the customer's own name/phone" do
+      headers = { "Authorization" => "Bearer #{access_token_for(customer)}" }
+
+      patch "/api/v1/customer/auth/me",
+            params: { customer: { first_name: "Janet", last_name: "Doe", phone: "2222222222" } },
+            headers: headers, as: :json
+
+      expect(response).to have_http_status(:ok)
+      body = response.parsed_body.dig("data", "customer")
+      expect(body["first_name"]).to eq("Janet")
+      expect(body["last_name"]).to eq("Doe")
+      expect(body["phone"]).to eq("2222222222")
+      expect(customer.reload.first_name).to eq("Janet")
+    end
+
+    it "requires authentication" do
+      patch "/api/v1/customer/auth/me", params: { customer: { first_name: "Nope" } }, as: :json
+      expect(response).to have_http_status(:unauthorized)
+    end
+  end
+
   describe "password reset" do
     let(:customer) { create(:customer, password: "password123") }
 

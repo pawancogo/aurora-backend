@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-# Immutable address snapshot captured at checkout — not a foreign key to a
-# customer's address book (that book doesn't exist yet; canonical "Customer
-# Profile & Address Book" sprint is still pending). Editing/versioning this
-# after placement is a later sprint's concern (Delivery & Address Change
-# Workflow), not this one.
+# Immutable address snapshot captured at checkout — deliberately not a
+# foreign key to the customer's Address book (see Address), so a shopper
+# editing/deleting a saved address never alters a past order. Editing/
+# versioning this after placement is a later sprint's concern (Delivery &
+# Address Change Workflow), not this one.
 class OrderAddress < ApplicationRecord
   belongs_to :order
 

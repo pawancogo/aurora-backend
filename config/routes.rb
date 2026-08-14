@@ -47,17 +47,22 @@ Rails.application.routes.draw do
       # Razorpay webhook (signature-verified, no customer/admin auth).
       post "webhooks/razorpay", to: "webhooks#razorpay"
 
-      # Customer authentication (self-service).
+      # Customer authentication (self-service) + profile/address book.
       namespace :customer do
-        post "auth/register",            to: "registrations#create"
-        post "auth/login",               to: "sessions#create"
-        post "auth/refresh",             to: "sessions#refresh"
-        post "auth/logout",              to: "sessions#destroy"
-        get  "auth/me",                  to: "me#show"
-        post "auth/verify-email",        to: "email_verifications#create"
-        post "auth/resend-verification", to: "email_verifications#resend"
-        post "auth/forgot-password",     to: "passwords#create"
-        post "auth/reset-password",      to: "passwords#update"
+        post  "auth/register",            to: "registrations#create"
+        post  "auth/login",               to: "sessions#create"
+        post  "auth/refresh",             to: "sessions#refresh"
+        post  "auth/logout",              to: "sessions#destroy"
+        get   "auth/me",                  to: "me#show"
+        patch "auth/me",                  to: "me#update"
+        post  "auth/verify-email",        to: "email_verifications#create"
+        post  "auth/resend-verification", to: "email_verifications#resend"
+        post  "auth/forgot-password",     to: "passwords#create"
+        post  "auth/reset-password",      to: "passwords#update"
+
+        resources :addresses, only: %i[index create update destroy] do
+          patch :default, on: :member
+        end
       end
 
       # Admin authentication + RBAC.

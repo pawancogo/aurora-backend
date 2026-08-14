@@ -10,9 +10,27 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_14_112819) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_14_122154) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "addresses", force: :cascade do |t|
+    t.integer "address_type", default: 0, null: false
+    t.string "city", null: false
+    t.string "country", default: "IN", null: false
+    t.datetime "created_at", null: false
+    t.bigint "customer_id", null: false
+    t.string "full_name", null: false
+    t.boolean "is_default", default: false, null: false
+    t.string "line1", null: false
+    t.string "line2"
+    t.string "phone", null: false
+    t.string "postal_code", null: false
+    t.string "state", null: false
+    t.datetime "updated_at", null: false
+    t.index ["customer_id", "is_default"], name: "index_addresses_on_customer_id_and_is_default"
+    t.index ["customer_id"], name: "index_addresses_on_customer_id"
+  end
 
   create_table "admin_user_roles", force: :cascade do |t|
     t.bigint "admin_user_id", null: false
@@ -532,6 +550,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_14_112819) do
     t.index ["product_id"], name: "index_wishlist_items_on_product_id"
   end
 
+  add_foreign_key "addresses", "customers"
   add_foreign_key "admin_user_roles", "admin_users"
   add_foreign_key "admin_user_roles", "roles"
   add_foreign_key "attribute_values", "product_attributes"
