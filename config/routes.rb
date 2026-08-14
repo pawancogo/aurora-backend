@@ -124,6 +124,10 @@ Rails.application.routes.draw do
     delete "customers/:id/sessions",           to: "customers#revoke_sessions", as: :customer_sessions
     delete "customers/:id/sessions/:token_id", to: "customers#revoke_session",  as: :customer_session
 
+    # General site settings (store name/tagline/support email/currency).
+    get   "general_settings", to: "general_settings#show",   as: :general_settings
+    patch "general_settings", to: "general_settings#update"
+
     # Payment settings (Razorpay payment-methods config).
     get   "payment_settings", to: "payment_settings#show",   as: :payment_settings
     patch "payment_settings", to: "payment_settings#update"

@@ -1,0 +1,32 @@
+<h1 class="page-title">General settings</h1>
+<p class="page-sub">Store name, tagline, support email, and default currency shown across the storefront.</p>
+
+<%= form_with url: admin_general_settings_path, method: :patch, scope: nil do %>
+  <div class="form-row" style="max-width:480px;">
+    <label>Store name</label>
+    <input type="text" name="site.name" value="<%= @values["site.name"] %>">
+  </div>
+
+  <div class="form-row" style="max-width:480px;">
+    <label>Tagline</label>
+    <input type="text" name="site.tagline" value="<%= @values["site.tagline"] %>">
+  </div>
+
+  <div class="form-row" style="max-width:480px;">
+    <label>Support email</label>
+    <input type="email" name="site.support_email" value="<%= @values["site.support_email"] %>">
+    <p class="muted-sm">
+      Shown to shoppers as the contact address for order help. Support is manual today —
+      replying to this address, not an automated notification system.
+    </p>
+  </div>
+
+  <div class="form-row" style="max-width:480px;">
+    <label>Currency code</label>
+    <input type="text" name="site.currency" value="<%= @values["site.currency"] %>">
+  </div>
+
+  <div class="form-actions">
+    <button type="submit" class="btn-sm">Save</button>
+  </div>
+<% end %>
