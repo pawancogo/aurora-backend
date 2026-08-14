@@ -8,7 +8,7 @@ module Admin
   class GeneralSettingsController < BaseController
     before_action -> { require_permission!("settings.manage") }
 
-    KEYS = %w[site.name site.tagline site.support_email site.currency].freeze
+    KEYS = %w[site.name site.tagline site.support_email site.currency addresses.max_per_customer].freeze
 
     def show
       @values = KEYS.index_with { |key| SiteSetting.get(key) }

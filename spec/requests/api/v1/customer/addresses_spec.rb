@@ -57,6 +57,21 @@ RSpec.describe "Customer addresses", type: :request do
 
       expect(data["is_default"]).to be(false)
     end
+
+    it "422s once the customer is at the configured address limit" do
+      SiteSetting.create!(key: "addresses.max_per_customer", value: 1, value_type: "number", category: "general")
+      create(:address, customer: customer)
+
+      post "/api/v1/customer/addresses",
+           params: { address: {
+             full_name: "Second", phone: "8888888888", line1: "456 Side St",
+             city: "Pune", state: "Maharashtra", postal_code: "411001", country: "IN"
+           } },
+           headers: auth_headers_for(customer), as: :json
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(customer.addresses.count).to eq(1)
+    end
   end
 
   describe "PATCH /api/v1/customer/addresses/:id" do

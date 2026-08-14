@@ -9,6 +9,31 @@ RSpec.describe Address do
     expect(address.errors.attribute_names).to include(:full_name, :line1)
   end
 
+  describe "per-customer limit" do
+    it "blocks a new address once the customer is at the configured limit" do
+      SiteSetting.create!(key: "addresses.max_per_customer", value: 2, value_type: "number", category: "general")
+      customer = create(:customer)
+      create_list(:address, 2, customer: customer)
+
+      address = build(:address, customer: customer)
+
+      expect(address).not_to be_valid
+      expect(address.errors[:base]).to include(match(/up to 2 addresses/))
+    end
+
+    it "allows updating an existing address even when the customer is at the limit" do
+      SiteSetting.create!(key: "addresses.max_per_customer", value: 1, value_type: "number", category: "general")
+      customer = create(:customer)
+      address = create(:address, customer: customer)
+
+      expect { address.update!(full_name: "Renamed") }.not_to raise_error
+    end
+
+    it "falls back to a default of 10 when unset" do
+      expect(Address.max_per_customer).to eq(10)
+    end
+  end
+
   describe "default exclusivity" do
     it "demotes the customer's other addresses when one is saved as default" do
       customer = create(:customer)

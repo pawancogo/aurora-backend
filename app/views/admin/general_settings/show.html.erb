@@ -26,6 +26,11 @@
     <input type="text" name="site.currency" value="<%= @values["site.currency"] %>">
   </div>
 
+  <div class="form-row" style="max-width:480px;">
+    <label>Max saved addresses per customer</label>
+    <input type="number" min="1" name="addresses.max_per_customer" value="<%= @values["addresses.max_per_customer"] %>">
+  </div>
+
   <div class="form-actions">
     <button type="submit" class="btn-sm">Save</button>
   </div>
