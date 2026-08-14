@@ -82,4 +82,39 @@ RSpec.describe "Api::V1::Orders" do
       expect(response).to have_http_status(:not_found)
     end
   end
+
+  describe "PATCH /api/v1/orders/:id/shipping_address" do
+    it "updates the address while the order is still cancellable" do
+      customer = create(:customer)
+      order = create(:order, customer: customer, status: :confirmed)
+      create(:order_address, order: order, city: "Mumbai")
+
+      patch "/api/v1/orders/#{order.id}/shipping_address", params: { address: { city: "Pune" } }, headers: auth_headers_for(customer), as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(data.dig("shipping_address", "city")).to eq("Pune")
+    end
+
+    it "rejects the edit once the order has moved past confirmed" do
+      customer = create(:customer)
+      order = create(:order, customer: customer, status: :accepted)
+      create(:order_address, order: order, city: "Mumbai")
+
+      patch "/api/v1/orders/#{order.id}/shipping_address", params: { address: { city: "Pune" } }, headers: auth_headers_for(customer), as: :json
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(order.shipping_address.reload.city).to eq("Mumbai")
+    end
+
+    it "404s on another customer's order" do
+      customer_a = create(:customer)
+      customer_b = create(:customer)
+      order_b = create(:order, customer: customer_b, status: :confirmed)
+      create(:order_address, order: order_b)
+
+      patch "/api/v1/orders/#{order_b.id}/shipping_address", params: { address: { city: "Pune" } }, headers: auth_headers_for(customer_a), as: :json
+
+      expect(response).to have_http_status(:not_found)
+    end
+  end
 end

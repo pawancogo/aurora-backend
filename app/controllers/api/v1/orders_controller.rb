@@ -33,6 +33,27 @@ module Api
 
         render_success(OrderSerializer.new(order).as_json)
       end
+
+      # PATCH /api/v1/orders/:id/shipping_address { address: { ... } }
+      def update_shipping_address
+        order = current_customer.orders.find(params[:id])
+        unless order.cancellable?
+          return render_error(
+            code: "address_not_editable",
+            message: "This order has already moved too far along to change its address.",
+            status: :unprocessable_content
+          )
+        end
+
+        order.update_shipping_address!(address_params)
+        render_success(OrderSerializer.new(order).as_json)
+      end
+
+      private
+
+      def address_params
+        params.require(:address).permit(:full_name, :phone, :line1, :line2, :city, :state, :postal_code, :country)
+      end
     end
   end
 end

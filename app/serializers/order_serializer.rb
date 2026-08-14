@@ -20,7 +20,10 @@ class OrderSerializer
       placed_at: @order.placed_at,
       shipping_address: @order.shipping_address && OrderAddressSerializer.new(@order.shipping_address).as_json,
       items: @order.order_items.map { |item| OrderItemSerializer.new(item).as_json },
-      payment: @order.pending? && (payment = @order.payments.order(:id).last) ? payment_json(payment) : nil
+      payment: @order.pending? && (payment = @order.payments.order(:id).last) ? payment_json(payment) : nil,
+      carrier_name: @order.carrier_name,
+      tracking_number: @order.tracking_number,
+      events: @order.order_events.map { |event| { description: event.description, occurred_at: event.occurred_at } }
     }
   end
 

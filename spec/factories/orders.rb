@@ -40,4 +40,10 @@ FactoryBot.define do
     amount_cents { 1000 }
     status { :created }
   end
+
+  factory :order_event do
+    order
+    description { "Package handed to courier" }
+    occurred_at { Time.current }
+  end
 end

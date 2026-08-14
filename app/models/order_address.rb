@@ -1,12 +1,15 @@
 # frozen_string_literal: true
 
-# Immutable address snapshot captured at checkout — deliberately not a
-# foreign key to the customer's Address book (see Address), so a shopper
-# editing/deleting a saved address never alters a past order. Editing/
-# versioning this after placement is a later sprint's concern (Delivery &
-# Address Change Workflow), not this one.
+# A snapshot of the address an order ships to — captured fresh at checkout
+# (deliberately not a foreign key to the customer's Address book, see
+# Address, so editing/deleting a saved address never alters a past order).
+# It can be corrected after placement while the order is still eligible
+# (Order#update_shipping_address!) — has_paper_trail keeps a full history
+# of every such change (old/new values, who, when).
 class OrderAddress < ApplicationRecord
   belongs_to :order
+
+  has_paper_trail
 
   enum :address_type, { shipping: 0 }
 

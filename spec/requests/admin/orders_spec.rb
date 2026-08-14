@@ -239,4 +239,73 @@ RSpec.describe "Admin orders", type: :request do
       expect(response.body).not_to include(unrelated.order_number)
     end
   end
+
+  describe "PATCH /admin/orders/:id/tracking" do
+    it "sets the carrier and tracking number" do
+      sign_in_admin(create(:admin_user, :super_admin, password: "password1234"))
+      order = create(:order, status: :shipped)
+
+      patch "/admin/orders/#{order.id}/tracking", params: { carrier_name: "BlueDart", tracking_number: "AWB123" }
+
+      expect(response).to redirect_to(admin_order_path(order))
+      expect(order.reload.carrier_name).to eq("BlueDart")
+      expect(order.tracking_number).to eq("AWB123")
+    end
+
+    it "forbids setting tracking without orders.manage" do
+      sign_in_admin(create(:admin_user, password: "password1234"))
+      order = create(:order, status: :shipped)
+
+      patch "/admin/orders/#{order.id}/tracking", params: { carrier_name: "BlueDart" }
+
+      expect(response).to redirect_to("/admin")
+      expect(order.reload.carrier_name).to be_nil
+    end
+  end
+
+  describe "POST /admin/orders/:id/events" do
+    it "logs a manual delivery update" do
+      sign_in_admin(create(:admin_user, :super_admin, password: "password1234"))
+      order = create(:order, status: :shipped)
+
+      post "/admin/orders/#{order.id}/events", params: { description: "Out for delivery" }
+
+      expect(response).to redirect_to(admin_order_path(order))
+      expect(order.order_events.last.description).to eq("Out for delivery")
+    end
+  end
+
+  describe "PATCH /admin/orders/:id/shipping_address" do
+    it "updates the address while the order hasn't shipped yet" do
+      sign_in_admin(create(:admin_user, :super_admin, password: "password1234"))
+      order = create(:order, status: :ready_to_ship)
+      address = create(:order_address, order: order, city: "Mumbai")
+
+      patch "/admin/orders/#{order.id}/shipping_address", params: { address: { city: "Pune" } }
+
+      expect(response).to redirect_to(admin_order_path(order))
+      expect(address.reload.city).to eq("Pune")
+    end
+
+    it "refuses the edit once the order has shipped" do
+      sign_in_admin(create(:admin_user, :super_admin, password: "password1234"))
+      order = create(:order, status: :shipped)
+      address = create(:order_address, order: order, city: "Mumbai")
+
+      patch "/admin/orders/#{order.id}/shipping_address", params: { address: { city: "Pune" } }
+
+      expect(flash[:alert]).to be_present
+      expect(address.reload.city).to eq("Mumbai")
+    end
+
+    it "forbids the edit without orders.manage" do
+      sign_in_admin(create(:admin_user, password: "password1234"))
+      order = create(:order, status: :confirmed)
+      create(:order_address, order: order)
+
+      patch "/admin/orders/#{order.id}/shipping_address", params: { address: { city: "Pune" } }
+
+      expect(response).to redirect_to("/admin")
+    end
+  end
 end

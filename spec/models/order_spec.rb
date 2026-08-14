@@ -124,4 +124,16 @@ RSpec.describe Order do
     address = create(:order_address, order: order)
     expect(order.shipping_address).to eq(address)
   end
+
+  describe "#update_shipping_address!" do
+    it "updates the order's shipping address in place, keeping a version history" do
+      order = create(:order)
+      address = create(:order_address, order: order, city: "Mumbai")
+
+      order.update_shipping_address!(city: "Pune")
+
+      expect(address.reload.city).to eq("Pune")
+      expect(address.versions.count).to eq(2)
+    end
+  end
 end

@@ -15,6 +15,7 @@ class Order < ApplicationRecord
   has_many :order_items, dependent: :destroy
   has_many :order_addresses, dependent: :destroy
   has_many :payments, dependent: :destroy
+  has_many :order_events, -> { order(:occurred_at) }, dependent: :destroy
 
   # `pending` = placed, awaiting payment confirmation (inventory reserved,
   # not yet decremented). `payment_failed` = the payment attempt failed or
@@ -83,6 +84,13 @@ class Order < ApplicationRecord
 
   def shipping_address
     order_addresses.shipping.first
+  end
+
+  # Reuses the same eligibility as cancellation — if the order can still be
+  # cancelled outright, it's also safe to just fix the address on it. No
+  # separate "editable states" config; one rule covers both.
+  def update_shipping_address!(attrs)
+    shipping_address.update!(attrs)
   end
 
   def subtotal

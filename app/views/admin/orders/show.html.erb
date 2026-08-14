@@ -42,8 +42,127 @@
     <p><%= address.line1 %><% if address.line2.present? %>, <%= address.line2 %><% end %></p>
     <p><%= [address.city, address.state, address.postal_code].join(", ") %></p>
     <p><%= address.country %></p>
+
+    <% if allowed_to?("orders.manage") && @order.admin_cancellable? %>
+      <details style="margin-top:12px;">
+        <summary class="btn-sm" style="display:inline-block;cursor:pointer;">Edit address</summary>
+        <div style="margin-top:12px;">
+        <%= form_with url: admin_order_shipping_address_path(@order), method: :patch, scope: :address do |form| %>
+          <div class="admin-form-grid" style="max-width:640px;">
+            <div class="form-row">
+              <label>Full name</label>
+              <%= form.text_field :full_name, value: address.full_name %>
+            </div>
+            <div class="form-row">
+              <label>Phone</label>
+              <%= form.text_field :phone, value: address.phone %>
+            </div>
+          </div>
+          <div class="form-row">
+            <label>Address line 1</label>
+            <%= form.text_field :line1, value: address.line1 %>
+          </div>
+          <div class="form-row">
+            <label>Address line 2</label>
+            <%= form.text_field :line2, value: address.line2 %>
+          </div>
+          <div class="admin-form-grid" style="max-width:640px;">
+            <div class="form-row">
+              <label>City</label>
+              <%= form.text_field :city, value: address.city %>
+            </div>
+            <div class="form-row">
+              <label>State</label>
+              <%= form.text_field :state, value: address.state %>
+            </div>
+            <div class="form-row">
+              <label>Postal code</label>
+              <%= form.text_field :postal_code, value: address.postal_code %>
+            </div>
+            <div class="form-row">
+              <label>Country</label>
+              <%= form.text_field :country, value: address.country %>
+            </div>
+          </div>
+          <div class="form-actions">
+            <%= form.submit "Save address", class: "btn-sm" %>
+          </div>
+        <% end %>
+        </div>
+      </details>
+    <% end %>
   </div>
+
+  <% versions = address.versions %>
+  <% if versions.any? { |v| v.event != "create" } %>
+    <div class="panel">
+      <div class="panel-head"><h2>Address history</h2></div>
+      <%
+        history_columns = [
+          { label: "Changed", class: "muted-sm", cell: ->(v) { v.created_at.strftime("%d %b %Y, %H:%M") } },
+          { label: "By", class: "muted-sm", cell: ->(v) {
+              v.whodunnit ? (AdminUser.find_by(id: v.whodunnit)&.email || "Admin ##{v.whodunnit}") : "Shopper"
+            } },
+          { label: "Previous address", cell: ->(v) {
+              old = v.reify
+              next "—" unless old
+
+              [ old.full_name, old.phone, old.line1, old.line2, old.city, old.state, old.postal_code, old.country ]
+                .compact_blank.join(", ")
+            } }
+        ]
+      %>
+      <%= render "admin/ui/table", rows: versions.reverse, columns: history_columns %>
+    </div>
+  <% end %>
 <% end %>
+
+<div class="panel">
+  <div class="panel-head"><h2>Delivery</h2></div>
+  <p>Carrier: <%= @order.carrier_name.presence || "—" %></p>
+  <p>Tracking number: <%= @order.tracking_number.presence || "—" %></p>
+
+  <% if allowed_to?("orders.manage") %>
+    <%= form_with url: admin_order_tracking_path(@order), method: :patch do |form| %>
+      <div class="admin-form-grid" style="max-width:640px;">
+        <div class="form-row">
+          <label>Carrier</label>
+          <%= form.text_field :carrier_name, value: @order.carrier_name %>
+        </div>
+        <div class="form-row">
+          <label>Tracking number</label>
+          <%= form.text_field :tracking_number, value: @order.tracking_number %>
+        </div>
+      </div>
+      <div class="form-actions">
+        <%= form.submit "Save tracking details", class: "btn-sm" %>
+      </div>
+    <% end %>
+  <% end %>
+
+  <div class="panel-head" style="margin-top:20px;"><h2>Delivery updates</h2></div>
+  <%
+    event_columns = [
+      { label: "When", class: "muted-sm", cell: ->(e) { e.occurred_at.strftime("%d %b %Y, %H:%M") } },
+      { label: "Update", cell: ->(e) { e.description } }
+    ]
+  %>
+  <%= render "admin/ui/table", rows: @order.order_events, columns: event_columns, empty: "No delivery updates logged yet." %>
+
+  <% if allowed_to?("orders.manage") %>
+    <div style="margin-top:12px;">
+    <%= form_with url: admin_order_events_path(@order), method: :post do |form| %>
+      <div class="form-row">
+        <label>Add a delivery update</label>
+        <input type="text" name="description" placeholder="e.g. Package handed to courier">
+      </div>
+      <div class="form-actions">
+        <%= form.submit "Add update", class: "btn-sm" %>
+      </div>
+    <% end %>
+    </div>
+  <% end %>
+</div>
 
 <% if @order.payments.any? %>
   <div class="panel">

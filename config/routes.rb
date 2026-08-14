@@ -41,7 +41,8 @@ Rails.application.routes.draw do
       post "checkout",                           to: "checkout#create"
       post "checkout/:order_id/verify_payment",  to: "checkout#verify_payment"
       resources :orders, only: %i[index show] do
-        post :cancel, on: :member
+        post  :cancel, on: :member
+        patch :shipping_address, on: :member, action: :update_shipping_address
       end
 
       # Razorpay webhook (signature-verified, no customer/admin auth).
@@ -132,12 +133,16 @@ Rails.application.routes.draw do
     get   "payment_settings", to: "payment_settings#show",   as: :payment_settings
     patch "payment_settings", to: "payment_settings#update"
 
-    # Order management + fulfillment actions (advance one step, cancel/reject, refund).
-    get   "orders",             to: "orders#index",   as: :orders
-    get   "orders/:id",         to: "orders#show",    as: :order
-    patch "orders/:id/advance", to: "orders#advance", as: :advance_order
-    patch "orders/:id/cancel",  to: "orders#cancel",  as: :cancel_order
-    patch "orders/:id/refund",  to: "orders#refund",  as: :refund_order
+    # Order management + fulfillment actions (advance one step, cancel/reject, refund,
+    # manual delivery tracking, address correction).
+    get   "orders",                    to: "orders#index",                 as: :orders
+    get   "orders/:id",                to: "orders#show",                  as: :order
+    patch "orders/:id/advance",        to: "orders#advance",               as: :advance_order
+    patch "orders/:id/cancel",         to: "orders#cancel",                as: :cancel_order
+    patch "orders/:id/refund",         to: "orders#refund",                as: :refund_order
+    patch "orders/:id/tracking",       to: "orders#update_tracking",       as: :order_tracking
+    post  "orders/:id/events",         to: "orders#add_event",             as: :order_events
+    patch "orders/:id/shipping_address", to: "orders#update_shipping_address", as: :order_shipping_address
 
     # Typeahead options for async custom-select dropdowns.
     get "options/:resource", to: "options#index", as: :options

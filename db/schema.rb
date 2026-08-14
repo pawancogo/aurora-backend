@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_14_122154) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_14_132645) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -235,6 +235,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_14_122154) do
     t.index ["order_id"], name: "index_order_addresses_on_order_id"
   end
 
+  create_table "order_events", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "description", null: false
+    t.datetime "occurred_at", null: false
+    t.bigint "order_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["order_id"], name: "index_order_events_on_order_id"
+  end
+
   create_table "order_items", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "line_total_cents", null: false
@@ -252,6 +261,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_14_122154) do
 
   create_table "orders", force: :cascade do |t|
     t.datetime "cancelled_at"
+    t.string "carrier_name"
     t.datetime "created_at", null: false
     t.string "currency", default: "INR", null: false
     t.bigint "customer_id", null: false
@@ -263,6 +273,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_14_122154) do
     t.integer "status", default: 0, null: false
     t.integer "subtotal_cents", null: false
     t.integer "total_cents", null: false
+    t.string "tracking_number"
     t.datetime "updated_at", null: false
     t.index ["customer_id"], name: "index_orders_on_customer_id"
     t.index ["order_number"], name: "index_orders_on_order_number", unique: true
@@ -562,6 +573,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_14_122154) do
   add_foreign_key "category_attributes", "product_attributes"
   add_foreign_key "inventory_items", "product_variants"
   add_foreign_key "order_addresses", "orders"
+  add_foreign_key "order_events", "orders"
   add_foreign_key "order_items", "orders"
   add_foreign_key "order_items", "product_variants"
   add_foreign_key "orders", "customers"
