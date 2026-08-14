@@ -38,6 +38,27 @@ RSpec.describe "Admin orders", type: :request do
     expect(response).to redirect_to("/admin")
   end
 
+  it "shows a refunded payment's refund id and date without crashing" do
+    sign_in_admin(create(:admin_user, :super_admin, password: "password1234"))
+    order = create(:order, status: :cancelled)
+    create(:payment, order: order, status: :refunded, razorpay_refund_id: "rfnd_ABC123", refunded_at: Time.current)
+
+    get "/admin/orders/#{order.id}"
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("rfnd_ABC123")
+  end
+
+  it "doesn't crash on a refunded payment with no refund timestamp on record" do
+    sign_in_admin(create(:admin_user, :super_admin, password: "password1234"))
+    order = create(:order, status: :cancelled)
+    create(:payment, order: order, status: :refunded, razorpay_refund_id: nil, refunded_at: nil)
+
+    get "/admin/orders/#{order.id}"
+
+    expect(response).to have_http_status(:ok)
+  end
+
   describe "PATCH /admin/orders/:id/advance" do
     it "advances an order one step through the fulfillment sequence" do
       sign_in_admin(create(:admin_user, :super_admin, password: "password1234"))
@@ -171,6 +192,51 @@ RSpec.describe "Admin orders", type: :request do
       get "/admin/orders"
 
       expect(response.body).not_to include("Mark as")
+    end
+
+    it "omits the advance button for a cancelled order, on both the list and detail pages" do
+      sign_in_admin(create(:admin_user, :super_admin, password: "password1234"))
+      order = create(:order, status: :cancelled)
+
+      get "/admin/orders"
+      expect(response.body).not_to include("Mark as")
+
+      get "/admin/orders/#{order.id}"
+      expect(response.body).not_to include("Mark as")
+
+      patch "/admin/orders/#{order.id}/advance"
+      expect(order.reload).to be_cancelled
+    end
+
+    it "shows a Refund pending chip on the list for a cancelled order awaiting refund" do
+      sign_in_admin(create(:admin_user, :super_admin, password: "password1234"))
+      order = create(:order, status: :cancelled)
+      create(:payment, order: order, status: :refund_pending)
+      other = create(:order, status: :confirmed)
+
+      get "/admin/orders"
+
+      order_row = response.body[/<tr>(?:(?!<\/tr>).)*#{order.order_number}.*?<\/tr>/m]
+      other_row = response.body[/<tr>(?:(?!<\/tr>).)*#{other.order_number}.*?<\/tr>/m]
+      expect(order_row).to include("Refund pending")
+      expect(other_row).not_to include("Refund pending")
+    end
+  end
+
+  describe "GET /admin/orders?refund_pending=1" do
+    it "narrows the list to orders with a refund_pending payment" do
+      sign_in_admin(create(:admin_user, :super_admin, password: "password1234"))
+      needs_refund = create(:order, status: :cancelled)
+      create(:payment, order: needs_refund, status: :refund_pending)
+      already_refunded = create(:order, status: :cancelled)
+      create(:payment, order: already_refunded, status: :refunded)
+      unrelated = create(:order, status: :confirmed)
+
+      get "/admin/orders", params: { refund_pending: "1" }
+
+      expect(response.body).to include(needs_refund.order_number)
+      expect(response.body).not_to include(already_refunded.order_number)
+      expect(response.body).not_to include(unrelated.order_number)
     end
   end
 end

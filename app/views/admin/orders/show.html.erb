@@ -58,7 +58,9 @@
             content_tag(:span, p.status.humanize, class: "chip #{css}")
           } },
         { label: "Refund", class: "muted-sm", cell: ->(p) {
-            p.refunded? ? "#{p.razorpay_refund_id} · #{p.refunded_at.strftime('%d %b %Y')}" : "—"
+            next "—" unless p.refunded?
+
+            [ p.razorpay_refund_id, p.refunded_at&.strftime("%d %b %Y") ].compact.join(" · ").presence || "—"
           } },
         { label: "Attempted", class: "muted-sm", cell: ->(p) { p.created_at.strftime("%d %b %Y, %H:%M") } }
       ]

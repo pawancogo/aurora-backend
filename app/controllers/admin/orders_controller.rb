@@ -13,7 +13,9 @@ module Admin
     before_action -> { require_permission!("payments.manage") }, only: %i[refund]
 
     def index
-      result = Order.search(params, scope: Order.includes(:customer, :order_items).order(placed_at: :desc))
+      scope = Order.includes(:customer, :order_items, :payments).order(placed_at: :desc)
+      scope = scope.where(id: Payment.refund_pending.select(:order_id)) if params[:refund_pending].present?
+      result = Order.search(params, scope: scope)
       @facets = result.facets
       @orders = result.records
     end

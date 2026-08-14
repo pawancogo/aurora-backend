@@ -5,7 +5,9 @@
       placeholder: "Search by order number",
       filters: [
         { name: "status", prompt: "Any status", selected: params[:status],
-          options: Array(@facets["status"]).map { |facet| ["#{facet[:label]} (#{facet[:count]})", facet[:value]] } }
+          options: Array(@facets["status"]).map { |facet| ["#{facet[:label]} (#{facet[:count]})", facet[:value]] } },
+        { name: "refund_pending", prompt: "Any refund status", selected: params[:refund_pending],
+          options: [ [ "Refund pending", "1" ] ] }
       ] %>
 
 <%
@@ -17,7 +19,10 @@
       } },
     { label: "Status", cell: ->(order) {
         ok = %w[confirmed accepted ready_to_ship shipped delivered].include?(order.status)
-        content_tag(:span, order.status.humanize, class: "chip #{ok ? 'ok' : 'off'}")
+        status_chip = content_tag(:span, order.status.humanize, class: "chip #{ok ? 'ok' : 'off'}")
+        next status_chip unless order.refund_pending?
+
+        safe_join([ status_chip, content_tag(:span, "Refund pending", class: "chip off") ])
       } },
     { label: "Items", class: "muted-sm", cell: ->(order) { order.order_items.sum(&:quantity) } },
     { label: "Total", cell: ->(order) { "₹#{number_with_delimiter(order.total.round)}" } },
