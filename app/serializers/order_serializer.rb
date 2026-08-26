@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
-# Full order detail: totals, shipping snapshot, and every line item.
+# Full order detail: totals, shipping snapshot, line items, and shipment
+# tracking (carrier/AWB + delivery events) when a shipment exists.
 class OrderSerializer
   def initialize(order)
     @order = order
@@ -20,7 +21,10 @@ class OrderSerializer
       placed_at: @order.placed_at,
       shipping_address: @order.shipping_address && OrderAddressSerializer.new(@order.shipping_address).as_json,
       items: @order.order_items.map { |item| OrderItemSerializer.new(item).as_json },
-      payment: @order.pending? && (payment = @order.payments.order(:id).last) ? payment_json(payment) : nil
+      payment: @order.pending? && (payment = @order.payments.order(:id).last) ? payment_json(payment) : nil,
+      carrier_name: @order.carrier_name,
+      tracking_number: @order.tracking_number,
+      events: @order.delivery_events.map { |event| event_json(event) }
     }
   end
 
@@ -35,6 +39,13 @@ class OrderSerializer
       razorpay_config_id: SiteSetting.get("razorpay.config_id").presence,
       amount_cents: payment.amount_cents,
       currency: payment.currency
+    }
+  end
+
+  def event_json(event)
+    {
+      description: event.description,
+      occurred_at: event.occurred_at.iso8601
     }
   end
 end

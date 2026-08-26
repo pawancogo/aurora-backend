@@ -58,6 +58,10 @@ Rails.application.routes.draw do
         post "auth/resend-verification", to: "email_verifications#resend"
         post "auth/forgot-password",     to: "passwords#create"
         post "auth/reset-password",      to: "passwords#update"
+
+        resources :addresses, only: %i[index create update destroy] do
+          patch :default, on: :member
+        end
       end
 
       # Admin authentication + RBAC.
@@ -129,6 +133,8 @@ Rails.application.routes.draw do
     patch "orders/:id/advance", to: "orders#advance", as: :advance_order
     patch "orders/:id/cancel",  to: "orders#cancel",  as: :cancel_order
     patch "orders/:id/refund",  to: "orders#refund",  as: :refund_order
+    patch "orders/:id/shipment", to: "orders#update_shipment", as: :order_shipment
+    post  "orders/:id/shipment_events", to: "orders#create_shipment_event", as: :order_shipment_events
 
     # Typeahead options for async custom-select dropdowns.
     get "options/:resource", to: "options#index", as: :options

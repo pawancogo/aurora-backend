@@ -2,14 +2,14 @@
 
 module Admin
   # Order list/detail + fulfillment actions: advance an order one step
-  # through Order::FULFILLMENT_SEQUENCE, cancel/reject it outright (staff get
-  # more leeway than shoppers — see Order::ADMIN_CANCELLABLE_STATES), or
-  # manually refund a captured payment left over from a cancellation. No
-  # free-form status picker — address-change workflow, etc. still lands in a
-  # later sprint.
+  # through Order::FULFILLMENT_SEQUENCE (which also writes a shipment event),
+  # enter carrier/tracking/packing notes, log out-for-delivery, cancel/reject
+  # (staff get more leeway than shoppers — see Order::ADMIN_CANCELLABLE_STATES),
+  # or manually refund a captured payment left over from a cancellation. No
+  # free-form status picker. Post-placement address change is out of scope.
   class OrdersController < BaseController
     before_action -> { require_permission!("orders.read") }, only: %i[index show]
-    before_action -> { require_permission!("orders.manage") }, only: %i[advance cancel]
+    before_action -> { require_permission!("orders.manage") }, only: %i[advance cancel update_shipment create_shipment_event]
     before_action -> { require_permission!("payments.manage") }, only: %i[refund]
 
     def index
@@ -21,16 +21,14 @@ module Admin
     end
 
     def show
-      @order = Order.includes(:customer, :order_items, :order_addresses, :payments).find(params[:id])
+      @order = Order.includes(:customer, :order_items, :order_addresses, :payments, shipment: { events: :admin_user }).find(params[:id])
     end
 
     def advance
       order = Order.find(params[:id])
-      next_status = order.next_status
 
-      if next_status
-        order.update!(status: next_status)
-        redirect_to admin_order_path(order), notice: "Order marked as #{next_status.humanize}."
+      if order.advance!(admin_user: current_admin_user, delivery_notes: params[:delivery_notes])
+        redirect_to admin_order_path(order), notice: "Order marked as #{order.status.humanize}."
       else
         redirect_to admin_order_path(order), alert: "This order can't be advanced any further."
       end
@@ -59,6 +57,52 @@ module Admin
       redirect_to admin_order_path(order), notice: "Refund processed."
     rescue Payments::Refund::Error => e
       redirect_to admin_order_path(order), alert: e.message
+    end
+
+    def update_shipment
+      order = Order.find(params[:id])
+      unless order.can_manage_shipment?
+        redirect_to admin_order_path(order), alert: "This order isn't in fulfillment yet."
+        return
+      end
+
+      order.ensure_shipment!.apply_details!(shipment_params)
+      redirect_to admin_order_path(order), notice: "Shipment details saved."
+    rescue ActiveRecord::RecordInvalid => e
+      redirect_to admin_order_path(order), alert: e.record.errors.full_messages.to_sentence
+    end
+
+    def create_shipment_event
+      order = Order.find(params[:id])
+      unless order.can_manage_shipment?
+        redirect_to admin_order_path(order), alert: "This order isn't in fulfillment yet."
+        return
+      end
+
+      event_type = params[:event_type].to_s
+      unless %w[out_for_delivery note].include?(event_type)
+        redirect_to admin_order_path(order), alert: "Unknown event type."
+        return
+      end
+
+      description = params[:description].presence
+      description ||= "Out for delivery" if event_type == "out_for_delivery"
+
+      order.ensure_shipment!.events.create!(
+        event_type: event_type,
+        description: description,
+        occurred_at: Time.current,
+        admin_user: current_admin_user
+      )
+      redirect_to admin_order_path(order), notice: "Delivery event added."
+    rescue ActiveRecord::RecordInvalid => e
+      redirect_to admin_order_path(order), alert: e.record.errors.full_messages.to_sentence
+    end
+
+    private
+
+    def shipment_params
+      params.require(:shipment).permit(:carrier_name, :tracking_number, :packing_notes)
     end
   end
 end

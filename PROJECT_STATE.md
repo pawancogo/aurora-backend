@@ -5,11 +5,11 @@
 
 ## Current Position
 
-- **Active sprint:** Sprint 10 — Payments (Razorpay) 🚧 in progress (see the admin Roadmap tracker, `/admin/sprints/10`, for the detailed writeup)
-- **Status:** Sprints 1–9 done (see the numbering note below — canonical Sprint 8, Customer Profile & Address Book, is the one genuinely still pending). Sprint 10's backend + frontend integration is built and verified live against a real Razorpay test account (order creation, signature verification, reservation/fulfillment, webhook, retry — all confirmed); the one remaining step is clicking through an actual test payment inside Razorpay's hosted widget in a real browser.
-- **Canonical roadmap:** [ROADMAP.md](ROADMAP.md) (17 sprints). `SPRINT_PLAN.md` is **superseded**.
-- **⚠ Sprint-numbering note:** "Sprint 7"/"Sprint 8"/"Sprint 9" as tracked here = **Search & Discovery** / **Cart & Wishlist** / **Checkout & Order Placement** (SPRINT_PLAN's numbering + this project's UI tags such as the buy-box's old "Add to cart — Sprint 8" placeholder). The *canonical* ROADMAP.md instead labels Sprint 7 = "Customer Profile & Address Book" (still pending — a read-only `/account` stub exists) and files Search/Discovery and Cart/Wishlist one slot later (its Sprint 9 = Cart & Wishlist, matching; but its Sprint 8 = the still-pending Profile & Address Book). Checkout shipped ahead of the address book because Sprint 9's own spec designs `OrderAddress` as a form-captured snapshot, not a foreign key to a persisted address book — so it never depended on Sprint 7/8 existing. Reconcile the labels in a future pass if desired.
-- **Sprint tracking has moved off this file.** The backend now has a DB-backed admin **Roadmap** (`/admin/sprints`, `Sprint`/`SprintFeature` models) — viewable and editable by every admin role, with a plain-language description and a separate technical description per feature. It's seeded with the Sprint 1–9 history below so it doesn't start empty. This markdown log is kept for historical narrative detail (screenshots, gotchas, exact verification runs) that doesn't belong in the tracker; day-to-day "what shipped in sprint N" now lives in the admin UI, not here.
+- **Canonical list:** [ROADMAP.md](ROADMAP.md) — **25 sprints**. That file is the only numbering to follow. `SPRINT_PLAN.md` is retired.
+- **Shipped:** Sprints **1–13** and **16** (manual delivery). Day-to-day write-ups: Admin → Roadmap (`/admin/sprints`).
+- **Next:** Sprint **17 — Returns, Refunds & Exchanges.** Sprints 14 (Promotions) and 15 (Loyalty) are skipped for now.
+- **Reviews / ratings:** not shipped. Planned as **Sprint 18** (they were in some roadmaps, missing from `SPRINT_PLAN.md`, and never implemented beyond a feature flag + permissions).
+- This markdown log is historical (screenshots, gotchas). Do not take sprint numbers in older entries below as canonical — they mixed `SPRINT_PLAN` labels with delivery order.
 
 ## Locked Architectural Decisions (ADRs)
 
@@ -408,3 +408,17 @@ Sprint tracking moved off static markdown into the admin portal, so any admin ca
 - Backend port default changed to **3001** (`config/puma.rb`) so `bin/rails server`/`bundle exec rails s` need no `-p` flag; frontend already defaulted to 3000 via Next.js.
 
 Verification: backend **287 RSpec** (15 new: Sprint/SprintFeature models + admin sprints/sprint_features request specs incl. permission gating) / RuboCop clean (303 files) / Brakeman 0; live real-click — expand/collapse persists action buttons, added/edited/deleted a feature with both rich-text fields, search + status filter narrow the list, hash-anchor reopens the right sprint after a redirect.
+
+### Sprint 16 — Delivery, Shipments (manual) ✅ (completed 2026-08-26)
+
+Manual ops slice of delivery. Sprints 14 (Promotions) and 15 (Loyalty) were skipped; a third-party carrier adapter lives on a separate branch.
+
+Delivered:
+- **DB (2 tables):** `shipments` (1:1 with `orders` — `carrier_name`, `tracking_number`, `packing_notes`, `delivery_notes`) and `shipment_events` (append-only timeline: accepted / packed / shipped / out_for_delivery / delivered / note).
+- **`Order#advance!`** now creates the shipment if needed and writes a matching event. Optional `delivery_notes` are stored when marking delivered (no OTP/photo proof).
+- **Admin:** Shipment panel on the order page — save carrier/tracking/packing notes; log out-for-delivery or a free-form note. Mark as Delivered accepts optional notes. First time a tracking number is saved also adds a "Tracking · carrier · AWB" note.
+- **API:** `OrderSerializer` now emits `carrier_name`, `tracking_number`, and `events` (the storefront schema and order page already expected these; they were previously missing, so the Delivery section never rendered).
+- **Skipped:** post-placement address change; OTP/photo proof of delivery; carrier API / AWB adapter.
+
+Where to see it: Admin → Orders → open a confirmed+ order. Storefront → Account → Orders → open the order, Delivery section after staff save tracking or advance the order.
+

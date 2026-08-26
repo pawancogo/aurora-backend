@@ -41,6 +41,31 @@ RSpec.describe "Api::V1::Orders" do
     expect(response).to have_http_status(:not_found)
   end
 
+  it "returns null carrier/tracking and an empty events list when there is no shipment" do
+    customer = create(:customer)
+    order = create(:order, customer: customer)
+
+    get "/api/v1/orders/#{order.id}", headers: auth_headers_for(customer)
+
+    expect(data).to include("carrier_name" => nil, "tracking_number" => nil, "events" => [])
+  end
+
+  it "exposes carrier, tracking, and shipment events on the order detail" do
+    customer = create(:customer)
+    order = create(:order, customer: customer, status: :shipped)
+    shipment = create(:shipment, order: order, carrier_name: "BlueDart", tracking_number: "AWB123")
+    create(:shipment_event, shipment: shipment, event_type: :out_for_delivery,
+           description: "Out for delivery", occurred_at: Time.utc(2026, 8, 14, 10, 0, 0))
+
+    get "/api/v1/orders/#{order.id}", headers: auth_headers_for(customer)
+
+    expect(data["carrier_name"]).to eq("BlueDart")
+    expect(data["tracking_number"]).to eq("AWB123")
+    expect(data["events"].length).to eq(1)
+    expect(data["events"].first["description"]).to eq("Out for delivery")
+    expect(Time.iso8601(data["events"].first["occurred_at"])).to eq(Time.utc(2026, 8, 14, 10, 0, 0))
+  end
+
   it "paginates order history" do
     customer = create(:customer)
     create_list(:order, 15, customer: customer)

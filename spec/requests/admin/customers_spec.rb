@@ -28,6 +28,17 @@ RSpec.describe "Admin customers", type: :request do
     expect(response.body).to include("Login sessions")
   end
 
+  it "shows a customer's saved addresses" do
+    sign_in_admin(create(:admin_user, :super_admin, password: "password1234"))
+    customer = create(:customer)
+    create(:address, customer: customer, city: "Mumbai")
+
+    get "/admin/customers/#{customer.id}"
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Mumbai")
+  end
+
   it "edits a customer's contact details" do
     sign_in_admin(create(:admin_user, :super_admin, password: "password1234"))
     customer = create(:customer)

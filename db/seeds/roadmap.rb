@@ -225,6 +225,134 @@ SPRINTS = [
       { area: :frontend, title: "Order fulfillment stepper",
         description: "<p>A shopper's order page shows a horizontal progress tracker — Confirmed, Accepted, Ready to ship, Shipped, Delivered — with a checkmark on everything already done and the current step highlighted, the same pattern used by most e-commerce order-tracking pages. A cancelled, refunded, or returned order shows a plain one-line status instead of the tracker, and an order still awaiting payment shows neither (the existing \"complete payment\" box already covers that case).</p><p><strong>Where to see it:</strong> storefront → Account → Orders → open any order that's been confirmed.</p>",
         technical_description: "<p><code>OrderStepper</code> (<code>src/components/orders/order-stepper.tsx</code>) mirrors <code>Order::FULFILLMENT_SEQUENCE</code> from the backend as a plain client-side array — deliberately not fetched from an API, since the sequence is fixed and rarely changes. A sibling <code>hasOrderStepper(status)</code> helper lets the order page skip rendering the wrapping card entirely for pending/payment_failed orders instead of showing an empty box.</p>" }
+    ] },
+  { number: 13, title: "Customer Profile & Address Book", status: "completed",
+    goal: "Shoppers can edit their profile and save reusable shipping addresses, separate from the immutable snapshots stored on orders.",
+    dependencies: "Sprint 2, Sprint 9", estimate: "3 days",
+    features: [
+      { area: :database, title: "addresses table",
+        description: "<p>Each shopper can keep a list of saved delivery addresses (home, office, or other), with exactly one marked as the default.</p><p><strong>Where to see it:</strong> storefront → Account → Addresses.</p>",
+        technical_description: "<p><code>addresses</code> belongs to <code>customers</code>; integer enum <code>address_type</code> (home/office/other); unique partial index so only one <code>is_default</code> per customer. Not a foreign key from <code>order_addresses</code> — checkout still snapshots the form.</p>" },
+      { area: :backend, title: "Address-book API",
+        description: "<p>A signed-in shopper can list, add, edit, delete, and set a default address. Nobody can see or change someone else's book. There is a cap (default 10) so the list cannot grow forever.</p><p><strong>Where to see it:</strong> <code>GET/POST /api/v1/customer/addresses</code>, <code>PATCH /api/v1/customer/addresses/:id</code>, <code>PATCH .../default</code>, <code>DELETE</code>.</p>",
+        technical_description: "<p><code>Api::V1::Customer::AddressesController</code> scoped to <code>current_customer.addresses</code>. Setting <code>addresses.max_per_customer</code> is a public <code>SiteSetting</code>.</p>" },
+      { area: :frontend, title: "Addresses page + checkout picker",
+        description: "<p>Account → Addresses is a full editor. Checkout can pick a saved address or type a new one; if the book fails to load, checkout still works with a blank form.</p><p><strong>Where to see it:</strong> <code>/account/addresses</code>, <code>/checkout</code>.</p>",
+        technical_description: "<p><code>src/app/account/addresses/page.tsx</code> + <code>AddressForm</code>; checkout loads <code>getAddresses()</code> independently of shipping methods.</p>" },
+      { area: :admin, title: "Read-only customer addresses",
+        description: "<p>Staff can see a customer's saved addresses on the customer detail page, but cannot edit them there.</p><p><strong>Where to see it:</strong> Admin → Customers → open a customer → Addresses panel.</p>",
+        technical_description: "<p><code>Admin::CustomersController#show</code> loads <code>@addresses</code>; listed on <code>admin/customers/show.html.erb</code>.</p>" }
+    ] },
+  { number: 14, title: "Promotions & Coupons", status: "planned",
+    goal: "Discount codes and automatic offers on cart and checkout.",
+    dependencies: "Sprint 9, Sprint 10", estimate: "1–2 weeks",
+    features: [
+      { area: :backend, title: "Coupon + sale-price engine",
+        description: "<p>Shoppers can enter a code or get an offer applied automatically; the order total shows item, tax, shipping, and discount separately.</p>",
+        technical_description: "<p>Planned: coupon/rule models, checkout price breakup. Not built yet.</p>" }
+    ] },
+  { number: 15, title: "Loyalty, Wallet & Gift Cards", status: "planned",
+    goal: "Store credit and loyalty that can pay at checkout.",
+    dependencies: "Sprint 10, Sprint 14", estimate: "1–2 weeks",
+    features: [
+      { area: :backend, title: "Points, ledger, gift cards",
+        description: "<p>Shoppers earn points or hold store credit / gift cards and can spend them at checkout.</p>",
+        technical_description: "<p>Planned. Not built yet.</p>" }
+    ] },
+  { number: 16, title: "Delivery, Shipments (manual)", status: "completed",
+    goal: "A shipment record staff can fill by hand — carrier, tracking, packing notes, and a delivery timeline the shopper can see.",
+    dependencies: "Sprint 11, Sprint 12", estimate: "2 days",
+    features: [
+      { area: :database, title: "shipments + shipment_events",
+        description: "<p>Each order can have one shipment: a carrier name, a tracking number, warehouse packing notes, and optional delivery notes. A timeline of events (accepted, packed, shipped, out for delivery, delivered, notes) sits on that shipment.</p><p><strong>Where to see it:</strong> Admin → Orders → open an order in fulfillment — Shipment panel and Delivery timeline. Storefront → Account → Orders → open the order — Delivery section once tracking or events exist.</p>",
+        technical_description: "<p><code>shipments</code> is 1:1 with <code>orders</code> (unique index). <code>shipment_events</code> is an append-only timeline with an integer <code>event_type</code> enum. Packing notes stay admin-only; carrier/tracking/events are exposed on <code>OrderSerializer</code> as <code>carrier_name</code>, <code>tracking_number</code>, and <code>events</code> (the storefront schema already expected these).</p>" },
+      { area: :backend, title: "Advance writes shipment events",
+        description: "<p>Clicking \"Mark as Accepted / Ready to ship / Shipped / Delivered\" now also writes a matching timeline event, so the shopper sees more than just the stepper.</p>",
+        technical_description: "<p><code>Order#advance!</code> creates the shipment if needed, optionally stores <code>delivery_notes</code> when marking delivered, then appends a <code>ShipmentEvent</code>. Idempotent per event type so a retry does not duplicate the status event.</p>" },
+      { area: :admin, title: "Carrier, tracking, packing notes, out-for-delivery",
+        description: "<p>Staff can enter carrier + tracking + packing notes, log \"Out for delivery\" or a free-form note, and add optional delivery notes when marking delivered. No OTP or photo proof in this sprint.</p>",
+        technical_description: "<p><code>PATCH /admin/orders/:id/shipment</code> and <code>POST /admin/orders/:id/shipment_events</code>, gated by <code>orders.manage</code>. Saving a tracking number for the first time also adds a \"Tracking · carrier · AWB\" note event.</p>" }
+    ] },
+  { number: 17, title: "Returns, Refunds & Exchanges", status: "planned",
+    goal: "Customer return requests and staff refund/exchange workflow.",
+    dependencies: "Sprint 11, Sprint 15, Sprint 16", estimate: "1–2 weeks",
+    features: [
+      { area: :backend, title: "RMA + exchange vs refund",
+        description: "<p>Shoppers can request a return or exchange; staff approve it and send money back or restock.</p>",
+        technical_description: "<p>Planned. Manual Razorpay refunds already exist on cancelled orders (Sprint 11); this sprint is the full returns product.</p>" }
+    ] },
+  { number: 18, title: "Reviews, Ratings & Q&A", status: "planned",
+    goal: "Product star ratings, written/photo reviews, Q&A, and admin moderation — the sprint that was missing from SPRINT_PLAN.md.",
+    dependencies: "Sprint 4, Sprint 9, Sprint 11", estimate: "1–2 weeks",
+    features: [
+      { area: :database, title: "reviews + Q&A tables",
+        description: "<p>Each product can have star ratings and reviews (including photos), plus customer questions and answers.</p>",
+        technical_description: "<p>Planned: <code>reviews</code>, <code>review_images</code>, <code>review_votes</code>, <code>product_questions</code>, <code>product_answers</code>. Permissions <code>reviews.read</code>/<code>reviews.manage</code> and feature flag <code>reviews</code> are already seeded but unused.</p>" },
+      { area: :backend, title: "Review + Q&A APIs",
+        description: "<p>Anyone can read published reviews. Signed-in buyers can write a review (verified-purchase when they have a delivered order). Staff can hide or reply.</p>",
+        technical_description: "<p>Public list + authenticated create; admin moderate. Aggregate rating cached on the product.</p>" },
+      { area: :frontend, title: "PDP ratings, reviews, Q&A",
+        description: "<p>The product page shows average stars, a rating breakdown, the review list, a write-review form, and a Q&amp;A tab.</p>",
+        technical_description: "<p>Not built yet — PDP has no reviews UI today.</p>" },
+      { area: :admin, title: "Moderation queue",
+        description: "<p>Staff publish, hide, or respond to reviews and Q&amp;A.</p>",
+        technical_description: "<p>Planned. Gated by <code>reviews.manage</code>.</p>" }
+    ] },
+  { number: 19, title: "Personalization & Recommendations", status: "planned",
+    goal: "Recommendation slots on homepage, listings, product pages, and cart.",
+    dependencies: "Sprint 6, Sprint 7, Sprint 8", estimate: "1–2 weeks",
+    features: [
+      { area: :frontend, title: "Recs slots",
+        description: "<p>Shoppers see “recommended for you” / “others also viewed” in addition to recently viewed (already in Sprint 7).</p>",
+        technical_description: "<p>Planned. Not built yet.</p>" }
+    ] },
+  { number: 20, title: "Notifications & Comms", status: "planned",
+    goal: "Full transactional emails/SMS/push plus an in-app inbox and preferences.",
+    dependencies: "Sprint 2, Sprint 9, Sprint 11, Sprint 17", estimate: "1 week",
+    features: [
+      { area: :backend, title: "Transactional set + preferences",
+        description: "<p>Shoppers get emails (and later SMS/push) when an order is placed, shipped, delivered, refunded, or returned, and can turn marketing off.</p>",
+        technical_description: "<p>Verify/reset email already exists. This sprint is the rest of the set plus adapters.</p>" }
+    ] },
+  { number: 21, title: "Admin Dashboard & Ops", status: "planned",
+    goal: "Remaining operational UI on top of the catalog/orders/customers portal that already exists.",
+    dependencies: "Sprint 2–13", estimate: "1–2 weeks",
+    features: [
+      { area: :admin, title: "Dashboard metrics + bulk ops",
+        description: "<p>A numbers dashboard, bulk import/export, and an activity feed of staff actions.</p>",
+        technical_description: "<p>Much of CRUD already shipped in earlier sprints. This is the remainder.</p>" }
+    ] },
+  { number: 22, title: "Analytics, Reports & Audit Logs", status: "planned",
+    goal: "Sales/ops reports and a durable audit trail.",
+    dependencies: "Sprint 21", estimate: "1–2 weeks",
+    features: [
+      { area: :admin, title: "Reports + audit log",
+        description: "<p>Staff can pull sales, inventory, search, and returns reports, and see who changed what.</p>",
+        technical_description: "<p>Planned. PaperTrail already versions some models.</p>" }
+    ] },
+  { number: 23, title: "SEO & Accessibility", status: "planned",
+    goal: "Crawlable, accessible storefront including product structured data.",
+    dependencies: "Sprint 4, Sprint 6, Sprint 18", estimate: "1 week",
+    features: [
+      { area: :frontend, title: "JSON-LD, sitemaps, WCAG AA",
+        description: "<p>Search engines get Product/Offer/AggregateRating markup; core flows meet WCAG AA.</p>",
+        technical_description: "<p>AggregateRating JSON-LD waits on Sprint 18 ratings.</p>" }
+    ] },
+  { number: 24, title: "Performance & Security Hardening", status: "planned",
+    goal: "Production-grade caching, query health, CSP, observability, and GDPR basics.",
+    dependencies: "Sprint 1–23", estimate: "1–2 weeks",
+    features: [
+      { area: :other, title: "Perf + security pass",
+        description: "<p>The store stays fast under load and meets a basic security/privacy bar before production.</p>",
+        technical_description: "<p>N+1/cache pass, CSP, Sentry/APM, consent/export/delete.</p>" }
+    ] },
+  { number: 25, title: "Production Readiness & K8s", status: "planned",
+    goal: "Deployable production artifacts and smoke tests.",
+    dependencies: "Sprint 24", estimate: "1 week",
+    features: [
+      { area: :other, title: "K8s + CI/CD + DR",
+        description: "<p>The stack can be deployed with secrets, backups, and a smoke-test gate.</p>",
+        technical_description: "<p>Production images, manifests, deploy workflow, OpenAPI complete.</p>" }
     ] }
 ].freeze
 

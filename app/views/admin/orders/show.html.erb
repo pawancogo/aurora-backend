@@ -18,7 +18,15 @@
   <p><strong>Total: ₹<%= number_with_delimiter(@order.total.round) %></strong></p>
   <% if allowed_to?("orders.manage") && (@order.next_status || @order.admin_cancellable?) %>
     <div class="form-actions" style="margin-top:12px;">
-      <% if @order.next_status %>
+      <% if @order.next_status == "delivered" %>
+        <%= form_with url: admin_advance_order_path(@order), method: :patch do %>
+          <div class="form-row">
+            <label for="delivery_notes">Delivery notes (optional)</label>
+            <%= text_area_tag :delivery_notes, nil, id: "delivery_notes", placeholder: "e.g. Handed to security; left at door" %>
+          </div>
+          <%= submit_tag "Mark as Delivered", class: "btn-sm" %>
+        <% end %>
+      <% elsif @order.next_status %>
         <%= button_to "Mark as #{@order.next_status.humanize}", admin_advance_order_path(@order), method: :patch, class: "btn-sm" %>
       <% end %>
       <% if @order.admin_cancellable? %>
@@ -34,6 +42,67 @@
     </div>
   <% end %>
 </div>
+
+<% shipment = @order.shipment %>
+<% if allowed_to?("orders.manage") && @order.can_manage_shipment? %>
+  <div class="panel">
+    <div class="panel-head"><h2>Shipment</h2></div>
+    <%= form_with url: admin_order_shipment_path(@order), method: :patch do %>
+      <div class="form-row">
+        <label for="shipment_carrier_name">Carrier</label>
+        <%= text_field_tag "shipment[carrier_name]", shipment&.carrier_name, id: "shipment_carrier_name", placeholder: "e.g. BlueDart" %>
+      </div>
+      <div class="form-row">
+        <label for="shipment_tracking_number">Tracking number</label>
+        <%= text_field_tag "shipment[tracking_number]", shipment&.tracking_number, id: "shipment_tracking_number", placeholder: "AWB / tracking id" %>
+      </div>
+      <div class="form-row">
+        <label for="shipment_packing_notes">Packing notes</label>
+        <%= text_area_tag "shipment[packing_notes]", shipment&.packing_notes, id: "shipment_packing_notes", placeholder: "Warehouse notes — not shown to the shopper" %>
+      </div>
+      <div class="form-actions"><%= submit_tag "Save shipment", class: "btn-sm" %></div>
+    <% end %>
+
+    <%= form_with url: admin_order_shipment_events_path(@order), method: :post do %>
+      <div class="form-row">
+        <label for="event_type">Add event</label>
+        <select name="event_type" id="event_type">
+          <option value="out_for_delivery">Out for delivery</option>
+          <option value="note">Note</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label for="event_description">Description (optional for out for delivery)</label>
+        <%= text_field_tag :description, nil, id: "event_description", placeholder: "Shown on the shopper's order page" %>
+      </div>
+      <div class="form-actions"><%= submit_tag "Add event", class: "btn-sm" %></div>
+    <% end %>
+  </div>
+<% elsif shipment %>
+  <div class="panel">
+    <div class="panel-head"><h2>Shipment</h2></div>
+    <p>Carrier: <%= shipment.carrier_name.presence || "—" %></p>
+    <p>Tracking: <%= shipment.tracking_number.presence || "—" %></p>
+    <% if shipment.packing_notes.present? %>
+      <p>Packing notes: <%= shipment.packing_notes %></p>
+    <% end %>
+  </div>
+<% end %>
+
+<% if shipment&.events&.any? %>
+  <div class="panel">
+    <div class="panel-head"><h2>Delivery timeline</h2></div>
+    <%
+      event_columns = [
+        { label: "When", class: "muted-sm", cell: ->(e) { e.occurred_at.strftime("%d %b %Y, %H:%M") } },
+        { label: "Type", cell: ->(e) { e.event_type.humanize } },
+        { label: "Description", cell: ->(e) { e.description } },
+        { label: "By", class: "muted-sm", cell: ->(e) { e.admin_user&.email || "—" } }
+      ]
+    %>
+    <%= render "admin/ui/table", rows: shipment.events.chronological, columns: event_columns %>
+  </div>
+<% end %>
 
 <% if (address = @order.shipping_address) %>
   <div class="panel">

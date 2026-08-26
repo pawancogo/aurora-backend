@@ -40,4 +40,17 @@ FactoryBot.define do
     amount_cents { 1000 }
     status { :created }
   end
+
+  factory :shipment do
+    order
+    carrier_name { "BlueDart" }
+    tracking_number { "AWB123" }
+  end
+
+  factory :shipment_event do
+    shipment
+    event_type { :packed }
+    description { "Packed and ready to ship" }
+    occurred_at { Time.current }
+  end
 end

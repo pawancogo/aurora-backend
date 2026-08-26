@@ -10,9 +10,27 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_14_112819) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_26_100001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "addresses", force: :cascade do |t|
+    t.integer "address_type", default: 0, null: false
+    t.string "city", null: false
+    t.string "country", default: "IN", null: false
+    t.datetime "created_at", null: false
+    t.bigint "customer_id", null: false
+    t.string "full_name", null: false
+    t.boolean "is_default", default: false, null: false
+    t.string "line1", null: false
+    t.string "line2"
+    t.string "phone", null: false
+    t.string "postal_code", null: false
+    t.string "state", null: false
+    t.datetime "updated_at", null: false
+    t.index ["customer_id"], name: "index_addresses_on_customer_id"
+    t.index ["customer_id"], name: "index_addresses_one_default_per_customer", unique: true, where: "(is_default = true)"
+  end
 
   create_table "admin_user_roles", force: :cascade do |t|
     t.bigint "admin_user_id", null: false
@@ -418,6 +436,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_14_112819) do
     t.index ["key"], name: "index_roles_on_key", unique: true
   end
 
+  create_table "shipment_events", force: :cascade do |t|
+    t.bigint "admin_user_id"
+    t.datetime "created_at", null: false
+    t.string "description", null: false
+    t.integer "event_type", default: 0, null: false
+    t.datetime "occurred_at", null: false
+    t.bigint "shipment_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["admin_user_id"], name: "index_shipment_events_on_admin_user_id"
+    t.index ["shipment_id", "occurred_at"], name: "index_shipment_events_on_shipment_id_and_occurred_at"
+    t.index ["shipment_id"], name: "index_shipment_events_on_shipment_id"
+  end
+
+  create_table "shipments", force: :cascade do |t|
+    t.string "carrier_name"
+    t.datetime "created_at", null: false
+    t.text "delivery_notes"
+    t.bigint "order_id", null: false
+    t.text "packing_notes"
+    t.string "tracking_number"
+    t.datetime "updated_at", null: false
+    t.index ["order_id"], name: "index_shipments_on_order_id", unique: true
+  end
+
   create_table "shipping_methods", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
@@ -532,6 +574,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_14_112819) do
     t.index ["product_id"], name: "index_wishlist_items_on_product_id"
   end
 
+  add_foreign_key "addresses", "customers"
   add_foreign_key "admin_user_roles", "admin_users"
   add_foreign_key "admin_user_roles", "roles"
   add_foreign_key "attribute_values", "product_attributes"
@@ -559,6 +602,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_14_112819) do
   add_foreign_key "products", "tax_classes"
   add_foreign_key "role_permissions", "permissions"
   add_foreign_key "role_permissions", "roles"
+  add_foreign_key "shipment_events", "admin_users", on_delete: :nullify
+  add_foreign_key "shipment_events", "shipments"
+  add_foreign_key "shipments", "orders"
   add_foreign_key "sprint_features", "sprints"
   add_foreign_key "stock_movements", "admin_users", on_delete: :nullify
   add_foreign_key "stock_movements", "inventory_items"

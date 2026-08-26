@@ -16,6 +16,7 @@ module Admin
 
     def show
       @sessions = @customer.refresh_tokens.order(created_at: :desc).limit(50)
+      @addresses = @customer.addresses.order(is_default: :desc, id: :asc)
     end
 
     def edit; end

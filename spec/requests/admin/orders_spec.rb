@@ -30,6 +30,17 @@ RSpec.describe "Admin orders", type: :request do
     expect(response.body).to include("Jane Doe")
   end
 
+  it "shows the shipment form for an order in fulfillment" do
+    sign_in_admin(create(:admin_user, :super_admin, password: "password1234"))
+    order = create(:order, status: :accepted)
+
+    get "/admin/orders/#{order.id}"
+
+    expect(response.body).to include("Carrier")
+    expect(response.body).to include("Packing notes")
+    expect(response.body).to include("Out for delivery")
+  end
+
   it "forbids access without orders.read" do
     sign_in_admin(create(:admin_user, password: "password1234"))
 
@@ -88,6 +99,27 @@ RSpec.describe "Admin orders", type: :request do
 
       expect(response).to redirect_to("/admin")
       expect(order.reload).to be_confirmed
+    end
+
+    it "records a shipment event when advancing" do
+      sign_in_admin(create(:admin_user, :super_admin, password: "password1234"))
+      order = create(:order, status: :confirmed)
+
+      patch "/admin/orders/#{order.id}/advance"
+
+      expect(order.reload).to be_accepted
+      expect(order.shipment.events.accepted).to be_present
+    end
+
+    it "saves optional delivery notes when marking delivered" do
+      sign_in_admin(create(:admin_user, :super_admin, password: "password1234"))
+      order = create(:order, status: :shipped)
+
+      patch "/admin/orders/#{order.id}/advance", params: { delivery_notes: "Left with the guard" }
+
+      expect(order.reload).to be_delivered
+      expect(order.shipment.delivery_notes).to eq("Left with the guard")
+      expect(order.delivery_events.last.description).to include("Left with the guard")
     end
   end
 
@@ -171,6 +203,70 @@ RSpec.describe "Admin orders", type: :request do
       patch "/admin/orders/#{order.id}/refund"
 
       expect(response).to redirect_to("/admin")
+    end
+  end
+
+  describe "PATCH /admin/orders/:id/shipment" do
+    it "saves carrier, tracking, and packing notes" do
+      sign_in_admin(create(:admin_user, :super_admin, password: "password1234"))
+      order = create(:order, status: :accepted)
+
+      patch "/admin/orders/#{order.id}/shipment", params: {
+        shipment: { carrier_name: "BlueDart", tracking_number: "AWB123", packing_notes: "Fragile" }
+      }
+
+      expect(response).to redirect_to(admin_order_path(order))
+      shipment = order.reload.shipment
+      expect(shipment.carrier_name).to eq("BlueDart")
+      expect(shipment.tracking_number).to eq("AWB123")
+      expect(shipment.packing_notes).to eq("Fragile")
+    end
+
+    it "rejects shipment edits on a pending order" do
+      sign_in_admin(create(:admin_user, :super_admin, password: "password1234"))
+      order = create(:order, status: :pending)
+
+      patch "/admin/orders/#{order.id}/shipment", params: {
+        shipment: { carrier_name: "BlueDart", tracking_number: "AWB123" }
+      }
+
+      expect(flash[:alert]).to match(/isn't in fulfillment/i)
+      expect(order.reload.shipment).to be_nil
+    end
+
+    it "forbids editing a shipment without orders.manage" do
+      sign_in_admin(create(:admin_user, password: "password1234"))
+      order = create(:order, status: :accepted)
+
+      patch "/admin/orders/#{order.id}/shipment", params: {
+        shipment: { carrier_name: "BlueDart", tracking_number: "AWB123" }
+      }
+
+      expect(response).to redirect_to("/admin")
+      expect(order.reload.shipment).to be_nil
+    end
+  end
+
+  describe "POST /admin/orders/:id/shipment_events" do
+    it "logs an out-for-delivery event" do
+      sign_in_admin(create(:admin_user, :super_admin, password: "password1234"))
+      order = create(:order, status: :shipped)
+
+      post "/admin/orders/#{order.id}/shipment_events", params: { event_type: "out_for_delivery" }
+
+      expect(response).to redirect_to(admin_order_path(order))
+      event = order.reload.shipment.events.out_for_delivery.first
+      expect(event.description).to eq("Out for delivery")
+    end
+
+    it "rejects an unknown event type" do
+      sign_in_admin(create(:admin_user, :super_admin, password: "password1234"))
+      order = create(:order, status: :shipped)
+
+      post "/admin/orders/#{order.id}/shipment_events", params: { event_type: "lost" }
+
+      expect(flash[:alert]).to match(/unknown event type/i)
+      expect(order.reload.shipment).to be_nil
     end
   end
 

@@ -15,6 +15,7 @@ class Order < ApplicationRecord
   has_many :order_items, dependent: :destroy
   has_many :order_addresses, dependent: :destroy
   has_many :payments, dependent: :destroy
+  has_one :shipment, dependent: :destroy
 
   # `pending` = placed, awaiting payment confirmation (inventory reserved,
   # not yet decremented). `payment_failed` = the payment attempt failed or
@@ -36,15 +37,54 @@ class Order < ApplicationRecord
   # "advance" action (always one step, never a free-form status picker).
   FULFILLMENT_SEQUENCE = %w[confirmed accepted ready_to_ship shipped delivered].freeze
 
+  before_validation :generate_order_number, on: :create
+
+  validates :order_number, presence: true, uniqueness: true
+  validates :subtotal_cents, :shipping_cents, :total_cents, numericality: { greater_than_or_equal_to: 0 }
+
   def next_status
     idx = FULFILLMENT_SEQUENCE.index(status)
     idx && FULFILLMENT_SEQUENCE[idx + 1]
   end
 
-  before_validation :generate_order_number, on: :create
+  # Staff can attach carrier/tracking/packing notes once the order is in
+  # the fulfillment sequence, or afterwards if a shipment record already
+  # exists (e.g. a cancelled order that had been accepted).
+  def can_manage_shipment?
+    status.in?(FULFILLMENT_SEQUENCE) || shipment.present?
+  end
 
-  validates :order_number, presence: true, uniqueness: true
-  validates :subtotal_cents, :shipping_cents, :total_cents, numericality: { greater_than_or_equal_to: 0 }
+  def ensure_shipment!
+    self.shipment = Shipment.find_or_create_by!(order_id: id)
+  end
+
+  # Walk one step through FULFILLMENT_SEQUENCE and append a matching
+  # shipment event. Optional delivery_notes are stored on the shipment and
+  # included in the "Delivered" event — no OTP/photo proof in this sprint.
+  def advance!(admin_user: nil, delivery_notes: nil)
+    nxt = next_status
+    return false unless nxt
+
+    transaction do
+      ship = ensure_shipment!
+      ship.update!(delivery_notes: delivery_notes) if delivery_notes.present?
+      update!(status: nxt)
+      ship.record_status_event!(nxt, admin_user: admin_user)
+    end
+    true
+  end
+
+  def carrier_name
+    shipment&.carrier_name
+  end
+
+  def tracking_number
+    shipment&.tracking_number
+  end
+
+  def delivery_events
+    shipment ? shipment.events.chronological : ShipmentEvent.none
+  end
 
   CANCELLABLE_STATES = %w[pending confirmed].freeze
 

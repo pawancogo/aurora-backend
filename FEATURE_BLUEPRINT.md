@@ -15,7 +15,7 @@
 - 🟡 Products: slug, SKU, brand, category, description, highlights, specs, dimensions, weight, warranty, HSN/GST, status, featured/new/bestseller *(Sprint 4)*
 - 🟡 Variants (color/size/storage/RAM/custom), per-variant price/MRP/SKU/barcode/images/inventory/status *(Sprint 5)*
 - 🟡 Media: multiple images, video, 360°/zoom, alt text, ordering *(Sprint 4/5)*
-- 🟡 Related / cross-sell / upsell / "frequently bought together" *(Sprint 5/14)*
+- 🟡 Related / cross-sell / upsell / "frequently bought together" *(Sprint 5/19)*
 - ⬜ Size charts & fit guides (per category/brand) ⭐
 - ⬜ Product bundles / kits / configurable sets ⭐
 - ⬜ Collections / lookbooks / curated shops (manual + rule-based) ⭐
@@ -30,14 +30,14 @@
 - ⬜ Delivery estimate + pincode/ZIP serviceability check ⭐
 - ⬜ Size recommendation ("true to size"), size chart modal ⭐
 - ⬜ Back-in-stock / restock notify-me ⭐
-- ⬜ Ratings summary, review highlights, rating distribution, photo reviews *(Sprint — reviews)*
+- ⬜ Ratings summary, review highlights, rating distribution, photo reviews *(Sprint 18)*
 - ⬜ Product Q&A (customer questions + answers) ⭐
 - ⬜ Offers/coupons applicable, EMI/pay-later options, tax-inclusive display ⭐
 - ⬜ Recently viewed, "others also viewed", social share ⭐
-- ⬜ Rich structured data (Product/Offer/AggregateRating JSON-LD) 🟡 *(SEO sprint)*
+- ⬜ Rich structured data (Product/Offer/AggregateRating JSON-LD) 🟡 *(Sprint 23)*
 
 ## 3. Search & Discovery
-- 🟡 Full-text search, autocomplete, filters, sort, pagination/infinite scroll *(Sprint 14)*
+- 🟡 Full-text search, autocomplete, filters, sort, pagination/infinite scroll *(Sprint 7)*
 - ⬜ Typo tolerance, synonyms, stemming, ranking/relevance tuning ⭐
 - ⬜ Faceted filters from attributes (brand/price/rating/size/color/availability/discount) 🟡
 - ⬜ Search suggestions, trending/popular searches, zero-result handling + recommendations ⭐
@@ -66,17 +66,17 @@
 - ⬜ Refund to source / to store credit; partial refunds ⭐
 
 ## 6. Orders & Fulfillment
-- 🟡 Lifecycle: pending→confirmed→packed→shipped→delivered→cancelled→refunded→returned *(enum done, Sprint 9)* — timeline events / status transitions by staff ⬜ *(Sprint 11)*
-- 🟡 Immutable address snapshot *(done, Sprint 9)* — version history + change audit ⬜ *(Sprint 11)*
+- ✅ Lifecycle: pending→confirmed→accepted→ready_to_ship→shipped→delivered→cancelled→refunded→returned *(enum + admin advance, Sprint 11)* — timeline events ✅ *(Sprint 16)*
+- 🟡 Immutable address snapshot *(done, Sprint 9)* — post-placement address change skipped
 - ⬜ Order cancellation (customer, within window) + partial cancellation ⭐
 - ⬜ Order modification (address/slot) within allowed states 🟡
 - ⬜ Split shipments / partial fulfillment, multi-warehouse routing ⭐
 - ⬜ Invoice (GST-compliant PDF), packing slip, shipping label, e-way bill ⭐
-- ⬜ Carrier/AWB tracking integration + tracking page + webhooks ⭐
-- ⬜ Delivery OTP / proof of delivery ⭐
+- 🟡 Manual carrier/tracking + delivery timeline *(Sprint 16)* — ⬜ carrier API / AWB webhooks ⭐
+- ⬜ Delivery OTP / photo proof of delivery ⭐ — optional delivery notes exist *(Sprint 16)*
 
 ## 7. Returns, Refunds & Exchanges
-- 🟡 Return request workflow, admin approve/reject, refund status *(Sprint 12)*
+- 🟡 Return request workflow, admin approve/reject, refund status *(Sprint 17)*
 - ⬜ Return eligibility windows/rules per category, non-returnable flags ⭐
 - ⬜ Exchange (size/color) vs refund choice; reverse pickup scheduling ⭐
 - ⬜ QC on return receipt, restocking, refund to source/store-credit ⭐
@@ -84,7 +84,7 @@
 
 ## 8. Customer Account
 - ✅ Auth: register/login/logout, email verify, forgot/reset, JWT + refresh rotation
-- 🟡 Profile, address book (default, types) *(Sprint 7)*
+- ✅ Profile, address book (default, types) *(Sprint 13)*
 - ⬜ Order history + reorder, track order, download invoice ⭐
 - ✅ Wishlist (single list, add/remove) *(Sprint 8)* — 🟡 multiple lists / share wishlist ⭐ still deferred
 - ⬜ Saved cards, wallet/store credit balance + ledger, gift cards ⭐
@@ -93,10 +93,10 @@
 - ⭐ Account security: sessions/devices list, 2FA, change email/password, delete account (GDPR)
 
 ## 9. Reviews, Ratings & UGC
-- 🟡 Reviews + ratings *(roadmap: reviews)*
-- ⬜ Verified-purchase badge, photo/video reviews, helpful votes, sort/filter ⭐
-- ⬜ Moderation queue, profanity filter, seller/admin response ⭐
-- ⬜ Product Q&A, review request emails post-delivery ⭐
+- ⬜ Reviews + ratings *(Sprint 18)*
+- ⬜ Verified-purchase badge, photo/video reviews, helpful votes, sort/filter *(Sprint 18)*
+- ⬜ Moderation queue, profanity filter, seller/admin response *(Sprint 18)*
+- ⬜ Product Q&A, review request emails post-delivery *(Sprint 18)*
 
 ## 10. Promotions, Pricing & Loyalty  ⭐ (roadmap originally EXCLUDED coupons/flash sales)
 - ⬜ Coupons (code, auto), cart/product/category/BOGO/tiered/free-shipping rules, usage limits, stacking rules ⭐
@@ -126,13 +126,13 @@
 
 ## 14. Admin / Back-office (Ops)
 - ✅ Session-based server-rendered admin portal (login → dashboard), RBAC (roles/permissions), audit-ready
-- 🟡 CRUD for catalog/orders/customers/CMS/settings/nav *(APIs partly; UI Sprint 13)*
+- 🟡 CRUD for catalog/orders/customers/CMS/settings/nav *(APIs + portal partly; remaining UI Sprint 21)*
 - ⬜ Order ops: search/filter, status change, cancel/refund/return, notes, timeline, manual order creation ⭐
 - ⬜ Inventory ops: stock adjust, transfers, low-stock alerts, stock history/logs 🟡
 - ⬜ Customer ops: view/search, impersonate, credit adjust, block ⭐
 - ⬜ Marketing: coupons, banners, sections, campaigns ⭐
 - ⬜ Bulk import/export, CSV, saved views, column config ⭐
-- ⬜ Audit logs of every admin action, activity feed *(Sprint 16)* 🟡
+- ⬜ Audit logs of every admin action, activity feed *(Sprint 22)* 🟡
 - ⬜ Multi-admin, granular per-resource permissions ✅(model) 🟡(UI)
 
 ## 15. Inventory & Warehouse
@@ -142,7 +142,7 @@
 - ⬜ Reorder points, supplier/PO (if in scope) ⭐
 
 ## 16. Analytics, Reporting & Experimentation
-- 🟡 Sales/inventory reports, dashboards *(Sprint 16)*
+- 🟡 Sales/inventory reports, dashboards *(Sprint 22)*
 - ⬜ Funnel (view→cart→checkout→purchase), conversion, AOV, cohort, RFM ⭐
 - ⬜ Product/collection performance, search analytics, returns analytics ⭐
 - ⬜ Event tracking (GA4/Segment), server-side events, data export ⭐
@@ -156,14 +156,14 @@
 
 ## 18. Platform / Non-Functional
 - ✅ SSR, Redis caching (nav), background jobs, rate limiting, CORS, JWT, strong params, Brakeman
-- 🟡 Perf: image optimization/CDN, code splitting, N+1 elimination, query indexes *(Sprint 16)*
+- 🟡 Perf: image optimization/CDN, code splitting, N+1 elimination, query indexes *(Sprint 24)*
 - ⬜ Accessibility (WCAG AA), keyboard nav, focus management, ARIA on all interactive UI ⭐
 - ⬜ i18n / l10n (currency, locale, RTL), multi-currency ⭐
 - ⬜ Observability: structured logs, error tracking (Sentry), APM, uptime, health SLOs ⭐
 - ⬜ Security: 2FA, CSP, secrets mgmt, PII encryption, WAF, bot/fraud protection ⭐
 - ⬜ Compliance: GDPR/CCPA (consent, export, delete), cookie consent, PCI, tax/invoice law ⭐
 - ⬜ PWA / offline, mobile app API parity ⭐
-- ⬜ CI/CD, blue-green/canary, DB migrations strategy, backups/DR, K8s *(Sprint 17)* 🟡
+- ⬜ CI/CD, blue-green/canary, DB migrations strategy, backups/DR, K8s *(Sprint 25)* 🟡
 
 ## 19. Integrations (extension points)
 - ⬜ Payment gateways, shipping/logistics aggregators (Shiprocket/Delhivery), tax (Avalara),
@@ -179,7 +179,7 @@
 
 ## How we apply this
 1. **Each existing sprint is now built to blueprint depth** for its domain (not the thin version). Example: Sprint 4 "Catalog" also lands the product lifecycle, media ordering, and facet-attribute registry — not just base fields.
-2. **New scope to fold in (were missing/excluded):** Promotions & Loyalty (§10), Personalization (§12), Wallet/Gift cards, Product Q&A, Back-in-stock, Abandoned cart, Size charts, Delivery serviceability, richer Payments (saved cards/EMI), Exchanges, Observability, Accessibility, i18n, Compliance. These become either expanded sprint scopes or new sprints (e.g., "Sprint 10.5 — Promotions & Coupons").
-3. **Sequencing unchanged**, depth increased. Before each sprint I'll present the blueprint-aligned scope so we hit ~90% of enterprise expectations per domain in one pass, then harden.
+2. **Folded-in ⭐ scope** is numbered on [ROADMAP.md](ROADMAP.md): Promotions **#14**, Loyalty/Wallet **#15**, Reviews/Q&A **#18**, Personalization **#19**, etc.
+3. **Follow ROADMAP.md numbering only.** `SPRINT_PLAN.md` and older 17/23-sprint outlines are retired.
 
-> The original [ROADMAP.md](ROADMAP.md) explicitly excluded coupons/flash sales, loyalty, blog/FAQ, and real gateway/logistics integrations. This blueprint recommends bringing the ⭐ items in. Tell me which ⭐ areas are in-scope so I can update the roadmap accordingly.
+> Coupons, loyalty, reviews, and Razorpay are in-scope on the canonical roadmap. Marketplace, barcode scanning, and OTP-on-delivery stay out.

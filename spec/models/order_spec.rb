@@ -124,4 +124,52 @@ RSpec.describe Order do
     address = create(:order_address, order: order)
     expect(order.shipping_address).to eq(address)
   end
+
+  describe "#advance!" do
+    it "walks one step and records a shipment event" do
+      order = create(:order, status: :confirmed)
+
+      expect(order.advance!).to be true
+
+      expect(order.reload).to be_accepted
+      expect(order.shipment).to be_present
+      expect(order.delivery_events.map(&:event_type)).to eq([ "accepted" ])
+      expect(order.delivery_events.first.description).to eq("Accepted for fulfillment")
+    end
+
+    it "includes tracking on the shipped event when it's already on the shipment" do
+      order = create(:order, status: :ready_to_ship)
+      create(:shipment, order: order, carrier_name: "BlueDart", tracking_number: "AWB123")
+
+      order.advance!
+
+      expect(order.reload).to be_shipped
+      expect(order.delivery_events.last.description).to eq("Shipped · BlueDart · AWB123")
+    end
+
+    it "stores delivery notes on the delivered event" do
+      order = create(:order, status: :shipped)
+
+      order.advance!(delivery_notes: "Handed to security")
+
+      expect(order.reload).to be_delivered
+      expect(order.shipment.delivery_notes).to eq("Handed to security")
+      expect(order.delivery_events.last.description).to eq("Delivered — Handed to security")
+    end
+
+    it "returns false and does nothing when there's no next status" do
+      order = create(:order, status: :delivered)
+
+      expect(order.advance!).to be false
+      expect(order.reload).to be_delivered
+      expect(order.shipment).to be_nil
+    end
+  end
+
+  describe "#can_manage_shipment?" do
+    it "is true in the fulfillment sequence and false while pending" do
+      expect(build(:order, status: :confirmed)).to be_can_manage_shipment
+      expect(build(:order, status: :pending)).not_to be_can_manage_shipment
+    end
+  end
 end

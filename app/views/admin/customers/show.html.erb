@@ -19,6 +19,24 @@
   <% end %>
 </div>
 
+<div class="panel">
+  <div class="panel-head"><h2>Addresses</h2></div>
+  <% if @addresses.empty? %>
+    <p class="muted">No saved addresses.</p>
+  <% else %>
+    <ul>
+      <% @addresses.each do |address| %>
+        <li>
+          <strong><%= address.address_type.capitalize %></strong>
+          <% if address.is_default? %><span class="chip ok">Default</span><% end %>
+          — <%= address.full_name %>, <%= address.line1 %><%= ", #{address.line2}" if address.line2.present? %>,
+          <%= address.city %>, <%= address.state %> <%= address.postal_code %>, <%= address.country %>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+</div>
+
 <%= render "admin/ui/sessions", sessions: @sessions, can_manage: can_manage,
       revoke_all_path: admin_customer_sessions_path(@customer),
       revoke_path: ->(session) { admin_customer_session_path(@customer, session) } %>
