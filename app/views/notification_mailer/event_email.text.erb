@@ -1,0 +1,12 @@
+Hi <%= @customer.first_name.presence || "there" %>,
+
+<%= @notification.body %>
+
+View details: <%= @cta_url %>
+
+Manage notification preferences: <%= @preferences_url %>
+<% if @optional %>
+Don't want review reminders? Unsubscribe from optional email: <%= @unsubscribe_url %>
+<% end %>
+
+— The Aurora Team

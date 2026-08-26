@@ -15,8 +15,14 @@ class Customer < ApplicationRecord
   has_many :addresses, dependent: :destroy
   has_many :orders, dependent: :restrict_with_error
   has_many :return_requests, dependent: :restrict_with_error
+  has_many :reviews, dependent: :restrict_with_error
+  has_many :product_questions, dependent: :restrict_with_error
+  has_many :review_votes, dependent: :destroy
+  has_many :notifications, dependent: :destroy
+  has_many :notification_preferences, dependent: :destroy
 
   before_validation :normalize_email
+  before_validation :ensure_unsubscribe_token
 
   validates :email,
             presence: true,
@@ -24,6 +30,7 @@ class Customer < ApplicationRecord
             format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :password, length: { minimum: 8 }, allow_nil: true
   validates :status, inclusion: { in: %w[active inactive] }
+  validates :unsubscribe_token, presence: true, uniqueness: true
 
   def confirmed?
     confirmed_at.present?
@@ -41,5 +48,9 @@ class Customer < ApplicationRecord
 
   def normalize_email
     self.email = email.to_s.strip.downcase.presence
+  end
+
+  def ensure_unsubscribe_token
+    self.unsubscribe_token ||= SecureRandom.urlsafe_base64(24)
   end
 end

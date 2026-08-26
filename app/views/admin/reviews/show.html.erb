@@ -1,0 +1,58 @@
+<p><%= link_to "← Reviews", admin_reviews_path, class: "link" %></p>
+<h1 class="page-title"><%= @review.product.name %></h1>
+
+<div class="panel">
+  <div class="panel-head"><h2>Review</h2></div>
+  <p>Customer: <%= link_to(@review.customer.full_name.presence || @review.customer.email, admin_customer_path(@review.customer)) %></p>
+  <p>Product: <%= link_to @review.product.name, edit_admin_product_path(@review.product) %></p>
+  <p>Rating: <%= @review.rating %> ★</p>
+  <p>Status: <span class="chip <%= @review.hidden? ? "off" : (@review.pending? ? "sys" : "ok") %>"><%= @review.status.humanize %></span></p>
+  <p>Verified purchase: <%= @review.verified_purchase? ? "Yes" : "No" %></p>
+  <% if @review.title.present? %>
+    <p>Title: <%= @review.title %></p>
+  <% end %>
+  <p>Body: <%= @review.body %></p>
+  <p>Helpful votes: <%= @review.helpful_count %></p>
+  <p>Submitted: <%= @review.created_at.strftime("%d %b %Y, %H:%M") %></p>
+  <% if @review.admin_response.present? %>
+    <p>Store response: <%= @review.admin_response %></p>
+  <% end %>
+</div>
+
+<% if @review.images.any? %>
+  <div class="panel">
+    <div class="panel-head"><h2>Photos</h2></div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <% @review.images.each do |image| %>
+        <a href="<%= image.url %>" target="_blank" rel="noopener">
+          <img src="<%= image.url %>" alt="" width="120" height="120" style="object-fit:cover;border-radius:8px">
+        </a>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
+<% if allowed_to?("reviews.manage") %>
+  <div class="panel">
+    <div class="panel-head"><h2>Moderate</h2></div>
+    <div class="form-actions">
+      <% unless @review.published? %>
+        <%= button_to "Publish", admin_publish_review_path(@review), method: :patch, class: "btn-sm" %>
+      <% end %>
+      <% unless @review.hidden? %>
+        <%= button_to "Hide", admin_hide_review_path(@review), method: :patch, class: "btn-sm" %>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h2>Respond as store</h2></div>
+    <%= form_with url: admin_respond_review_path(@review), method: :patch do %>
+      <div class="form-row">
+        <label for="admin_response">Response</label>
+        <%= text_area_tag :admin_response, @review.admin_response, id: "admin_response", placeholder: "Thank the shopper or address the issue" %>
+      </div>
+      <div class="form-actions"><%= submit_tag @review.admin_response.present? ? "Update response" : "Post response", class: "btn-sm" %></div>
+    <% end %>
+  </div>
+<% end %>

@@ -17,6 +17,11 @@ module Payments
 
       refund = Razorpay::Refund.create(payment_id: @payment.razorpay_payment_id, amount: @payment.amount_cents)
       @payment.update!(status: :refunded, razorpay_refund_id: refund.id, refunded_at: Time.current)
+      order = @payment.order
+      order.notify!(
+        "order.refunded",
+        "refund_amount" => Notifications::Payload.money(@payment.amount_cents, @payment.currency)
+      )
       @payment
     rescue Razorpay::Error => e
       raise Error, "Razorpay refund failed: #{e.message}"

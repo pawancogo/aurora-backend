@@ -72,6 +72,7 @@ class Order < ApplicationRecord
       update!(status: nxt)
       ship.record_status_event!(nxt, admin_user: admin_user)
     end
+    notify_fulfillment!(nxt)
     true
   end
 
@@ -158,6 +159,15 @@ class Order < ApplicationRecord
     total_cents / 100.0
   end
 
+  def notify!(event, extra = {})
+    Notifications::Notify.call(
+      event: event,
+      recipient: customer,
+      notifiable: self,
+      payload: Notifications::Payload.for_order(self).merge(extra.stringify_keys)
+    )
+  end
+
   private
 
   def perform_cancel!
@@ -172,7 +182,17 @@ class Order < ApplicationRecord
       payments.captured.each { |payment| payment.update!(status: :refund_pending) }
       update!(status: :cancelled, cancelled_at: Time.current)
     end
+    notify!("order.cancelled")
     true
+  end
+
+  def notify_fulfillment!(status)
+    case status.to_s
+    when "shipped" then notify!("order.shipped")
+    when "delivered"
+      notify!("order.delivered")
+      notify!("review.request")
+    end
   end
 
   def generate_order_number

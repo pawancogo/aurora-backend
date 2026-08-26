@@ -44,6 +44,7 @@ RSpec.describe Order do
       expect(order.reload).to be_cancelled
       expect(order.cancelled_at).to be_present
       expect(variant.inventory_item.reload.reserved).to eq(0)
+      expect(order.customer.notifications.where(event_key: "order.cancelled")).to exist
     end
 
     it "returns false and does nothing when not cancellable" do
@@ -163,6 +164,17 @@ RSpec.describe Order do
       expect(order.advance!).to be false
       expect(order.reload).to be_delivered
       expect(order.shipment).to be_nil
+    end
+
+    it "notifies the shopper when the order ships and again when it is delivered" do
+      order = create(:order, status: :ready_to_ship)
+      create(:shipment, order: order, carrier_name: "BlueDart", tracking_number: "AWB123")
+
+      expect { order.advance! }.to have_enqueued_job(Notifications::DeliverJob)
+      expect(order.customer.notifications.pluck(:event_key)).to eq([ "order.shipped" ])
+
+      expect { order.advance! }.to have_enqueued_job(Notifications::DeliverJob).twice
+      expect(order.customer.notifications.pluck(:event_key)).to contain_exactly("order.shipped", "order.delivered", "review.request")
     end
   end
 

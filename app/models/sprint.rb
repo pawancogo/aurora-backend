@@ -5,7 +5,7 @@
 class Sprint < ApplicationRecord
   has_many :sprint_features, -> { order(:position, :id) }, dependent: :destroy, inverse_of: :sprint
 
-  enum :status, { planned: 0, in_progress: 1, completed: 2 }, default: 0
+  enum :status, { planned: 0, in_progress: 1, completed: 2, skipped: 3 }, default: 0
 
   validates :number, presence: true, uniqueness: true
   validates :title, presence: true

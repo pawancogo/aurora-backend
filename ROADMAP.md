@@ -29,16 +29,16 @@ Shipped sprint write-ups live in **Admin → Roadmap** (`/admin/sprints`). Histo
 | 15 | ⬜ | Loyalty, Wallet & Gift Cards | Points/tiers, store-credit ledger, gift cards |
 | 16 | ✅ | Delivery, Shipments (manual) | Carrier/tracking, packing notes, delivery events. Address change skipped. 3P carrier on the other branch. |
 | 17 | ✅ | Returns, Refunds & Exchanges | Customer RMA, admin approve/restock, refund flagged for Razorpay |
-| 18 | ⬜ | **Reviews, Ratings & Q&A** | Verified-purchase, photo reviews, moderation, product Q&A |
-| 19 | ⬜ | Personalization & Recommendations | Recs slots, behavioral events |
-| 20 | ⬜ | Notifications & Comms | Full transactional set, SMS/push adapters, preferences |
+| 18 | ✅ | **Reviews, Ratings & Q&A** | Verified-purchase, photo reviews, moderation, product Q&A |
+| 19 | ⬜ | Personalization & Recommendations | Recs slots, behavioral events | skip
+| 20 | ✅ | Notifications & Comms | Transactional email + inbox, SMS/push adapters, preferences |
 | 21 | ⬜ | Admin Dashboard & Ops | Remaining ops CRUD, bulk I/O, activity feed |
 | 22 | ⬜ | Analytics, Reports & Audit Logs | Funnels, conversion, search/returns analytics, audit trail |
 | 23 | ⬜ | SEO & Accessibility | Structured data, sitemaps, redirects, WCAG AA |
 | 24 | ⬜ | Performance & Security Hardening | Caching, N+1, CSP, observability, GDPR/consent |
 | 25 | ⬜ | Production Readiness & K8s | CI/CD, K8s, secrets, backups/DR, smoke tests |
 
-**Next sprint to start:** **18 — Reviews, Ratings & Q&A.** (14 and 15 skipped for now.)
+**Next sprint to start:** **21 — Admin Dashboard & Ops.** (14, 15, and 19 skipped for now.)
 
 ---
 
@@ -73,9 +73,9 @@ Admin → Roadmap sprints **1–12** already match this list. Sprint **13** (add
 
 ---
 
-## Shipped (1–13, 16–17)
+## Shipped (1–13, 16–18, 20)
 
-Details: `/admin/sprints/1` … `/admin/sprints/13`, `/admin/sprints/16`.
+Details: `/admin/sprints/1` … `/admin/sprints/13`, `/admin/sprints/16`–`18`, `/admin/sprints/20`.
 
 | # | What shipped |
 |---|--------------|
@@ -94,6 +94,8 @@ Details: `/admin/sprints/1` … `/admin/sprints/13`, `/admin/sprints/16`.
 | 13 | Profile edit, address book CRUD, default address, admin read-only addresses |
 | 16 | Manual shipment record, carrier/tracking, packing notes, out-for-delivery events, optional delivery notes |
 | 17 | Customer RMA on delivered orders, admin approve/reject/receive/restock/complete, refund flagged to existing Razorpay refund click |
+| 18 | Star ratings + written/photo reviews, verified-purchase, helpful votes, Q&A, admin moderation; `reviews` feature flag |
+| 20 | Transactional order/return/refund emails via existing SMTP, in-app inbox + badge, preferences + unsubscribe; SMS/push adapters registered but off until keys |
 
 Sprint 13 shipped after checkout on purpose: orders store a **snapshot** (`order_addresses`), not a foreign key to the address book.
 
@@ -145,67 +147,37 @@ Sprint 16 is the **manual** delivery slice. Post-placement address change and OT
 
 **Skipped:** reverse pickup adapter, refund-to-store-credit (Sprint 15), automatic Razorpay refund on complete, OTP/photo POD.
 
-### Sprint 18 — Reviews, Ratings & Q&A
+### Sprint 18 — Reviews, Ratings & Q&A ✅
 
 **Goal:** Product ratings and reviews on the PDP, plus Q&A and moderation.
 
 **Depends on:** 4, 9, 11  
-**Estimate:** 1–2 weeks
+**Shipped:** star rating + written/photo review, ratings summary and distribution, sort/filter, verified-purchase badge, helpful votes, product Q&A, admin publish/hide/respond. Cached `rating_avg` / `rating_count` on the product. Feature flag `reviews` hides the storefront UI and 404s the APIs when off.
 
-This is the sprint that was listed in some roadmaps and **missing from `SPRINT_PLAN.md`**. It is **not built yet** (only `reviews.read` / `reviews.manage` permissions and a `reviews` feature flag exist).
+**Skipped:** video reviews; profanity auto-filter (staff still hide). Review-request email after delivery shipped in Sprint 20.
 
-#### Features
-- Star rating + written review on PDP
-- Ratings summary, distribution, sort/filter
-- Verified-purchase badge (reviewer has a delivered order for that product)
-- Photo reviews
-- Helpful votes
-- Product Q&A (ask / answer)
-- Admin moderation queue (publish / hide / respond)
-- Optional: review-request email after delivery
-
-#### Backend
-- `reviews`, `review_images`, `review_votes`, `product_questions`, `product_answers`
-- Aggregate rating on product (or cached counter)
-- Customers can only review products they purchased (when verified-purchase is on)
-- Public list API + authenticated create; admin moderate API
-
-#### Frontend
-- PDP ratings summary + review list + write-review form
-- Q&A tab
-- Account: “reviews to write” from delivered orders
-
-#### Admin
-- Moderation queue, respond as store
-- Feature flag `reviews` already seeded — wire it to hide the UI when off
-
-#### Testing
-- Verified-purchase guard specs
-- Moderation authorization specs
-- Aggregate rating recalculation specs
+This is the sprint that was listed in some roadmaps and **missing from `SPRINT_PLAN.md`**. It is now built.
 
 ### Sprint 19 — Personalization & Recommendations
 
 **Goal:** Recs on homepage, PLP, PDP, and cart.
 
 **Depends on:** 6, 7, 8  
-**Estimate:** 1–2 weeks
+**Estimate:** 1–2 weeks  
+**Status:** skipped for now.
 
 - Recently viewed (already started in #7) → “recommended for you” / “others also viewed”
 - Homepage/PLP/PDP/cart recs slots
 - Behavioral events pipeline (view/cart/purchase)
 
-### Sprint 20 — Notifications & Comms
+### Sprint 20 — Notifications & Comms ✅
 
 **Goal:** Full transactional set plus preferences.
 
 **Depends on:** 2, 9, 11, 17  
-**Estimate:** 1 week
+**Shipped:** order placed/confirmed/shipped/delivered/cancelled/refunded and return requested/approved/rejected/completed emails through the existing SMTP/ActionMailer path; review-request email after delivery; in-app inbox + unread badge; preference toggles and public unsubscribe. SMS and push adapters are registered and stay off until `SMS_PROVIDER` / `VAPID_PUBLIC_KEY` are set.
 
-- Order placed/confirmed/shipped/delivered, refund, return emails
-- SMS/push adapters (mock until keys)
-- In-app notification center + unread badge
-- Preference / unsubscribe
+**Skipped:** live SMS/WhatsApp/push providers; abandoned-cart and back-in-stock campaigns.
 
 ### Sprint 21 — Admin Dashboard & Ops
 
@@ -279,6 +251,6 @@ Coupons, loyalty, reviews, and real Razorpay are **in scope** (sprints 14, 15, 1
 
 ## Approval gate
 
-**Current status:** Sprints **1–13 complete.** Next: **Sprint 14 — Promotions & Coupons.**
+**Current status:** Sprints **1–13, 16–18, 20 complete.** Next: **Sprint 21 — Admin Dashboard & Ops.** (14, 15, 19 skipped.)
 
 After each sprint: update Admin → Roadmap, append [PROJECT_STATE.md](PROJECT_STATE.md) if needed, then wait for approval before starting the next number on this list.

@@ -29,6 +29,8 @@ class Product < ApplicationRecord
                                 reject_if: ->(attrs) { attrs[:name].blank? && attrs[:value].blank? }
   has_many :product_relations, -> { order(:position, :id) }, dependent: :destroy, inverse_of: :product
   has_many :related_products, through: :product_relations
+  has_many :reviews, dependent: :destroy
+  has_many :questions, class_name: "ProductQuestion", dependent: :destroy
 
   # Every product owns one hidden master variant that carries default price +
   # inventory until real option variants exist.

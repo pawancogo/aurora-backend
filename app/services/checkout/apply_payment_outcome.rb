@@ -30,6 +30,7 @@ module Checkout
         order.order_items.includes(product_variant: :inventory_item).each { |item| fulfil!(item) }
         order.update!(status: :confirmed)
       end
+      order.notify!("order.confirmed")
     end
 
     def fail!
@@ -39,6 +40,7 @@ module Checkout
         order.order_items.includes(product_variant: :inventory_item).each { |item| release!(item) }
         order.update!(status: :payment_failed)
       end
+      order.notify!("order.payment_failed")
     end
 
     # Converts the reservation into a real sale: releases the held quantity

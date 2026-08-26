@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_26_120001) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_26_190000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -159,6 +159,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_26_120001) do
     t.datetime "created_at", null: false
     t.datetime "deleted_at"
     t.string "email", null: false
+    t.boolean "email_marketing", default: true, null: false
     t.string "first_name"
     t.string "last_name"
     t.string "password_digest", null: false
@@ -166,11 +167,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_26_120001) do
     t.datetime "reset_password_sent_at"
     t.string "reset_password_token_digest"
     t.string "status", default: "active", null: false
+    t.string "unsubscribe_token", null: false
     t.datetime "updated_at", null: false
     t.index ["confirmation_token_digest"], name: "index_customers_on_confirmation_token_digest"
     t.index ["deleted_at"], name: "index_customers_on_deleted_at"
     t.index ["email"], name: "index_customers_on_email", unique: true
     t.index ["reset_password_token_digest"], name: "index_customers_on_reset_password_token_digest"
+    t.index ["unsubscribe_token"], name: "index_customers_on_unsubscribe_token", unique: true
   end
 
   create_table "feature_flags", force: :cascade do |t|
@@ -217,6 +220,48 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_26_120001) do
     t.integer "reserved", default: 0, null: false
     t.datetime "updated_at", null: false
     t.index ["product_variant_id"], name: "index_inventory_items_on_product_variant_id", unique: true
+  end
+
+  create_table "notification_deliveries", force: :cascade do |t|
+    t.string "channel", null: false
+    t.datetime "created_at", null: false
+    t.text "error"
+    t.bigint "notification_id", null: false
+    t.datetime "sent_at"
+    t.integer "status", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["notification_id", "channel"], name: "index_notification_deliveries_on_notification_id_and_channel", unique: true
+    t.index ["notification_id"], name: "index_notification_deliveries_on_notification_id"
+  end
+
+  create_table "notification_preferences", force: :cascade do |t|
+    t.string "channel", null: false
+    t.datetime "created_at", null: false
+    t.bigint "customer_id", null: false
+    t.boolean "enabled", default: true, null: false
+    t.string "event_key", null: false
+    t.datetime "updated_at", null: false
+    t.index ["customer_id", "event_key", "channel"], name: "idx_notification_prefs_unique", unique: true
+    t.index ["customer_id"], name: "index_notification_preferences_on_customer_id"
+  end
+
+  create_table "notifications", force: :cascade do |t|
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.bigint "customer_id", null: false
+    t.string "event_key", null: false
+    t.bigint "notifiable_id", null: false
+    t.string "notifiable_type", null: false
+    t.jsonb "payload", default: {}, null: false
+    t.datetime "read_at"
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.string "url"
+    t.index ["customer_id", "created_at"], name: "index_notifications_on_customer_id_and_created_at"
+    t.index ["customer_id", "event_key", "notifiable_type", "notifiable_id"], name: "idx_notifications_unique_event", unique: true
+    t.index ["customer_id", "read_at"], name: "index_notifications_on_customer_id_and_read_at"
+    t.index ["customer_id"], name: "index_notifications_on_customer_id"
+    t.index ["notifiable_type", "notifiable_id"], name: "index_notifications_on_notifiable"
   end
 
   create_table "order_addresses", force: :cascade do |t|
@@ -296,6 +341,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_26_120001) do
     t.index ["key"], name: "index_permissions_on_key", unique: true
   end
 
+  create_table "product_answers", force: :cascade do |t|
+    t.bigint "admin_user_id"
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.bigint "customer_id"
+    t.bigint "product_question_id", null: false
+    t.integer "status", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["admin_user_id"], name: "index_product_answers_on_admin_user_id"
+    t.index ["customer_id"], name: "index_product_answers_on_customer_id"
+    t.index ["product_question_id", "status"], name: "index_product_answers_on_product_question_id_and_status"
+    t.index ["product_question_id"], name: "index_product_answers_on_product_question_id"
+  end
+
   create_table "product_attributes", force: :cascade do |t|
     t.string "code", null: false
     t.datetime "created_at", null: false
@@ -319,6 +378,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_26_120001) do
     t.index ["attribute_value_id"], name: "index_product_images_on_attribute_value_id"
     t.index ["product_id", "position"], name: "index_product_images_on_product_id_and_position"
     t.index ["product_id"], name: "index_product_images_on_product_id"
+  end
+
+  create_table "product_questions", force: :cascade do |t|
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.bigint "customer_id", null: false
+    t.bigint "product_id", null: false
+    t.integer "status", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["customer_id"], name: "index_product_questions_on_customer_id"
+    t.index ["product_id", "status"], name: "index_product_questions_on_product_id_and_status"
+    t.index ["product_id"], name: "index_product_questions_on_product_id"
+    t.index ["status"], name: "index_product_questions_on_status"
   end
 
   create_table "product_relations", force: :cascade do |t|
@@ -380,6 +452,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_26_120001) do
     t.boolean "new_arrival", default: false, null: false
     t.integer "price_cents", default: 0, null: false
     t.datetime "published_at"
+    t.decimal "rating_avg", precision: 3, scale: 2, default: "0.0", null: false
+    t.integer "rating_count", default: 0, null: false
+    t.jsonb "rating_distribution", default: {}, null: false
     t.string "search_keywords"
     t.string "sku", null: false
     t.string "slug", null: false
@@ -445,6 +520,46 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_26_120001) do
     t.index ["order_id"], name: "index_return_requests_on_order_id"
     t.index ["rma_number"], name: "index_return_requests_on_rma_number", unique: true
     t.index ["status"], name: "index_return_requests_on_status"
+  end
+
+  create_table "review_images", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "position", default: 0, null: false
+    t.bigint "review_id", null: false
+    t.datetime "updated_at", null: false
+    t.string "url", null: false
+    t.index ["review_id"], name: "index_review_images_on_review_id"
+  end
+
+  create_table "review_votes", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "customer_id", null: false
+    t.bigint "review_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["customer_id"], name: "index_review_votes_on_customer_id"
+    t.index ["review_id", "customer_id"], name: "index_review_votes_on_review_id_and_customer_id", unique: true
+    t.index ["review_id"], name: "index_review_votes_on_review_id"
+  end
+
+  create_table "reviews", force: :cascade do |t|
+    t.text "admin_response"
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.bigint "customer_id", null: false
+    t.integer "helpful_count", default: 0, null: false
+    t.bigint "product_id", null: false
+    t.datetime "published_at"
+    t.integer "rating", null: false
+    t.datetime "responded_at"
+    t.integer "status", default: 0, null: false
+    t.string "title"
+    t.datetime "updated_at", null: false
+    t.boolean "verified_purchase", default: false, null: false
+    t.index ["customer_id"], name: "index_reviews_on_customer_id"
+    t.index ["product_id", "customer_id"], name: "index_reviews_on_product_id_and_customer_id", unique: true
+    t.index ["product_id", "status"], name: "index_reviews_on_product_id_and_status"
+    t.index ["product_id"], name: "index_reviews_on_product_id"
+    t.index ["status"], name: "index_reviews_on_status"
   end
 
   create_table "role_permissions", force: :cascade do |t|
@@ -616,14 +731,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_26_120001) do
   add_foreign_key "category_attributes", "categories"
   add_foreign_key "category_attributes", "product_attributes"
   add_foreign_key "inventory_items", "product_variants"
+  add_foreign_key "notification_deliveries", "notifications"
+  add_foreign_key "notification_preferences", "customers"
+  add_foreign_key "notifications", "customers"
   add_foreign_key "order_addresses", "orders"
   add_foreign_key "order_items", "orders"
   add_foreign_key "order_items", "product_variants"
   add_foreign_key "orders", "customers"
   add_foreign_key "orders", "shipping_methods"
   add_foreign_key "payments", "orders"
+  add_foreign_key "product_answers", "admin_users"
+  add_foreign_key "product_answers", "customers"
+  add_foreign_key "product_answers", "product_questions"
   add_foreign_key "product_images", "attribute_values"
   add_foreign_key "product_images", "products"
+  add_foreign_key "product_questions", "customers"
+  add_foreign_key "product_questions", "products"
   add_foreign_key "product_relations", "products"
   add_foreign_key "product_relations", "products", column: "related_product_id"
   add_foreign_key "product_specifications", "products"
@@ -635,6 +758,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_26_120001) do
   add_foreign_key "return_items", "return_requests"
   add_foreign_key "return_requests", "customers"
   add_foreign_key "return_requests", "orders"
+  add_foreign_key "review_images", "reviews"
+  add_foreign_key "review_votes", "customers"
+  add_foreign_key "review_votes", "reviews"
+  add_foreign_key "reviews", "customers"
+  add_foreign_key "reviews", "products"
   add_foreign_key "role_permissions", "permissions"
   add_foreign_key "role_permissions", "roles"
   add_foreign_key "shipment_events", "admin_users", on_delete: :nullify

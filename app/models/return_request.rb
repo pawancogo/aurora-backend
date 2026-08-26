@@ -46,6 +46,7 @@ class ReturnRequest < ApplicationRecord
   def self.request!(order:, reason:, resolution: :refund, items: nil)
     raise Error, "This order can't be returned." unless order.returnable?
 
+    request = nil
     transaction do
       request = create!(
         order: order,
@@ -54,8 +55,9 @@ class ReturnRequest < ApplicationRecord
         resolution: resolution.presence || :refund
       )
       request.add_lines!(items)
-      request
     end
+    request.notify!("return.requested")
+    request
   end
 
   def add_lines!(items)
@@ -71,6 +73,7 @@ class ReturnRequest < ApplicationRecord
     raise Error, "Only a requested return can be approved." unless requested?
 
     update!(status: :approved, decided_at: Time.current, admin_notes: note.presence || admin_notes)
+    notify!("return.approved")
   end
 
   def reject!(note:)
@@ -78,6 +81,7 @@ class ReturnRequest < ApplicationRecord
     raise Error, "Please add a note explaining the rejection." if note.blank?
 
     update!(status: :rejected, decided_at: Time.current, admin_notes: note)
+    notify!("return.rejected")
   end
 
   def receive!(admin_user: nil)
@@ -111,6 +115,16 @@ class ReturnRequest < ApplicationRecord
       end
       update!(status: :completed, completed_at: Time.current)
     end
+    notify!("return.completed")
+  end
+
+  def notify!(event)
+    Notifications::Notify.call(
+      event: event,
+      recipient: customer,
+      notifiable: self,
+      payload: Notifications::Payload.for_return(self)
+    )
   end
 
   private

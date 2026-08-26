@@ -19,6 +19,7 @@ RSpec.describe ReturnRequest do
       expect(request).to be_refund
       expect(request.rma_number).to match(/\ARMA-[A-Z0-9]{10}\z/)
       expect(request.return_items.map(&:quantity)).to eq([ 2 ])
+      expect(order.customer.notifications.where(event_key: "return.requested")).to exist
     end
 
     it "rejects an order that isn't delivered" do

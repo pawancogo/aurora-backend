@@ -51,6 +51,7 @@ module Checkout
         @cart.cart_items.destroy_all
       end
 
+      order.notify!("order.placed")
       order
     end
 

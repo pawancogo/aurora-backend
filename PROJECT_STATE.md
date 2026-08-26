@@ -6,9 +6,9 @@
 ## Current Position
 
 - **Canonical list:** [ROADMAP.md](ROADMAP.md) — **25 sprints**. That file is the only numbering to follow. `SPRINT_PLAN.md` is retired.
-- **Shipped:** Sprints **1–13**, **16** (manual delivery), and **17** (returns/RMA). Day-to-day write-ups: Admin → Roadmap (`/admin/sprints`).
-- **Next:** Sprint **18 — Reviews, Ratings & Q&A.** Sprints 14 (Promotions) and 15 (Loyalty) are skipped for now.
-- **Reviews / ratings:** not shipped. Planned as **Sprint 18** (they were in some roadmaps, missing from `SPRINT_PLAN.md`, and never implemented beyond a feature flag + permissions).
+- **Shipped:** Sprints **1–13**, **16** (manual delivery), **17** (returns/RMA), **18** (reviews, ratings & Q&A), and **20** (notifications). Day-to-day write-ups: Admin → Roadmap (`/admin/sprints`).
+- **Next:** Sprint **21 — Admin Dashboard & Ops.** Sprints 14 (Promotions), 15 (Loyalty), and 19 (Personalization) are skipped for now.
+- **Reviews / ratings:** shipped as **Sprint 18**. Feature flag `reviews` hides the PDP/account UI when off. Review-request email shipped in Sprint 20; profanity auto-filter was skipped.
 - This markdown log is historical (screenshots, gotchas). Do not take sprint numbers in older entries below as canonical — they mixed `SPRINT_PLAN` labels with delivery order.
 
 ## Locked Architectural Decisions (ADRs)
@@ -433,5 +433,31 @@ Delivered:
 - **Skipped:** reverse pickup, store-credit refunds, auto-Razorpay on complete.
 
 Where to see it: storefront → delivered order → Request a return; Admin → Returns.
+
+### Sprint 18 — Reviews, Ratings & Q&A ✅ (completed 2026-08-26)
+
+Product ratings were only a feature flag + permissions until this sprint.
+
+Delivered:
+- **DB:** `reviews`, `review_images`, `review_votes`, `product_questions`, `product_answers`. Cached `rating_avg`, `rating_count`, `rating_distribution` on `products`.
+- **Shopper:** verified-purchase reviews (delivered/returned order required), photo URL, helpful votes, PDP summary + sort/filter, Q&A, Account → Reviews for items still to write.
+- **Admin → Reviews / Q&A:** publish, hide, respond as the store. Customer answers stay pending until published.
+- **Flag:** `reviews` off → storefront section hidden, APIs 404 with `reviews_disabled`.
+- **Skipped:** video reviews; automatic profanity filter. Review-request email after delivery shipped in Sprint 20.
+
+Where to see it: any PDP → Reviews / Q&A tabs; Account → Reviews; Admin → Reviews and Admin → Q&A.
+
+### Sprint 20 — Notifications & Comms ✅ (completed 2026-08-26)
+
+Sprint 19 (Personalization) was skipped. This is the inbox + email comms slice.
+
+Delivered:
+- **DB:** `notifications` (in-app inbox, polymorphic notifiable), `notification_deliveries` (per-channel send attempts), `notification_preferences`. Customers gain `email_marketing` and `unsubscribe_token`.
+- **Dispatcher:** `Notifications::Notify` + `Notifications::Catalog` + `Notifications::Registry`. Email uses the existing ActionMailer/SMTP path (`NotificationMailer` → `DeliverJob` on the default Sidekiq queue). SMS and push adapters are registered and stay disabled until `SMS_PROVIDER` / `VAPID_PUBLIC_KEY`. Adding WhatsApp later is a new adapter + catalog channel — Notify does not change.
+- **Triggers:** order placed / confirmed / payment failed / shipped / delivered / cancelled / refunded; return requested / approved / rejected / completed; review request after delivery.
+- **Shopper:** header bell + unread badge, Account → Notifications inbox and optional-email toggles, `/unsubscribe?token=` for marketing mail. Transactional order/return email cannot be turned off.
+
+Where to see it: storefront header bell (signed in); Account → Notifications; `tmp/mails` in development (or real SMTP when `SMTP_ADDRESS` is set).
+
 
 

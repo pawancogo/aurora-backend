@@ -1,0 +1,65 @@
+<p><%= link_to "← Q&A", admin_questions_path, class: "link" %></p>
+<h1 class="page-title">Question</h1>
+
+<div class="panel">
+  <div class="panel-head"><h2>From the shopper</h2></div>
+  <p>Product: <%= link_to @question.product.name, edit_admin_product_path(@question.product) %></p>
+  <p>Customer: <%= link_to(@question.customer.full_name.presence || @question.customer.email, admin_customer_path(@question.customer)) %></p>
+  <p>Status: <span class="chip <%= @question.hidden? ? "off" : (@question.pending? ? "sys" : "ok") %>"><%= @question.status.humanize %></span></p>
+  <p><%= @question.body %></p>
+  <p>Asked: <%= @question.created_at.strftime("%d %b %Y, %H:%M") %></p>
+</div>
+
+<% if allowed_to?("reviews.manage") %>
+  <div class="panel">
+    <div class="panel-head"><h2>Moderate</h2></div>
+    <div class="form-actions">
+      <% unless @question.published? %>
+        <%= button_to "Publish", admin_publish_question_path(@question), method: :patch, class: "btn-sm" %>
+      <% end %>
+      <% unless @question.hidden? %>
+        <%= button_to "Hide", admin_hide_question_path(@question), method: :patch, class: "btn-sm" %>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
+<div class="panel">
+  <div class="panel-head"><h2>Answers</h2></div>
+  <% if @question.answers.empty? %>
+    <p class="page-sub">No answers yet.</p>
+  <% else %>
+    <% @question.answers.each do |answer| %>
+      <div style="margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid #e5e5e5">
+        <p>
+          <strong><%= answer.from_store? ? "Store" : answer.author_name %></strong>
+          <span class="chip <%= answer.hidden? ? "off" : (answer.pending? ? "sys" : "ok") %>"><%= answer.status.humanize %></span>
+        </p>
+        <p><%= answer.body %></p>
+        <% if allowed_to?("reviews.manage") %>
+          <div class="form-actions">
+            <% unless answer.published? %>
+              <%= button_to "Publish answer", admin_publish_answer_path(answer), method: :patch, class: "btn-sm" %>
+            <% end %>
+            <% unless answer.hidden? %>
+              <%= button_to "Hide answer", admin_hide_answer_path(answer), method: :patch, class: "btn-sm" %>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  <% end %>
+</div>
+
+<% if allowed_to?("reviews.manage") %>
+  <div class="panel">
+    <div class="panel-head"><h2>Answer as store</h2></div>
+    <%= form_with url: admin_answer_question_path(@question), method: :post do %>
+      <div class="form-row">
+        <label for="answer_body">Answer</label>
+        <%= text_area_tag :body, nil, id: "answer_body", placeholder: "Reply that shoppers will see on the product page" %>
+      </div>
+      <div class="form-actions"><%= submit_tag "Post answer", class: "btn-sm" %></div>
+    <% end %>
+  </div>
+<% end %>

@@ -30,6 +30,8 @@ class ProductListSerializer
       new_arrival: @product.new_arrival,
       best_seller: @product.best_seller,
       image: variant.display_image_url,
+      rating_avg: @product.rating_avg.to_f,
+      rating_count: @product.rating_count,
       group: group_json
     }
   end

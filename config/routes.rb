@@ -20,7 +20,14 @@ Rails.application.routes.draw do
       resources :pages, only: :show # :id = slug
 
       # Catalog (public). :id is the slug.
-      resources :products, only: %i[index show]
+      resources :products, only: %i[index show] do
+        resources :reviews, only: %i[index create], controller: "product_reviews"
+        resources :questions, only: %i[index create], controller: "product_questions"
+      end
+      post "reviews/:id/vote", to: "review_votes#create"
+      post "questions/:question_id/answers", to: "product_answers#create"
+      get "account/reviews", to: "account_reviews#index"
+      get "account/reviews/pending", to: "account_reviews#pending"
       resources :categories, only: %i[index show]
       resources :brands, only: %i[index show]
 
@@ -45,6 +52,16 @@ Rails.application.routes.draw do
         resources :return_requests, only: :create
       end
       resources :return_requests, only: %i[index show]
+
+      # In-app inbox + delivery preferences. Unsubscribe is public (token in query/body).
+      resources :notifications, only: :index do
+        get :unread_count, on: :collection
+        post :read_all, on: :collection
+        patch :read, on: :member
+      end
+      resource :notification_preferences, only: %i[show update]
+      get  "unsubscribe", to: "unsubscribes#show"
+      post "unsubscribe", to: "unsubscribes#create"
 
       # Razorpay webhook (signature-verified, no customer/admin auth).
       post "webhooks/razorpay", to: "webhooks#razorpay"
@@ -144,6 +161,20 @@ Rails.application.routes.draw do
     patch "returns/:id/reject",   to: "return_requests#reject",   as: :reject_return
     patch "returns/:id/receive",  to: "return_requests#receive",  as: :receive_return
     patch "returns/:id/complete", to: "return_requests#complete", as: :complete_return
+
+    get   "reviews",              to: "reviews#index",   as: :reviews
+    get   "reviews/:id",          to: "reviews#show",    as: :review
+    patch "reviews/:id/publish",  to: "reviews#publish", as: :publish_review
+    patch "reviews/:id/hide",     to: "reviews#hide",    as: :hide_review
+    patch "reviews/:id/respond",  to: "reviews#respond", as: :respond_review
+
+    get   "questions",                    to: "questions#index",  as: :questions
+    get   "questions/:id",                to: "questions#show",   as: :question
+    patch "questions/:id/publish",        to: "questions#publish", as: :publish_question
+    patch "questions/:id/hide",           to: "questions#hide",    as: :hide_question
+    post  "questions/:id/answers",        to: "questions#answer",  as: :answer_question
+    patch "answers/:id/publish",          to: "answers#publish",   as: :publish_answer
+    patch "answers/:id/hide",             to: "answers#hide",      as: :hide_answer
 
     # Typeahead options for async custom-select dropdowns.
     get "options/:resource", to: "options#index", as: :options

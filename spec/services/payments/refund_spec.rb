@@ -14,6 +14,7 @@ RSpec.describe Payments::Refund do
     expect(payment.razorpay_refund_id).to eq("rfnd_ABC123")
     expect(payment.refunded_at).to be_present
     expect(Razorpay::Refund).to have_received(:create).with(payment_id: "pay_ABC123", amount: 1500)
+    expect(payment.order.customer.notifications.where(event_key: "order.refunded")).to exist
   end
 
   it "raises without calling Razorpay when the payment isn't refund_pending" do

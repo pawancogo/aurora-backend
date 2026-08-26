@@ -1,0 +1,28 @@
+<h1 class="page-title">Reviews</h1>
+<p class="page-sub">Moderation queue for product ratings. Pending reviews are not shown on the storefront until published.</p>
+
+<%= render "admin/ui/search", url: admin_reviews_path, query: params[:q],
+      placeholder: "Search title or body",
+      filters: [
+        { name: "status", prompt: "Any status", selected: params[:status],
+          options: Array(@facets["status"]).map { |facet| ["#{facet[:label]} (#{facet[:count]})", facet[:value]] } },
+        { name: "rating", prompt: "Any rating", selected: params[:rating],
+          options: Array(@facets["rating"]).map { |facet| ["#{facet[:label]} ★ (#{facet[:count]})", facet[:value]] } }
+      ] %>
+
+<%
+  columns = [
+    { label: "Product", cell: ->(review) { link_to(review.product.name, admin_review_path(review)) } },
+    { label: "Customer", class: "muted-sm", cell: ->(review) { review.customer.email } },
+    { label: "Rating", cell: ->(review) { "#{review.rating} ★" } },
+    { label: "Status", cell: ->(review) {
+        css = review.pending? ? "sys" : (review.hidden? ? "off" : "ok")
+        content_tag(:span, review.status.humanize, class: "chip #{css}")
+      } },
+    { label: "Verified", class: "muted-sm", cell: ->(review) { review.verified_purchase? ? "Yes" : "—" } },
+    { label: "Submitted", class: "muted-sm", cell: ->(review) { review.created_at.strftime("%d %b %Y, %H:%M") } }
+  ]
+%>
+<%= render "admin/ui/table", rows: @reviews, columns: columns, empty: "No reviews." %>
+
+<%= render "admin/ui/pagination", collection: @reviews, path: admin_reviews_path %>

@@ -9,4 +9,8 @@ class FeatureFlag < ApplicationRecord
   def self.to_map(scope = all)
     scope.each_with_object({}) { |flag, map| map[flag.key] = flag.enabled }
   end
+
+  def self.enabled?(key)
+    where(key: key).pick(:enabled) == true
+  end
 end

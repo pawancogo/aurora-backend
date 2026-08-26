@@ -167,6 +167,8 @@ RSpec.describe "Api::V1::Checkout" do
       expect(Payment.find_by(razorpay_order_id: "order_VERIFY1")).to be_captured
       expect(variant.inventory_item.reload.on_hand).to eq(8)
       expect(variant.inventory_item.reload.reserved).to eq(0)
+      expect(customer.notifications.where(event_key: "order.placed")).to exist
+      expect(customer.notifications.where(event_key: "order.confirmed")).to exist
     end
 
     it "fails the order and releases the reservation on an invalid signature" do

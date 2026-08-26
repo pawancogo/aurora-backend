@@ -30,8 +30,8 @@
 - ⬜ Delivery estimate + pincode/ZIP serviceability check ⭐
 - ⬜ Size recommendation ("true to size"), size chart modal ⭐
 - ⬜ Back-in-stock / restock notify-me ⭐
-- ⬜ Ratings summary, review highlights, rating distribution, photo reviews *(Sprint 18)*
-- ⬜ Product Q&A (customer questions + answers) ⭐
+- ✅ Ratings summary, review highlights, rating distribution, photo reviews *(Sprint 18)*
+- ✅ Product Q&A (customer questions + answers) *(Sprint 18)*
 - ⬜ Offers/coupons applicable, EMI/pay-later options, tax-inclusive display ⭐
 - ⬜ Recently viewed, "others also viewed", social share ⭐
 - ⬜ Rich structured data (Product/Offer/AggregateRating JSON-LD) 🟡 *(Sprint 23)*
@@ -88,15 +88,15 @@
 - ⬜ Order history + reorder, track order, download invoice ⭐
 - ✅ Wishlist (single list, add/remove) *(Sprint 8)* — 🟡 multiple lists / share wishlist ⭐ still deferred
 - ⬜ Saved cards, wallet/store credit balance + ledger, gift cards ⭐
-- ⬜ Notification & communication preferences (email/SMS/push, marketing opt-in) 🟡
+- ✅ Notification & communication preferences (email/SMS/push, marketing opt-in) *(Sprint 20)* — SMS/push delivery waits on keys
 - ⬜ Social/OTP login (Google/Apple, phone OTP) ⭐
 - ⭐ Account security: sessions/devices list, 2FA, change email/password, delete account (GDPR)
 
 ## 9. Reviews, Ratings & UGC
-- ⬜ Reviews + ratings *(Sprint 18)*
-- ⬜ Verified-purchase badge, photo/video reviews, helpful votes, sort/filter *(Sprint 18)*
-- ⬜ Moderation queue, profanity filter, seller/admin response *(Sprint 18)*
-- ⬜ Product Q&A, review request emails post-delivery *(Sprint 18)*
+- ✅ Reviews + ratings *(Sprint 18)*
+- 🟡 Verified-purchase badge, photo reviews, helpful votes, sort/filter *(Sprint 18)* — video reviews ⬜
+- 🟡 Moderation queue, seller/admin response *(Sprint 18)* — profanity auto-filter ⬜
+- 🟡 Product Q&A *(Sprint 18)* — video reviews / profanity auto-filter ⬜
 
 ## 10. Promotions, Pricing & Loyalty  ⭐ (roadmap originally EXCLUDED coupons/flash sales)
 - ⬜ Coupons (code, auto), cart/product/category/BOGO/tiered/free-shipping rules, usage limits, stacking rules ⭐
@@ -118,10 +118,10 @@
 - ⬜ Segmentation, behavioral events pipeline ⭐
 
 ## 13. Notifications & Comms
-- 🟡 Transactional email (verify/reset) via SMTP + Sidekiq *(done)*
-- ⬜ Full transactional set: order placed/confirmed/shipped/out-for-delivery/delivered, refund, return ⭐
-- ⬜ SMS + WhatsApp + push (web/mobile), in-app notification center 🟡
-- ⬜ Templating + localization + preference-based suppression, unsubscribe ⭐
+- ✅ Transactional email (verify/reset) via SMTP + Sidekiq
+- ✅ Full transactional set: order placed/confirmed/shipped/delivered/cancelled/refunded, return requested/approved/rejected/completed, review request *(Sprint 20)*
+- 🟡 SMS + push adapters registered (off until keys); in-app notification center ✅; WhatsApp ⬜
+- ✅ Preference-based suppression + unsubscribe *(Sprint 20)* — localization ⬜
 - ⬜ Marketing automation hooks (abandoned cart, back-in-stock, win-back) ⭐
 
 ## 14. Admin / Back-office (Ops)
@@ -173,7 +173,7 @@
 ## 20. Trust, Safety & Support
 - ⬜ Help center / FAQ, contact/support ticket, live chat/bot ⭐
 - ⬜ Fraud checks (velocity, address/BIN), chargeback handling ⭐
-- ⬜ Content moderation (reviews/Q&A), report abuse ⭐
+- 🟡 Content moderation (reviews/Q&A) *(Sprint 18)* — report abuse ⬜
 
 ---
 
