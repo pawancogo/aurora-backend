@@ -1,0 +1,28 @@
+<h1 class="page-title">Returns</h1>
+<p class="page-sub">Shopper return requests (RMA). The /p/returns page is only the policy.</p>
+
+<%= render "admin/ui/search", url: admin_returns_path, query: params[:q],
+      placeholder: "Search by RMA number",
+      filters: [
+        { name: "status", prompt: "Any status", selected: params[:status],
+          options: Array(@facets["status"]).map { |facet| ["#{facet[:label]} (#{facet[:count]})", facet[:value]] } },
+        { name: "resolution", prompt: "Any resolution", selected: params[:resolution],
+          options: Array(@facets["resolution"]).map { |facet| ["#{facet[:label]} (#{facet[:count]})", facet[:value]] } }
+      ] %>
+
+<%
+  columns = [
+    { label: "RMA", cell: ->(r) { link_to(r.rma_number, admin_return_request_path(r)) } },
+    { label: "Order", cell: ->(r) { link_to(r.order.order_number, admin_order_path(r.order)) } },
+    { label: "Customer", class: "muted-sm", cell: ->(r) { r.customer.email } },
+    { label: "Status", cell: ->(r) {
+        css = r.requested? ? "sys" : (r.rejected? ? "off" : "ok")
+        content_tag(:span, r.status.humanize, class: "chip #{css}")
+      } },
+    { label: "Resolution", class: "muted-sm", cell: ->(r) { r.resolution.humanize } },
+    { label: "Requested", class: "muted-sm", cell: ->(r) { r.created_at.strftime("%d %b %Y, %H:%M") } }
+  ]
+%>
+<%= render "admin/ui/table", rows: @return_requests, columns: columns, empty: "No return requests." %>
+
+<%= render "admin/ui/pagination", collection: @return_requests, path: admin_returns_path %>

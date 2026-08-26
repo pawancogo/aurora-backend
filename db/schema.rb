@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_26_100001) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_26_120001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -416,6 +416,37 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_26_100001) do
     t.index ["token_digest"], name: "index_refresh_tokens_on_token_digest", unique: true
   end
 
+  create_table "return_items", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "order_item_id", null: false
+    t.integer "quantity", null: false
+    t.boolean "restocked", default: false, null: false
+    t.bigint "return_request_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["order_item_id"], name: "index_return_items_on_order_item_id"
+    t.index ["return_request_id", "order_item_id"], name: "index_return_items_on_return_request_id_and_order_item_id", unique: true
+    t.index ["return_request_id"], name: "index_return_items_on_return_request_id"
+  end
+
+  create_table "return_requests", force: :cascade do |t|
+    t.text "admin_notes"
+    t.datetime "completed_at"
+    t.datetime "created_at", null: false
+    t.bigint "customer_id", null: false
+    t.datetime "decided_at"
+    t.bigint "order_id", null: false
+    t.string "reason", null: false
+    t.datetime "received_at"
+    t.integer "resolution", default: 0, null: false
+    t.string "rma_number", null: false
+    t.integer "status", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["customer_id"], name: "index_return_requests_on_customer_id"
+    t.index ["order_id"], name: "index_return_requests_on_order_id"
+    t.index ["rma_number"], name: "index_return_requests_on_rma_number", unique: true
+    t.index ["status"], name: "index_return_requests_on_status"
+  end
+
   create_table "role_permissions", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "permission_id", null: false
@@ -600,6 +631,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_26_100001) do
   add_foreign_key "products", "brands"
   add_foreign_key "products", "categories"
   add_foreign_key "products", "tax_classes"
+  add_foreign_key "return_items", "order_items"
+  add_foreign_key "return_items", "return_requests"
+  add_foreign_key "return_requests", "customers"
+  add_foreign_key "return_requests", "orders"
   add_foreign_key "role_permissions", "permissions"
   add_foreign_key "role_permissions", "roles"
   add_foreign_key "shipment_events", "admin_users", on_delete: :nullify

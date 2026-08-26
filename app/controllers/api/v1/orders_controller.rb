@@ -16,7 +16,7 @@ module Api
 
       # GET /api/v1/orders/:id
       def show
-        order = current_customer.orders.includes(:order_items, :order_addresses, :payments, shipment: :events).find(params[:id])
+        order = current_customer.orders.includes(:order_items, :order_addresses, :payments, :return_requests, shipment: :events).find(params[:id])
         render_success(OrderSerializer.new(order).as_json)
       end
 

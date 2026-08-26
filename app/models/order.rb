@@ -16,6 +16,7 @@ class Order < ApplicationRecord
   has_many :order_addresses, dependent: :destroy
   has_many :payments, dependent: :destroy
   has_one :shipment, dependent: :destroy
+  has_many :return_requests, dependent: :destroy
 
   # `pending` = placed, awaiting payment confirmation (inventory reserved,
   # not yet decremented). `payment_failed` = the payment attempt failed or
@@ -84,6 +85,26 @@ class Order < ApplicationRecord
 
   def delivery_events
     shipment ? shipment.events.chronological : ShipmentEvent.none
+  end
+
+  def delivered_at
+    return nil unless delivered? || returned?
+
+    shipment&.events&.delivered&.maximum(:occurred_at) || updated_at
+  end
+
+  def within_return_window?
+    return false unless delivered_at
+
+    delivered_at >= ReturnRequest.window_days.days.ago
+  end
+
+  def returnable?
+    delivered? && within_return_window? && return_requests.open.none?
+  end
+
+  def current_return_request
+    return_requests.recent.first
   end
 
   CANCELLABLE_STATES = %w[pending confirmed].freeze

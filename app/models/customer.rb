@@ -14,6 +14,7 @@ class Customer < ApplicationRecord
   has_many :wishlisted_products, through: :wishlist_items, source: :product
   has_many :addresses, dependent: :destroy
   has_many :orders, dependent: :restrict_with_error
+  has_many :return_requests, dependent: :restrict_with_error
 
   before_validation :normalize_email
 

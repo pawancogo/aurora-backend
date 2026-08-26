@@ -172,4 +172,17 @@ RSpec.describe Order do
       expect(build(:order, status: :pending)).not_to be_can_manage_shipment
     end
   end
+
+  describe "#returnable?" do
+    it "is true for a delivered order still inside the return window" do
+      order = create(:order, status: :delivered)
+      expect(order).to be_returnable
+    end
+
+    it "is false once an open return request exists" do
+      order = create(:order, status: :delivered)
+      create(:return_request, order: order, customer: order.customer)
+      expect(order.reload).not_to be_returnable
+    end
+  end
 end

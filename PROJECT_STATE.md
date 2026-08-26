@@ -6,8 +6,8 @@
 ## Current Position
 
 - **Canonical list:** [ROADMAP.md](ROADMAP.md) — **25 sprints**. That file is the only numbering to follow. `SPRINT_PLAN.md` is retired.
-- **Shipped:** Sprints **1–13** and **16** (manual delivery). Day-to-day write-ups: Admin → Roadmap (`/admin/sprints`).
-- **Next:** Sprint **17 — Returns, Refunds & Exchanges.** Sprints 14 (Promotions) and 15 (Loyalty) are skipped for now.
+- **Shipped:** Sprints **1–13**, **16** (manual delivery), and **17** (returns/RMA). Day-to-day write-ups: Admin → Roadmap (`/admin/sprints`).
+- **Next:** Sprint **18 — Reviews, Ratings & Q&A.** Sprints 14 (Promotions) and 15 (Loyalty) are skipped for now.
 - **Reviews / ratings:** not shipped. Planned as **Sprint 18** (they were in some roadmaps, missing from `SPRINT_PLAN.md`, and never implemented beyond a feature flag + permissions).
 - This markdown log is historical (screenshots, gotchas). Do not take sprint numbers in older entries below as canonical — they mixed `SPRINT_PLAN` labels with delivery order.
 
@@ -421,4 +421,17 @@ Delivered:
 - **Skipped:** post-placement address change; OTP/photo proof of delivery; carrier API / AWB adapter.
 
 Where to see it: Admin → Orders → open a confirmed+ order. Storefront → Account → Orders → open the order, Delivery section after staff save tracking or advance the order.
+
+### Sprint 17 — Returns, Refunds & Exchanges ✅ (completed 2026-08-26)
+
+The CMS `/p/returns` page is still just policy copy. This sprint is the RMA product.
+
+Delivered:
+- **DB:** `return_requests` + `return_items`. Window setting `returns.window_days` (default 7).
+- **Shopper:** request a return on a delivered order (refund or exchange), list RMAs at Account → Returns.
+- **Admin → Returns:** approve / reject (note required) / mark received (restocks via `Inventory::AdjustStock`) / complete. Completing a refund RMA flags captured payments `refund_pending` and sets the order to `returned`. Money still moves with the existing Refund payment button.
+- **Skipped:** reverse pickup, store-credit refunds, auto-Razorpay on complete.
+
+Where to see it: storefront → delivered order → Request a return; Admin → Returns.
+
 

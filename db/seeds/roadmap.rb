@@ -273,13 +273,22 @@ SPRINTS = [
         description: "<p>Staff can enter carrier + tracking + packing notes, log \"Out for delivery\" or a free-form note, and add optional delivery notes when marking delivered. No OTP or photo proof in this sprint.</p>",
         technical_description: "<p><code>PATCH /admin/orders/:id/shipment</code> and <code>POST /admin/orders/:id/shipment_events</code>, gated by <code>orders.manage</code>. Saving a tracking number for the first time also adds a \"Tracking · carrier · AWB\" note event.</p>" }
     ] },
-  { number: 17, title: "Returns, Refunds & Exchanges", status: "planned",
-    goal: "Customer return requests and staff refund/exchange workflow.",
-    dependencies: "Sprint 11, Sprint 15, Sprint 16", estimate: "1–2 weeks",
+  { number: 17, title: "Returns, Refunds & Exchanges", status: "completed",
+    goal: "Shoppers can request an RMA on a delivered order; staff approve, restock, and flag a refund.",
+    dependencies: "Sprint 11, Sprint 16", estimate: "3 days",
     features: [
-      { area: :backend, title: "RMA + exchange vs refund",
-        description: "<p>Shoppers can request a return or exchange; staff approve it and send money back or restock.</p>",
-        technical_description: "<p>Planned. Manual Razorpay refunds already exist on cancelled orders (Sprint 11); this sprint is the full returns product.</p>" }
+      { area: :database, title: "return_requests + return_items",
+        description: "<p>A delivered order can have a return request (RMA) with a reason, refund or exchange, and the line items coming back. Staff walk it from requested → approved → received → completed (or reject it).</p><p><strong>Where to see it:</strong> storefront → Account → Returns, or open a delivered order and tap Request a return. Admin → Returns.</p>",
+        technical_description: "<p><code>return_requests</code> 1:n <code>return_items</code>. Eligibility: order is delivered, within <code>returns.window_days</code> (default 7), and has no open RMA. Completing a refund RMA flags captured payments <code>refund_pending</code> and sets the order to <code>returned</code>; money still moves via the existing Refund payment button. Exchange restocks without refunding.</p>" },
+      { area: :backend, title: "Customer RMA API",
+        description: "<p>A shopper can open a return on their own delivered order and see their RMA list. They cannot see anyone else's.</p>",
+        technical_description: "<p><code>POST /api/v1/orders/:order_id/return_requests</code>, <code>GET /api/v1/return_requests</code>, <code>GET /api/v1/return_requests/:id</code>. <code>OrderSerializer</code> adds <code>returnable</code> and a <code>return_request</code> summary.</p>" },
+      { area: :admin, title: "Approve, receive (restock), complete",
+        description: "<p>Staff approve or reject with a note, mark the parcel received (which puts units back into on-hand), then complete the RMA.</p><p><strong>Where to see it:</strong> Admin → Returns.</p>",
+        technical_description: "<p><code>Admin::ReturnRequestsController</code>, gated by <code>orders.read</code>/<code>orders.manage</code>. Receive calls <code>Inventory::AdjustStock</code> with reason <code>return</code>.</p>" },
+      { area: :frontend, title: "Request a return + returns list",
+        description: "<p>A delivered order shows Request a return. Account → Returns lists RMAs. The CMS /p/returns page stays the policy copy only.</p>",
+        technical_description: "<p><code>/account/orders/:id/return</code>, <code>/account/returns</code>, <code>/account/returns/:id</code>.</p>" }
     ] },
   { number: 18, title: "Reviews, Ratings & Q&A", status: "planned",
     goal: "Product star ratings, written/photo reviews, Q&A, and admin moderation — the sprint that was missing from SPRINT_PLAN.md.",
@@ -367,6 +376,7 @@ SPRINTS.each do |attrs|
                               technical_description: feature[:technical_description], position: index)
     record.save!
   end
+  sprint.sprint_features.where.not(title: attrs[:features].map { |feature| feature[:title] }).destroy_all
 end
 
 Rails.logger.info("Seeded #{Sprint.count} sprints / #{SprintFeature.count} sprint features (roadmap)")

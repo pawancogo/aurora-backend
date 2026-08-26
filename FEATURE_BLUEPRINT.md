@@ -76,7 +76,7 @@
 - ⬜ Delivery OTP / photo proof of delivery ⭐ — optional delivery notes exist *(Sprint 16)*
 
 ## 7. Returns, Refunds & Exchanges
-- 🟡 Return request workflow, admin approve/reject, refund status *(Sprint 17)*
+- 🟡 Return request workflow, admin approve/reject, restock, refund-to-source *(Sprint 17)* — reverse pickup / store-credit ⬜
 - ⬜ Return eligibility windows/rules per category, non-returnable flags ⭐
 - ⬜ Exchange (size/color) vs refund choice; reverse pickup scheduling ⭐
 - ⬜ QC on return receipt, restocking, refund to source/store-credit ⭐

@@ -24,6 +24,7 @@
         <a class="nav-link <%= "active" if controller_name == "inventory" %>" href="<%= admin_inventory_path %>">Inventory</a>
         <a class="nav-link <%= "active" if controller_name == "customers" %>" href="<%= admin_customers_path %>">Customers</a>
         <a class="nav-link <%= "active" if controller_name == "orders" %>" href="<%= admin_orders_path %>">Orders</a>
+        <a class="nav-link <%= "active" if controller_name == "return_requests" %>" href="<%= admin_returns_path %>">Returns</a>
         <% if allowed_to?("settings.manage") %>
           <a class="nav-link <%= "active" if controller_name == "payment_settings" %>" href="<%= admin_payment_settings_path %>">Payment settings</a>
         <% end %>

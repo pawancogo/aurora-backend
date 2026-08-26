@@ -1,0 +1,72 @@
+<p><%= link_to "← Returns", admin_returns_path, class: "link" %></p>
+<h1 class="page-title"><%= @return_request.rma_number %></h1>
+
+<div class="panel">
+  <div class="panel-head"><h2>Return</h2></div>
+  <p>Order: <%= link_to @return_request.order.order_number, admin_order_path(@return_request.order) %></p>
+  <p>Customer: <%= link_to(@return_request.customer.full_name.presence || @return_request.customer.email, admin_customer_path(@return_request.customer)) %></p>
+  <p>Status: <span class="chip <%= @return_request.rejected? ? "off" : "ok" %>"><%= @return_request.status.humanize %></span></p>
+  <p>Resolution: <%= @return_request.resolution.humanize %></p>
+  <p>Reason: <%= @return_request.reason %></p>
+  <% if @return_request.admin_notes.present? %>
+    <p>Staff notes: <%= @return_request.admin_notes %></p>
+  <% end %>
+  <p>Requested: <%= @return_request.created_at.strftime("%d %b %Y, %H:%M") %></p>
+</div>
+
+<div class="panel">
+  <div class="panel-head"><h2>Items</h2></div>
+  <%
+    columns = [
+      { label: "Product", cell: ->(item) { item.order_item.product_name } },
+      { label: "SKU", class: "muted-sm", cell: ->(item) { item.order_item.variant_sku } },
+      { label: "Qty", cell: ->(item) { item.quantity } },
+      { label: "Restocked", class: "muted-sm", cell: ->(item) { item.restocked? ? "Yes" : "—" } }
+    ]
+  %>
+  <%= render "admin/ui/table", rows: @return_request.return_items, columns: columns, empty: "No items." %>
+</div>
+
+<% if allowed_to?("orders.manage") %>
+  <% if @return_request.requested? %>
+    <div class="panel">
+      <div class="panel-head"><h2>Decide</h2></div>
+      <%= form_with url: admin_approve_return_path(@return_request), method: :patch do %>
+        <div class="form-row">
+          <label for="approve_notes">Note (optional)</label>
+          <%= text_area_tag :admin_notes, nil, id: "approve_notes", placeholder: "Internal note" %>
+        </div>
+        <div class="form-actions"><%= submit_tag "Approve", class: "btn-sm" %></div>
+      <% end %>
+      <%= form_with url: admin_reject_return_path(@return_request), method: :patch do %>
+        <div class="form-row">
+          <label for="reject_notes">Rejection note (required)</label>
+          <%= text_area_tag :admin_notes, nil, id: "reject_notes", placeholder: "Why this return is declined" %>
+        </div>
+        <div class="form-actions"><%= submit_tag "Reject", class: "btn-sm" %></div>
+      <% end %>
+    </div>
+  <% elsif @return_request.approved? %>
+    <div class="panel">
+      <div class="panel-head"><h2>Receive</h2></div>
+      <p class="page-sub">Marks the parcel as back in the warehouse and restocks the returned units.</p>
+      <div class="form-actions">
+        <%= button_to "Mark received + restock", admin_receive_return_path(@return_request), method: :patch, class: "btn-sm" %>
+      </div>
+    </div>
+  <% elsif @return_request.received? %>
+    <div class="panel">
+      <div class="panel-head"><h2>Complete</h2></div>
+      <p class="page-sub">
+        <% if @return_request.refund? %>
+          Flags the captured payment for refund and sets the order to Returned. Sending the money still needs Refund payment on the order.
+        <% else %>
+          Closes the exchange RMA. Stock is already back; ship a replacement separately if needed.
+        <% end %>
+      </p>
+      <div class="form-actions">
+        <%= button_to "Complete return", admin_complete_return_path(@return_request), method: :patch, class: "btn-sm" %>
+      </div>
+    </div>
+  <% end %>
+<% end %>

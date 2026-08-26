@@ -21,7 +21,7 @@ module Admin
     end
 
     def show
-      @order = Order.includes(:customer, :order_items, :order_addresses, :payments, shipment: { events: :admin_user }).find(params[:id])
+      @order = Order.includes(:customer, :order_items, :order_addresses, :payments, :return_requests, shipment: { events: :admin_user }).find(params[:id])
     end
 
     def advance

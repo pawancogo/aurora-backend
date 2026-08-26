@@ -122,7 +122,9 @@ super_admin.roles = [ Role.find_by!(key: "super_admin") ] unless super_admin.rol
   { key: "razorpay.config_id", value: "", value_type: "string", category: "payments", public_read: false,
     description: "Razorpay Dashboard payment-methods config ID passed to Checkout.js. Blank = card+UPI-only default." },
   { key: "addresses.max_per_customer", value: 10, value_type: "number", category: "addresses", public_read: true,
-    description: "Maximum saved addresses a customer can keep in their address book" }
+    description: "Maximum saved addresses a customer can keep in their address book" },
+  { key: "returns.window_days", value: 7, value_type: "number", category: "returns", public_read: true,
+    description: "Days after delivery during which a shopper can request a return" }
 ].each do |attrs|
   SiteSetting.find_or_create_by!(key: attrs[:key]) do |setting|
     setting.assign_attributes(attrs.except(:key))

@@ -42,7 +42,9 @@ Rails.application.routes.draw do
       post "checkout/:order_id/verify_payment",  to: "checkout#verify_payment"
       resources :orders, only: %i[index show] do
         post :cancel, on: :member
+        resources :return_requests, only: :create
       end
+      resources :return_requests, only: %i[index show]
 
       # Razorpay webhook (signature-verified, no customer/admin auth).
       post "webhooks/razorpay", to: "webhooks#razorpay"
@@ -135,6 +137,13 @@ Rails.application.routes.draw do
     patch "orders/:id/refund",  to: "orders#refund",  as: :refund_order
     patch "orders/:id/shipment", to: "orders#update_shipment", as: :order_shipment
     post  "orders/:id/shipment_events", to: "orders#create_shipment_event", as: :order_shipment_events
+
+    get   "returns",              to: "return_requests#index",    as: :returns
+    get   "returns/:id",          to: "return_requests#show",     as: :return_request
+    patch "returns/:id/approve",  to: "return_requests#approve",  as: :approve_return
+    patch "returns/:id/reject",   to: "return_requests#reject",   as: :reject_return
+    patch "returns/:id/receive",  to: "return_requests#receive",  as: :receive_return
+    patch "returns/:id/complete", to: "return_requests#complete", as: :complete_return
 
     # Typeahead options for async custom-select dropdowns.
     get "options/:resource", to: "options#index", as: :options

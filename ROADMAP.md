@@ -28,7 +28,7 @@ Shipped sprint write-ups live in **Admin → Roadmap** (`/admin/sprints`). Histo
 | 14 | ⬜ | Promotions & Coupons | Codes, cart/product rules, flash sales, free-shipping |
 | 15 | ⬜ | Loyalty, Wallet & Gift Cards | Points/tiers, store-credit ledger, gift cards |
 | 16 | ✅ | Delivery, Shipments (manual) | Carrier/tracking, packing notes, delivery events. Address change skipped. 3P carrier on the other branch. |
-| 17 | ⬜ | Returns, Refunds & Exchanges | RMA, reverse pickup, exchange, refund-to-store-credit |
+| 17 | ✅ | Returns, Refunds & Exchanges | Customer RMA, admin approve/restock, refund flagged for Razorpay |
 | 18 | ⬜ | **Reviews, Ratings & Q&A** | Verified-purchase, photo reviews, moderation, product Q&A |
 | 19 | ⬜ | Personalization & Recommendations | Recs slots, behavioral events |
 | 20 | ⬜ | Notifications & Comms | Full transactional set, SMS/push adapters, preferences |
@@ -38,7 +38,7 @@ Shipped sprint write-ups live in **Admin → Roadmap** (`/admin/sprints`). Histo
 | 24 | ⬜ | Performance & Security Hardening | Caching, N+1, CSP, observability, GDPR/consent |
 | 25 | ⬜ | Production Readiness & K8s | CI/CD, K8s, secrets, backups/DR, smoke tests |
 
-**Next sprint to start:** **17 — Returns, Refunds & Exchanges.** (14 and 15 skipped for now.)
+**Next sprint to start:** **18 — Reviews, Ratings & Q&A.** (14 and 15 skipped for now.)
 
 ---
 
@@ -73,7 +73,7 @@ Admin → Roadmap sprints **1–12** already match this list. Sprint **13** (add
 
 ---
 
-## Shipped (1–13, 16)
+## Shipped (1–13, 16–17)
 
 Details: `/admin/sprints/1` … `/admin/sprints/13`, `/admin/sprints/16`.
 
@@ -93,6 +93,7 @@ Details: `/admin/sprints/1` … `/admin/sprints/13`, `/admin/sprints/16`.
 | 12 | Storefront order stepper |
 | 13 | Profile edit, address book CRUD, default address, admin read-only addresses |
 | 16 | Manual shipment record, carrier/tracking, packing notes, out-for-delivery events, optional delivery notes |
+| 17 | Customer RMA on delivered orders, admin approve/reject/receive/restock/complete, refund flagged to existing Razorpay refund click |
 
 Sprint 13 shipped after checkout on purpose: orders store a **snapshot** (`order_addresses`), not a foreign key to the address book.
 
@@ -135,17 +136,14 @@ Sprint 16 is the **manual** delivery slice. Post-placement address change and OT
 
 **Skipped:** post-placement address change; OTP/photo proof of delivery; third-party carrier/AWB adapter (other branch).
 
-### Sprint 17 — Returns, Refunds & Exchanges
+### Sprint 17 — Returns, Refunds & Exchanges ✅
 
-**Goal:** Customer RMA and staff refund/exchange workflow.
+**Goal:** A real RMA, not the CMS policy page.
 
-**Depends on:** 11, 15, 16  
-**Estimate:** 1–2 weeks
+**Depends on:** 11, 16  
+**Shipped:** shopper return request on delivered orders (7-day window), refund or exchange, admin approve/reject/receive (restock)/complete. Completing a refund RMA flags `refund_pending`; money still moves via Refund payment.
 
-- Return request lifecycle, eligibility windows
-- Exchange (size/color) vs refund-to-source / store credit
-- Reverse pickup (adapter)
-- Admin: approve/reject, QC, restock
+**Skipped:** reverse pickup adapter, refund-to-store-credit (Sprint 15), automatic Razorpay refund on complete, OTP/photo POD.
 
 ### Sprint 18 — Reviews, Ratings & Q&A
 

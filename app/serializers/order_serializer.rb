@@ -24,7 +24,9 @@ class OrderSerializer
       payment: @order.pending? && (payment = @order.payments.order(:id).last) ? payment_json(payment) : nil,
       carrier_name: @order.carrier_name,
       tracking_number: @order.tracking_number,
-      events: @order.delivery_events.map { |event| event_json(event) }
+      events: @order.delivery_events.map { |event| event_json(event) },
+      returnable: @order.returnable?,
+      return_request: (request = @order.current_return_request) ? ReturnRequestSerializer.new(request).summary_json : nil
     }
   end
 

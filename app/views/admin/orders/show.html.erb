@@ -104,6 +104,21 @@
   </div>
 <% end %>
 
+<% if @order.return_requests.any? %>
+  <div class="panel">
+    <div class="panel-head"><h2>Returns</h2></div>
+    <%
+      return_columns = [
+        { label: "RMA", cell: ->(r) { link_to(r.rma_number, admin_return_request_path(r)) } },
+        { label: "Status", cell: ->(r) { content_tag(:span, r.status.humanize, class: "chip #{r.rejected? ? 'off' : 'ok'}") } },
+        { label: "Resolution", class: "muted-sm", cell: ->(r) { r.resolution.humanize } },
+        { label: "Requested", class: "muted-sm", cell: ->(r) { r.created_at.strftime("%d %b %Y") } }
+      ]
+    %>
+    <%= render "admin/ui/table", rows: @order.return_requests.recent, columns: return_columns %>
+  </div>
+<% end %>
+
 <% if (address = @order.shipping_address) %>
   <div class="panel">
     <div class="panel-head"><h2>Shipping address</h2></div>

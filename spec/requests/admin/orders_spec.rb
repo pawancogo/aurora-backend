@@ -270,6 +270,53 @@ RSpec.describe "Admin orders", type: :request do
     end
   end
 
+  it "walks the full manual delivery flow so the shopper sees carrier, tracking, and events" do
+    sign_in_admin(create(:admin_user, :super_admin, password: "password1234"))
+    customer = create(:customer)
+    order = create(:order, customer: customer, status: :confirmed)
+    create(:order_item, order: order)
+
+    get "/admin/orders/#{order.id}"
+    expect(response.body).to include("Carrier")
+    expect(response.body).to include("Packing notes")
+
+    patch "/admin/orders/#{order.id}/advance"
+    expect(order.reload).to be_accepted
+
+    patch "/admin/orders/#{order.id}/shipment", params: {
+      shipment: { carrier_name: "BlueDart", tracking_number: "AWB123", packing_notes: "Fragile" }
+    }
+    follow_redirect!
+    expect(response.body).to include("BlueDart")
+    expect(response.body).to include("AWB123")
+    expect(response.body).to include("Fragile")
+
+    patch "/admin/orders/#{order.id}/advance" # ready_to_ship
+    patch "/admin/orders/#{order.id}/advance" # shipped
+    expect(order.reload).to be_shipped
+
+    post "/admin/orders/#{order.id}/shipment_events", params: { event_type: "out_for_delivery" }
+    patch "/admin/orders/#{order.id}/advance", params: { delivery_notes: "Handed to security" }
+    expect(order.reload).to be_delivered
+
+    post "/api/v1/customer/auth/login", params: { email: customer.email, password: "password123" }, as: :json
+    token = response.parsed_body.dig("data", "tokens", "access_token")
+    get "/api/v1/orders/#{order.id}", headers: { "Authorization" => "Bearer #{token}" }
+
+    payload = response.parsed_body["data"]
+    expect(payload["carrier_name"]).to eq("BlueDart")
+    expect(payload["tracking_number"]).to eq("AWB123")
+    expect(payload["events"].map { |event| event["description"] }).to include(
+      "Accepted for fulfillment",
+      "Tracking · BlueDart · AWB123",
+      "Packed and ready to ship",
+      "Shipped · BlueDart · AWB123",
+      "Out for delivery",
+      "Delivered — Handed to security"
+    )
+    expect(payload).not_to have_key("packing_notes")
+  end
+
   describe "GET /admin/orders (inline advance button)" do
     it "shows a Mark as button for an order with a next status, for an admin with orders.manage" do
       sign_in_admin(create(:admin_user, :super_admin, password: "password1234"))
