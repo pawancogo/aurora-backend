@@ -1,0 +1,24 @@
+<p><%= link_to "← Products", admin_products_path, class: "link" %></p>
+<h1 class="page-title">Import products</h1>
+<p class="page-sub">CSV upsert by SKU. Missing SKU generates one. Price and MRP are in rupees. Status defaults to draft.</p>
+
+<div class="panel">
+  <div class="panel-head"><h2>Upload</h2></div>
+  <%= form_with url: import_admin_products_path, method: :post, multipart: true do %>
+    <div class="form-row">
+      <label for="file">CSV file</label>
+      <input id="file" type="file" name="file" accept=".csv,text/csv" required>
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn-sm">Import</button>
+      <%= link_to "Cancel", admin_products_path, class: "link" %>
+    </div>
+  <% end %>
+</div>
+
+<div class="panel">
+  <div class="panel-head"><h2>Columns</h2></div>
+  <p class="muted">Header row required. <code>name</code> is required; everything else is optional.</p>
+  <pre class="csv-sample">sku,name,status,price,mrp,brand,category
+SKU-EXAMPLE,Example Lamp,active,1299,1999,Aurora,Lighting</pre>
+</div>

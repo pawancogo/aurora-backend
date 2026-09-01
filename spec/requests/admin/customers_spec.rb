@@ -52,13 +52,36 @@ RSpec.describe "Admin customers", type: :request do
     expect(response).to redirect_to("/admin/customers/#{customer.id}")
   end
 
-  it "toggles a customer's status" do
+  it "toggles a customer's status and revokes sessions on block" do
     sign_in_admin(create(:admin_user, :super_admin, password: "password1234"))
     customer = create(:customer)
+    Auth::IssueTokenPair.new(customer).call
 
     patch "/admin/customers/#{customer.id}/status"
 
     expect(customer.reload.status).to eq("inactive")
+    expect(customer.refresh_tokens.active.count).to eq(0)
+  end
+
+  it "adds a staff note on a customer" do
+    sign_in_admin(create(:admin_user, :super_admin, password: "password1234"))
+    customer = create(:customer)
+
+    post "/admin/customers/#{customer.id}/notes", params: { body: "Called about a delayed shipment." }
+
+    expect(response).to redirect_to("/admin/customers/#{customer.id}")
+    expect(customer.customer_notes.last.body).to include("delayed shipment")
+  end
+
+  it "exports customers as CSV" do
+    sign_in_admin(create(:admin_user, :super_admin, password: "password1234"))
+    create(:customer, email: "export-me@example.com")
+
+    get "/admin/customers/export"
+
+    expect(response).to have_http_status(:ok)
+    expect(response.media_type).to eq("text/csv")
+    expect(response.body).to include("export-me@example.com")
   end
 
   it "revokes a single session" do

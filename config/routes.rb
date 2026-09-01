@@ -115,6 +115,7 @@ Rails.application.routes.draw do
     post   "login",     to: "sessions#create"
     delete "logout",    to: "sessions#destroy", as: :logout
     get    "dashboard", to: "dashboard#show"
+    get    "activity",  to: "activity#index", as: :activity
 
     get   "settings",             to: "settings#index",       as: :settings
     get   "settings/permissions", to: "settings#permissions", as: :settings_permissions
@@ -134,11 +135,13 @@ Rails.application.routes.draw do
     end
 
     # Customer management (+ login sessions)
+    get    "customers/export",                 to: "customers#export",          as: :export_customers
     get    "customers",                        to: "customers#index",           as: :customers
     get    "customers/:id",                    to: "customers#show",            as: :customer
     get    "customers/:id/edit",               to: "customers#edit",            as: :edit_customer
     patch  "customers/:id",                    to: "customers#update"
     patch  "customers/:id/status",             to: "customers#update_status",   as: :customer_status
+    post   "customers/:id/notes",              to: "customers#create_note",     as: :customer_notes
     delete "customers/:id/sessions",           to: "customers#revoke_sessions", as: :customer_sessions
     delete "customers/:id/sessions/:token_id", to: "customers#revoke_session",  as: :customer_session
 
@@ -147,6 +150,7 @@ Rails.application.routes.draw do
     patch "payment_settings", to: "payment_settings#update"
 
     # Order management + fulfillment actions (advance one step, cancel/reject, refund).
+    get   "orders/export",      to: "orders#export",  as: :export_orders
     get   "orders",             to: "orders#index",   as: :orders
     get   "orders/:id",         to: "orders#show",    as: :order
     patch "orders/:id/advance", to: "orders#advance", as: :advance_order
@@ -185,6 +189,11 @@ Rails.application.routes.draw do
     # Catalog management (server-rendered)
     get "variants", to: "variants#index", as: :variants # global catalog list of all variants
     resources :products, only: %i[index new create edit update destroy] do
+      collection do
+        get :export
+        get :import, action: :new_import
+        post :import
+      end
       resources :variants, only: %i[index new create edit update destroy], controller: "product_variants"
       resources :relations, only: %i[create destroy], controller: "product_relations"
     end
@@ -193,6 +202,7 @@ Rails.application.routes.draw do
     resources :attributes, only: %i[index new create edit update destroy], controller: "attributes"
 
     # Inventory operations (stock adjust, low-stock filter, movement history)
+    get   "inventory/export",              to: "inventory#export",          as: :export_inventory
     get   "inventory",                     to: "inventory#index",           as: :inventory
     get   "inventory/:variant_id",         to: "inventory#show",            as: :inventory_item
     post  "inventory/:variant_id/adjust",  to: "inventory#adjust",          as: :adjust_inventory

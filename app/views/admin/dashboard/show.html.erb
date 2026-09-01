@@ -1,18 +1,61 @@
 <h1 class="page-title">Dashboard</h1>
-<p class="page-sub">Welcome back, <%= current_admin_user.full_name || current_admin_user.email %>.</p>
+<p class="page-sub">Welcome back, <%= current_admin_user.full_name || current_admin_user.email %>. Live queues and last staff actions.</p>
 
 <div class="stat-grid">
-  <% @stats.each do |stat| %>
-    <div class="stat-card">
-      <div class="stat-value"><%= stat[:value] %></div>
-      <div class="stat-label"><%= stat[:label] %></div>
-    </div>
+  <% @cards.each do |card| %>
+    <%= link_to card.path, class: "stat-card" do %>
+      <div class="stat-value"><%= card.value %></div>
+      <div class="stat-label"><%= card.label %></div>
+    <% end %>
   <% end %>
 </div>
 
-<div class="panel">
-  <h2>Your access</h2>
-  <p>Roles: <%= current_admin_user.roles.map(&:name).join(", ").presence || "—" %></p>
-  <p><%= current_admin_user.permission_keys.size %> permission(s) granted</p>
-  <p>Full CRUD screens (products, orders, CMS, settings) arrive in the sprints noted in the sidebar.</p>
+<div class="dash-split">
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Saved queues</h2>
+    </div>
+    <% if @queues.empty? %>
+      <p class="muted">No operational queues for your role.</p>
+    <% else %>
+      <ul class="queue-list">
+        <% @queues.each do |queue| %>
+          <li>
+            <%= link_to queue.path do %>
+              <span><%= queue.label %></span>
+              <span class="chip <%= queue.count.positive? ? 'sys' : '' %>"><%= queue.count %></span>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Recent activity</h2>
+      <%= link_to "View all", admin_activity_path, class: "link" %>
+    </div>
+    <% if @activity.empty? %>
+      <p class="muted">No staff edits recorded yet.</p>
+    <% else %>
+      <ul class="activity-list">
+        <% @activity.each do |item| %>
+          <li>
+            <span class="muted-sm"><%= item.time.strftime("%d %b, %H:%M") %></span>
+            <span>
+              <strong><%= item.actor %></strong>
+              <%= item.verb %>
+              <%= item.item_type.downcase %>
+              <% if item.path %>
+                <%= link_to item.item_label, item.path %>
+              <% else %>
+                <%= item.item_label %>
+              <% end %>
+            </span>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  </div>
 </div>

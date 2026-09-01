@@ -381,5 +381,27 @@ RSpec.describe "Admin orders", type: :request do
       expect(response.body).not_to include(already_refunded.order_number)
       expect(response.body).not_to include(unrelated.order_number)
     end
+
+    it "narrows the list to orders that still need fulfillment" do
+      sign_in_admin(create(:admin_user, :super_admin, password: "password1234"))
+      open_order = create(:order, status: :confirmed)
+      shipped = create(:order, status: :shipped)
+
+      get "/admin/orders", params: { fulfillment: "1" }
+
+      expect(response.body).to include(open_order.order_number)
+      expect(response.body).not_to include(shipped.order_number)
+    end
+  end
+
+  it "exports orders as CSV" do
+    sign_in_admin(create(:admin_user, :super_admin, password: "password1234"))
+    order = create(:order)
+
+    get "/admin/orders/export"
+
+    expect(response).to have_http_status(:ok)
+    expect(response.media_type).to eq("text/csv")
+    expect(response.body).to include(order.order_number)
   end
 end

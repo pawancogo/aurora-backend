@@ -13,6 +13,7 @@ class AdminUser < ApplicationRecord
   has_many :roles, through: :admin_user_roles
   has_many :permissions, -> { distinct }, through: :roles
   has_many :refresh_tokens, as: :owner, dependent: :destroy
+  has_many :customer_notes, dependent: :restrict_with_error
 
   before_validation :normalize_email
 

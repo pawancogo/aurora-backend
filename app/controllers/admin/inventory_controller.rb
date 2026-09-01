@@ -4,13 +4,25 @@ module Admin
   # Inventory operations: stock levels across purchasable variants, low-stock
   # filtering, per-variant adjustments (through the ledger), and movement history.
   class InventoryController < BaseController
-    before_action -> { require_permission!("inventory.read") }, only: %i[index show]
+    before_action -> { require_permission!("inventory.read") }, only: %i[index show export]
     before_action -> { require_permission!("inventory.manage") }, only: %i[adjust update_settings]
     before_action :set_variant, only: %i[show adjust update_settings]
 
     def index
       @variants = filtered_scope.page(params[:page]).per(helpers.current_per_page)
       @low_stock_count = base_scope.where(low_stock_sql).count
+    end
+
+    def export
+      send_csv("inventory", %w[sku product variant on_hand reserved available threshold]) do |csv|
+        filtered_scope.limit(EXPORT_LIMIT).each do |variant|
+          item = variant.inventory_item
+          csv << [
+            variant.sku, variant.product.name, variant.option_label,
+            item&.on_hand, item&.reserved, item&.available, item&.low_stock_threshold
+          ]
+        end
+      end
     end
 
     def show

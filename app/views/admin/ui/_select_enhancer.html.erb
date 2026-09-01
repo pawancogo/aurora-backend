@@ -21,22 +21,25 @@
   // so only a single dropdown is ever open at a time.
   var closers = [];
 
-  function escapeHtml(value) {
-    return String(value).replace(/[&<>"']/g, function (ch) {
-      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch];
-    });
-  }
-
-  // Escape the label, wrapping each case-insensitive match of `term` in <mark>.
+  // Build a DOM fragment for the label, wrapping each case-insensitive match of
+  // `term` in <mark>. Uses text nodes (never innerHTML), so anything derived from
+  // `text`/`term` is set via textContent and can never be parsed as HTML —
+  // injection-proof by construction.
   function highlight(text, term) {
-    if (!term) return escapeHtml(text);
-    var lower = text.toLowerCase(), needle = String(term).toLowerCase(), out = "", i = 0, idx;
+    var frag = document.createDocumentFragment();
+    var str = String(text);
+    if (!term) { frag.appendChild(document.createTextNode(str)); return frag; }
+    var lower = str.toLowerCase(), needle = String(term).toLowerCase(), i = 0, idx;
     while ((idx = lower.indexOf(needle, i)) !== -1) {
-      out += escapeHtml(text.slice(i, idx)) +
-             '<mark class="ui-select-mark">' + escapeHtml(text.slice(idx, idx + needle.length)) + "</mark>";
+      if (idx > i) { frag.appendChild(document.createTextNode(str.slice(i, idx))); }
+      var mark = document.createElement("mark");
+      mark.className = "ui-select-mark";
+      mark.textContent = str.slice(idx, idx + needle.length);
+      frag.appendChild(mark);
       i = idx + needle.length;
     }
-    return out + escapeHtml(text.slice(i));
+    if (i < str.length) { frag.appendChild(document.createTextNode(str.slice(i))); }
+    return frag;
   }
 
   function enhance(select) {
@@ -90,7 +93,7 @@
       var item = document.createElement("button");
       item.type = "button";
       item.className = "ui-select-option" + (selected ? " selected" : "");
-      item.innerHTML = highlight(text, term);
+      item.appendChild(highlight(text, term));
       item.addEventListener("click", function () { choose(value, text); });
       return item;
     }

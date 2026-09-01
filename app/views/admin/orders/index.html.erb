@@ -1,13 +1,19 @@
 <h1 class="page-title">Orders</h1>
 <p class="page-sub">Placed orders across all customers.</p>
 
+<div class="toolbar">
+  <%= link_to "Export CSV", admin_export_orders_path(request.query_parameters.except("page")), class: "btn-ghost" %>
+</div>
+
 <%= render "admin/ui/search", url: admin_orders_path, query: params[:q],
       placeholder: "Search by order number",
       filters: [
         { name: "status", prompt: "Any status", selected: params[:status],
           options: Array(@facets["status"]).map { |facet| ["#{facet[:label]} (#{facet[:count]})", facet[:value]] } },
         { name: "refund_pending", prompt: "Any refund status", selected: params[:refund_pending],
-          options: [ [ "Refund pending", "1" ] ] }
+          options: [ [ "Refund pending", "1" ] ] },
+        { name: "fulfillment", prompt: "Any fulfillment", selected: params[:fulfillment],
+          options: [ [ "Needs fulfillment", "1" ] ] }
       ] %>
 
 <%

@@ -162,7 +162,7 @@ Puma is configured for **3001** so it does not collide with Next.js on 3000. Do 
 
 Smoke test: `curl -s http://localhost:3001/api/v1/health`
 
-Admin: [http://localhost:3001/admin/login](http://localhost:3001/admin/login)
+Admin: [http://localhost:3001/admin/login](http://localhost:3001/admin/login) — Dashboard, Activity, CSV export on list screens.
 
 ### 4. Sidekiq (background jobs)
 

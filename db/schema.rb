@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_26_190000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_31_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -150,6 +150,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_26_190000) do
     t.index ["category_id", "product_attribute_id"], name: "index_category_attributes_uniqueness", unique: true
     t.index ["category_id"], name: "index_category_attributes_on_category_id"
     t.index ["product_attribute_id"], name: "index_category_attributes_on_product_attribute_id"
+  end
+
+  create_table "customer_notes", force: :cascade do |t|
+    t.bigint "admin_user_id", null: false
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.bigint "customer_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["admin_user_id"], name: "index_customer_notes_on_admin_user_id"
+    t.index ["customer_id", "id"], name: "index_customer_notes_on_customer_id_and_id"
+    t.index ["customer_id"], name: "index_customer_notes_on_customer_id"
   end
 
   create_table "customers", force: :cascade do |t|
@@ -707,6 +718,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_26_190000) do
     t.jsonb "object"
     t.jsonb "object_changes"
     t.string "whodunnit"
+    t.index ["created_at"], name: "index_versions_on_created_at"
     t.index ["item_type", "item_id"], name: "index_versions_on_item_type_and_item_id"
   end
 
@@ -730,6 +742,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_26_190000) do
   add_foreign_key "categories", "categories", column: "parent_id"
   add_foreign_key "category_attributes", "categories"
   add_foreign_key "category_attributes", "product_attributes"
+  add_foreign_key "customer_notes", "admin_users"
+  add_foreign_key "customer_notes", "customers"
   add_foreign_key "inventory_items", "product_variants"
   add_foreign_key "notification_deliveries", "notifications"
   add_foreign_key "notification_preferences", "customers"

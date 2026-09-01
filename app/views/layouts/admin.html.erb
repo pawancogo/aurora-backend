@@ -12,6 +12,7 @@
       <div class="brand">AURORA <span>Admin</span></div>
       <nav>
         <a class="nav-link <%= "active" if controller_name == "dashboard" %>" href="<%= admin_root_path %>">Dashboard</a>
+        <a class="nav-link <%= "active" if controller_name == "activity" %>" href="<%= admin_activity_path %>">Activity</a>
 
         <div class="nav-section">Catalog</div>
         <a class="nav-link <%= "active" if controller_name == "products" || controller_name == "product_relations" %>" href="<%= admin_products_path %>">Products</a>

@@ -4,6 +4,8 @@ module Admin
   # Base controller for the server-rendered admin portal (ERB, session-authenticated).
   # Distinct from the stateless JWT customer/admin JSON API under /api/v1.
   class BaseController < ActionController::Base
+    include SendsCsv
+
     protect_from_forgery with: :exception
     layout "admin"
 

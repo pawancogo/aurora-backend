@@ -123,6 +123,37 @@ RSpec.describe "Admin catalog management", type: :request do
 
       expect { delete "/admin/products/#{product.id}" }.to change { Product.kept.count }.by(-1)
     end
+
+    it "exports products as CSV" do
+      sign_in_admin(super_admin)
+      product = create(:product, name: "CSV Lamp")
+
+      get "/admin/products/export"
+
+      expect(response).to have_http_status(:ok)
+      expect(response.media_type).to eq("text/csv")
+      expect(response.body).to include("CSV Lamp")
+      expect(response.body).to include(product.sku)
+    end
+
+    it "imports products from CSV, upserting by SKU" do
+      sign_in_admin(super_admin)
+      existing = create(:product, sku: "IMP-EXIST", name: "Before")
+      file = Tempfile.new([ "products", ".csv" ])
+      file.write("sku,name,status,price,mrp,brand,category\nIMP-EXIST,After,active,199,299,Aurora,Lighting\nIMP-NEW,New Lamp,draft,99,149,Aurora,Lighting\n")
+      file.rewind
+
+      post "/admin/products/import", params: {
+        file: Rack::Test::UploadedFile.new(file.path, "text/csv")
+      }
+
+      expect(existing.reload.name).to eq("After")
+      expect(Product.find_by(sku: "IMP-NEW").name).to eq("New Lamp")
+      expect(response).to redirect_to("/admin/products")
+    ensure
+      file&.close
+      file&.unlink
+    end
   end
 
   describe "permissions" do

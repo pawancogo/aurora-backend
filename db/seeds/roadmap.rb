@@ -329,13 +329,22 @@ SPRINTS = [
         description: "<p>A bell in the header shows unread count. Account → Notifications lists messages and lets the shopper turn off review reminders. An unsubscribe link in optional emails turns off marketing mail without touching order emails.</p>",
         technical_description: "<p><code>GET/PATCH /api/v1/notifications</code>, <code>/notification_preferences</code>, public <code>/unsubscribe</code>. Storefront: <code>NotificationBell</code>, <code>/account/notifications</code>, <code>/unsubscribe</code>.</p>" }
     ] },
-  { number: 21, title: "Admin Dashboard & Ops", status: "planned",
+  { number: 21, title: "Admin Dashboard & Ops", status: "completed",
     goal: "Remaining operational UI on top of the catalog/orders/customers portal that already exists.",
     dependencies: "Sprint 2–13", estimate: "1–2 weeks",
     features: [
-      { area: :admin, title: "Dashboard metrics + bulk ops",
-        description: "<p>A numbers dashboard, bulk import/export, and an activity feed of staff actions.</p>",
-        technical_description: "<p>Much of CRUD already shipped in earlier sprints. This is the remainder.</p>" }
+      { area: :admin, title: "Dashboard metrics + saved queues",
+        description: "<p>The home screen shows live counts: orders today, week revenue, fulfillment backlog, refunds pending, open returns, reviews waiting, low stock, and new customers. Each card (and the Saved queues list) opens the matching filtered list.</p><p><strong>Where to see it:</strong> Admin → Dashboard.</p>",
+        technical_description: "<p><code>Admin::Metrics</code> + <code>Admin::DashboardController#show</code>. Queue params: <code>?fulfillment=1</code>, <code>?refund_pending=1</code>, <code>?low_stock=1</code>, reviews <code>status=pending</code>.</p>" },
+      { area: :admin, title: "CSV import/export",
+        description: "<p>Staff can download the current products, orders, customers, or inventory list as CSV. Products can also be imported — matching SKU updates the row; a new SKU creates it (price in rupees, optional brand/category).</p><p><strong>Where to see it:</strong> Products → Export / Import CSV; Orders, Customers, Inventory → Export CSV.</p>",
+        technical_description: "<p><code>Admin::SendsCsv</code> (5k row cap). <code>Admin::Catalog::ImportProducts</code> upserts by SKU onto the master variant. Collection routes declared before <code>:id</code> for customers/orders/inventory.</p>" },
+      { area: :admin, title: "Customer notes + block",
+        description: "<p>On a customer page, staff can leave internal notes and block or unblock the account. Blocking immediately signs the shopper out of every device.</p><p><strong>Where to see it:</strong> Admin → Customers → (a customer) → Staff notes / Block customer.</p>",
+        technical_description: "<p><code>customer_notes</code> table. <code>CustomersController#create_note</code> + <code>#update_status</code> revokes <code>refresh_tokens.active</code> when moving to inactive.</p>" },
+      { area: :admin, title: "Activity feed",
+        description: "<p>A chronological list of staff edits (who changed which product, order, customer, and so on), with a short preview on the dashboard. Full sales/audit reports stay the next sprint.</p><p><strong>Where to see it:</strong> Admin → Activity, and the Recent activity panel on the dashboard.</p>",
+        technical_description: "<p><code>Admin::Activity</code> wraps <code>PaperTrail::Version</code> (index on <code>created_at</code>). <code>Admin::ActivityController#index</code> at <code>/admin/activity</code>. <code>set_paper_trail_whodunnit</code> already on <code>Admin::BaseController</code>.</p>" }
     ] },
   { number: 22, title: "Analytics, Reports & Audit Logs", status: "planned",
     goal: "Sales/ops reports and a durable audit trail.",

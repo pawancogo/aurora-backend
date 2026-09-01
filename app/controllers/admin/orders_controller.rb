@@ -8,16 +8,26 @@ module Admin
   # or manually refund a captured payment left over from a cancellation. No
   # free-form status picker. Post-placement address change is out of scope.
   class OrdersController < BaseController
-    before_action -> { require_permission!("orders.read") }, only: %i[index show]
+    before_action -> { require_permission!("orders.read") }, only: %i[index show export]
     before_action -> { require_permission!("orders.manage") }, only: %i[advance cancel update_shipment create_shipment_event]
     before_action -> { require_permission!("payments.manage") }, only: %i[refund]
 
     def index
-      scope = Order.includes(:customer, :order_items, :payments).order(placed_at: :desc)
-      scope = scope.where(id: Payment.refund_pending.select(:order_id)) if params[:refund_pending].present?
-      result = Order.search(params, scope: scope)
+      result = Order.search(params, scope: filtered_scope)
       @facets = result.facets
       @orders = result.records
+    end
+
+    def export
+      result = Order.search(params, scope: filtered_scope.includes(:customer), paginate: false)
+      send_csv("orders", %w[order_number status customer_email total_rupees placed_at]) do |csv|
+        result.records.limit(EXPORT_LIMIT).each do |order|
+          csv << [
+            order.order_number, order.status, order.customer.email,
+            format("%.2f", order.total), order.placed_at&.iso8601
+          ]
+        end
+      end
     end
 
     def show
@@ -103,6 +113,13 @@ module Admin
 
     def shipment_params
       params.require(:shipment).permit(:carrier_name, :tracking_number, :packing_notes)
+    end
+
+    def filtered_scope
+      scope = Order.includes(:customer, :order_items, :payments).order(placed_at: :desc)
+      scope = scope.where(id: Payment.refund_pending.select(:order_id)) if params[:refund_pending].present?
+      scope = scope.where(status: %w[confirmed accepted ready_to_ship]) if params[:fulfillment].present?
+      scope
     end
   end
 end

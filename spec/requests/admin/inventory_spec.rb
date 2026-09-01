@@ -93,4 +93,15 @@ RSpec.describe "Admin inventory", type: :request do
       post "/admin/inventory/#{variant.id}/adjust", params: { mode: "add", quantity: "5", reason: "restock" }
     end.not_to change { variant.inventory_item.reload.on_hand }
   end
+
+  it "exports inventory as CSV" do
+    sign_in_admin(super_admin)
+    variant
+
+    get "/admin/inventory/export"
+
+    expect(response).to have_http_status(:ok)
+    expect(response.media_type).to eq("text/csv")
+    expect(response.body).to include(variant.sku)
+  end
 end

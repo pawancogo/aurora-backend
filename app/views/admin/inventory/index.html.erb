@@ -8,12 +8,15 @@
   <% end %>
 </p>
 
-<div class="toolbar">
-  <% if params[:low_stock].present? %>
-    <%= link_to "Show all", admin_inventory_path(q: params[:q]), class: "btn-sm" %>
-  <% else %>
-    <%= link_to "Show low stock only", admin_inventory_path(low_stock: 1, q: params[:q]), class: "btn-sm" %>
-  <% end %>
+<div class="toolbar toolbar-split">
+  <div class="toolbar-group">
+    <%= link_to "Export CSV", admin_export_inventory_path(request.query_parameters.except("page")), class: "btn-ghost" %>
+    <% if params[:low_stock].present? %>
+      <%= link_to "Show all", admin_inventory_path(q: params[:q]), class: "btn-ghost" %>
+    <% else %>
+      <%= link_to "Show low stock only", admin_inventory_path(low_stock: 1, q: params[:q]), class: "btn-ghost" %>
+    <% end %>
+  </div>
 </div>
 
 <%= render "admin/ui/search", url: admin_inventory_path, query: params[:q],

@@ -1,5 +1,9 @@
 <h1 class="page-title">Customers</h1>
-<p class="page-sub">View accounts and manage their login sessions.</p>
+<p class="page-sub">View accounts, staff notes, and block shoppers from signing in.</p>
+
+<div class="toolbar">
+  <%= link_to "Export CSV", admin_export_customers_path(request.query_parameters.except("page")), class: "btn-ghost" %>
+</div>
 
 <%= render "admin/ui/search", url: admin_customers_path, query: params[:q],
       placeholder: "Search by email, name or phone",

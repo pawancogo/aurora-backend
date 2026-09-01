@@ -6,8 +6,8 @@
 ## Current Position
 
 - **Canonical list:** [ROADMAP.md](ROADMAP.md) — **25 sprints**. That file is the only numbering to follow. `SPRINT_PLAN.md` is retired.
-- **Shipped:** Sprints **1–13**, **16** (manual delivery), **17** (returns/RMA), **18** (reviews, ratings & Q&A), and **20** (notifications). Day-to-day write-ups: Admin → Roadmap (`/admin/sprints`).
-- **Next:** Sprint **21 — Admin Dashboard & Ops.** Sprints 14 (Promotions), 15 (Loyalty), and 19 (Personalization) are skipped for now.
+- **Shipped:** Sprints **1–13**, **16** (manual delivery), **17** (returns/RMA), **18** (reviews, ratings & Q&A), **20** (notifications), and **21** (admin dashboard & ops). Day-to-day write-ups: Admin → Roadmap (`/admin/sprints`).
+- **Next:** Sprint **22 — Analytics, Reports & Audit Logs.** Sprints 14 (Promotions), 15 (Loyalty), and 19 (Personalization) are skipped for now.
 - **Reviews / ratings:** shipped as **Sprint 18**. Feature flag `reviews` hides the PDP/account UI when off. Review-request email shipped in Sprint 20; profanity auto-filter was skipped.
 - This markdown log is historical (screenshots, gotchas). Do not take sprint numbers in older entries below as canonical — they mixed `SPRINT_PLAN` labels with delivery order.
 
@@ -458,6 +458,19 @@ Delivered:
 - **Shopper:** header bell + unread badge, Account → Notifications inbox and optional-email toggles, `/unsubscribe?token=` for marketing mail. Transactional order/return email cannot be turned off.
 
 Where to see it: storefront header bell (signed in); Account → Notifications; `tmp/mails` in development (or real SMTP when `SMTP_ADDRESS` is set).
+
+### Sprint 21 — Admin Dashboard & Ops ✅ (completed 2026-08-31)
+
+The catalog/orders/customers portal already existed. This sprint filled the remaining ops surface.
+
+Delivered:
+- **Dashboard:** live cards for orders today, 7-day captured revenue, open fulfillment, refunds pending, open returns, reviews to moderate, low stock, new customers (7d). Saved queues deep-link into filtered lists (`?fulfillment=1`, `?refund_pending=1`, `?low_stock=1`, pending reviews).
+- **CSV:** export products (honours current search filters), orders, customers, inventory. Import products by SKU (`Admin::Catalog::ImportProducts`) — create/update name, status, price/MRP, brand, category.
+- **Customers:** staff-only notes (`customer_notes`); Block/Unblock copy; blocking revokes active refresh tokens.
+- **Activity:** `/admin/activity` lists recent PaperTrail versions (who / verb / record), with a 10-row preview on the dashboard. Full reports stay Sprint 22.
+
+Where to see it: Admin → Dashboard; Admin → Activity; Products/Orders/Customers/Inventory → Export CSV; a customer detail → Staff notes / Block.
+
 
 
 

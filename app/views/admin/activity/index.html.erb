@@ -1,0 +1,16 @@
+<h1 class="page-title">Activity</h1>
+<p class="page-sub">Staff changes recorded by PaperTrail. Full sales/audit reports arrive in Sprint 22.</p>
+
+<%
+  columns = [
+    { label: "When", class: "muted-sm", cell: ->(item) { item.time.strftime("%d %b %Y, %H:%M") } },
+    { label: "Who", cell: ->(item) { item.actor } },
+    { label: "Action", cell: ->(item) { "#{item.verb} #{item.item_type.downcase}" } },
+    { label: "Record", cell: ->(item) {
+        item.path ? link_to(item.item_label, item.path) : item.item_label
+      } }
+  ]
+%>
+<%= render "admin/ui/table", rows: @items, columns: columns, empty: "No activity yet." %>
+
+<%= render "admin/ui/pagination", collection: @versions, path: admin_activity_path %>

@@ -126,14 +126,14 @@
 
 ## 14. Admin / Back-office (Ops)
 - ✅ Session-based server-rendered admin portal (login → dashboard), RBAC (roles/permissions), audit-ready
-- 🟡 CRUD for catalog/orders/customers/CMS/settings/nav *(APIs + portal partly; remaining UI Sprint 21)*
-- ⬜ Order ops: search/filter, status change, cancel/refund/return, notes, timeline, manual order creation ⭐
-- ⬜ Inventory ops: stock adjust, transfers, low-stock alerts, stock history/logs 🟡
-- ⬜ Customer ops: view/search, impersonate, credit adjust, block ⭐
-- ⬜ Marketing: coupons, banners, sections, campaigns ⭐
-- ⬜ Bulk import/export, CSV, saved views, column config ⭐
-- ⬜ Audit logs of every admin action, activity feed *(Sprint 22)* 🟡
-- ⬜ Multi-admin, granular per-resource permissions ✅(model) 🟡(UI)
+- ✅ CRUD for catalog/orders/customers/CMS/settings/nav *(Sprint 21 remaining ops)*
+- 🟡 Order ops: search/filter, status change, cancel/refund/return, timeline *(Sprints 9–13, 17)* — manual create / shopper-visible notes ⬜
+- 🟡 Inventory ops: stock adjust, low-stock, stock history *(Sprint 5)* — transfers ⬜
+- 🟡 Customer ops: view/search, staff notes, block *(Sprint 21)* — impersonate / credit ⬜
+- 🟡 Marketing: banners, sections *(Sprint 6)* — coupons/campaigns wait on 14
+- 🟡 Bulk import/export CSV *(Sprint 21)* — saved-view CRUD / column config ⬜ (dashboard queues stand in)
+- 🟡 Activity feed of admin mutations *(Sprint 21)* — full audit reports Sprint 22
+- 🟡 Multi-admin, granular per-resource permissions ✅(model + portal)
 
 ## 15. Inventory & Warehouse
 - 🟡 Inventory per variant, stock history, logs, low-stock alerts *(Sprint 5)*

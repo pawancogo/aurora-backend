@@ -2,8 +2,8 @@
 
 module Admin
   class ProductsController < BaseController
-    before_action -> { require_permission!("products.read") }, only: :index
-    before_action -> { require_permission!("products.manage") }, only: %i[new create edit update destroy]
+    before_action -> { require_permission!("products.read") }, only: %i[index export]
+    before_action -> { require_permission!("products.manage") }, only: %i[new create edit update destroy new_import import]
     before_action :set_product, only: %i[edit update destroy]
     before_action :load_form_options, only: %i[new create edit update]
 
@@ -11,6 +11,43 @@ module Admin
       result = Product.search(params, scope: Product.kept.includes(:brand, :category, :product_images).order(created_at: :desc))
       @facets = result.facets
       @products = result.records
+    end
+
+    def export
+      result = Product.search(
+        params,
+        scope: Product.kept.includes(:brand, :category).order(:id),
+        paginate: false
+      )
+      send_csv("products", %w[sku name status price mrp brand category]) do |csv|
+        result.records.limit(EXPORT_LIMIT).each do |product|
+          csv << [
+            product.sku, product.name, product.status, product.price, product.mrp,
+            product.brand&.name, product.category&.name
+          ]
+        end
+      end
+    end
+
+    def new_import
+      render :import
+    end
+
+    def import
+      uploaded = params[:file]
+      unless uploaded.respond_to?(:read)
+        redirect_to import_admin_products_path, alert: "Choose a CSV file to import."
+        return
+      end
+
+      result = Catalog::ImportProducts.new(io: uploaded).call
+      summary = "Imported #{result.created} new, updated #{result.updated}."
+      if result.errors.any?
+        redirect_to import_admin_products_path,
+                    alert: "#{summary} #{result.errors.first(8).join(' ')}"
+      else
+        redirect_to admin_products_path, notice: summary
+      end
     end
 
     def new

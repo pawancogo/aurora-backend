@@ -13,9 +13,40 @@
   <% if can_manage %>
     <div class="form-actions" style="margin-top:12px;">
       <%= link_to "Edit details", admin_edit_customer_path(@customer), class: "btn-sm" %>
-      <%= button_to (@customer.status == "active" ? "Deactivate account" : "Activate account"),
-            admin_customer_status_path(@customer), method: :patch, class: "link" %>
+      <%= button_to (@customer.status == "active" ? "Block customer" : "Unblock customer"),
+            admin_customer_status_path(@customer), method: :patch, class: "link danger",
+            form: { onsubmit: @customer.status == "active" ? "return confirm('Block this customer and revoke their sessions?');" : nil } %>
     </div>
+  <% end %>
+</div>
+
+<div class="panel">
+  <div class="panel-head"><h2>Staff notes</h2></div>
+  <% if @notes.empty? %>
+    <p class="muted">No notes yet.</p>
+  <% else %>
+    <ul class="note-list">
+      <% @notes.each do |note| %>
+        <li class="note-item">
+          <div class="note-meta">
+            <%= note.admin_user.full_name.presence || note.admin_user.email %>
+            · <%= note.created_at.strftime("%d %b %Y, %H:%M") %>
+          </div>
+          <div><%= simple_format(note.body) %></div>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+  <% if can_manage %>
+    <%= form_with url: admin_customer_notes_path(@customer), method: :post do %>
+      <div class="form-row">
+        <label for="note_body">Add a note</label>
+        <textarea id="note_body" name="body" rows="3" maxlength="2000" required placeholder="Visible only to staff."></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn-sm">Save note</button>
+      </div>
+    <% end %>
   <% end %>
 </div>
 

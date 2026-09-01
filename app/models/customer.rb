@@ -20,6 +20,7 @@ class Customer < ApplicationRecord
   has_many :review_votes, dependent: :destroy
   has_many :notifications, dependent: :destroy
   has_many :notification_preferences, dependent: :destroy
+  has_many :customer_notes, dependent: :destroy
 
   before_validation :normalize_email
   before_validation :ensure_unsubscribe_token

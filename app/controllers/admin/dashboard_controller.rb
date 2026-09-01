@@ -4,13 +4,10 @@ module Admin
   class DashboardController < BaseController
     # GET /admin (root) and /admin/dashboard
     def show
-      @stats = [
-        { label: "Customers", value: Customer.kept.count, permission: "customers.read" },
-        { label: "Admin users", value: AdminUser.kept.count, permission: "users.read" },
-        { label: "Roles", value: Role.count, permission: "roles.read" },
-        { label: "Categories", value: Category.kept.count, permission: "categories.read" },
-        { label: "Feature flags", value: FeatureFlag.count, permission: "settings.read" }
-      ]
+      metrics = Metrics.new
+      @cards = metrics.cards.select { |card| allowed_to?(card.permission) }
+      @queues = metrics.queues.select { |queue| allowed_to?(queue.permission) }
+      @activity = Activity.recent(limit: 10)
     end
   end
 end

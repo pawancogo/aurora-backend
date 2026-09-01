@@ -179,17 +179,14 @@ This is the sprint that was listed in some roadmaps and **missing from `SPRINT_P
 
 **Skipped:** live SMS/WhatsApp/push providers; abandoned-cart and back-in-stock campaigns.
 
-### Sprint 21 — Admin Dashboard & Ops
+### Sprint 21 — Admin Dashboard & Ops ✅
 
 **Goal:** Remaining operational UI (much of catalog/orders/customers already exists).
 
 **Depends on:** 2–13  
-**Estimate:** 1–2 weeks
+**Shipped:** live dashboard metrics (orders, revenue, fulfillment, refunds, returns, reviews, low stock, new customers); saved queues on the dashboard that deep-link into filtered lists; CSV export for products/orders/customers/inventory and product CSV import (upsert by SKU); customer staff notes and block/unblock (block revokes sessions); activity feed of PaperTrail admin edits.
 
-- Dashboard metrics
-- Remaining bulk import/export, saved views
-- Customer ops (notes, block)
-- Activity feed of admin actions
+**Skipped:** saved-view CRUD / column-config product (queues stand in); impersonate and store-credit (stay with skipped 14–15). Full audit/sales reports stay Sprint 22.
 
 ### Sprint 22 — Analytics, Reports & Audit Logs
 
@@ -251,6 +248,6 @@ Coupons, loyalty, reviews, and real Razorpay are **in scope** (sprints 14, 15, 1
 
 ## Approval gate
 
-**Current status:** Sprints **1–13, 16–18, 20 complete.** Next: **Sprint 21 — Admin Dashboard & Ops.** (14, 15, 19 skipped.)
+**Current status:** Sprints **1–13, 16–18, 20–21 complete.** Next: **Sprint 22 — Analytics, Reports & Audit Logs.** (14, 15, 19 skipped.)
 
 After each sprint: update Admin → Roadmap, append [PROJECT_STATE.md](PROJECT_STATE.md) if needed, then wait for approval before starting the next number on this list.

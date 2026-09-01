@@ -3,11 +3,17 @@
 <h1 class="page-title">Products</h1>
 <p class="page-sub">Your catalog. Click a product to edit its details, pricing and images.</p>
 
-<% if can_manage %>
-  <div class="toolbar">
-    <%= link_to "+ New product", new_admin_product_path, class: "btn-sm" %>
+<div class="toolbar toolbar-split">
+  <div class="toolbar-group">
+    <%= link_to "Export CSV", export_admin_products_path(request.query_parameters.except("page")), class: "btn-ghost" %>
+    <% if can_manage %>
+      <%= link_to "Import CSV", import_admin_products_path, class: "btn-ghost" %>
+    <% end %>
   </div>
-<% end %>
+  <% if can_manage %>
+    <%= link_to "+ New product", new_admin_product_path, class: "btn-sm" %>
+  <% end %>
+</div>
 
 <%
   facet_options = ->(key) { Array(@facets[key]).map { |facet| ["#{facet[:label]} (#{facet[:count]})", facet[:value]] } }
