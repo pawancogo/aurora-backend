@@ -53,7 +53,7 @@ gem "sprockets-rails"
 gem "sassc-rails" # compiles RailsAdmin's SCSS under sprockets
 
 # File/media uploads — one GenericUploader, provider chosen via STORAGE_PROVIDER.
-gem "carrierwave", "~> 3.0"
+gem "carrierwave", "~> 3.1"
 # Optional storage providers — required lazily only when selected (config/initializers/carrierwave.rb),
 # so they add no boot cost for the default local provider but need no code change to switch on.
 gem "fog-aws", require: false    # AWS S3 (production)
